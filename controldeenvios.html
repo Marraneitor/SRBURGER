@@ -564,6 +564,140 @@
         let comboConfigurations = {}; // Configuraciones de combos
         let localAutoRefreshId = null;
 
+        // === Notificación de nuevo pedido (sonido + voz, repetitivo hasta confirmar) ===
+        let _knownOrderIds = new Set();
+        let _orderNotifierInitialized = false;
+        let _newOrderAlertIntervalId = null;
+        let _notifAudioCtx = null;
+        let _audioUnlocked = false;
+
+        function ensureAudioUnlocked() {
+            if (_audioUnlocked) return;
+            _audioUnlocked = true;
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (Ctx && !_notifAudioCtx) _notifAudioCtx = new Ctx();
+                if (_notifAudioCtx && _notifAudioCtx.state === 'suspended') {
+                    _notifAudioCtx.resume().catch(() => {});
+                }
+            } catch (_) {}
+        }
+
+        // Muchos navegadores requieren una interacción del usuario para audio.
+        document.addEventListener('pointerdown', ensureAudioUnlocked, { once: true });
+
+        function shouldAlertForOrder(order) {
+            if (!order) return false;
+            if (isOrderCanceled(order)) return false;
+            const status = String(order.status || '').toLowerCase();
+            const confirmed = !!order.confirmed;
+            return status === 'pending' && !confirmed;
+        }
+
+        function hasAnyUnconfirmedPending(list) {
+            const arr = Array.isArray(list) ? list : [];
+            return arr.some(shouldAlertForOrder);
+        }
+
+        function isRecentOrder(order, withinMs = 120000) {
+            try {
+                const t = Date.parse(order && order.timestamp ? String(order.timestamp) : '');
+                if (!Number.isFinite(t)) return false;
+                return (Date.now() - t) >= 0 && (Date.now() - t) <= withinMs;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function speakNewOrder() {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                // Intentar desbloquear audio primero
+                ensureAudioUnlocked();
+
+                const phrase = 'Ha llegado un nuevo pedido';
+                const u = new SpeechSynthesisUtterance(phrase);
+                u.lang = 'es-MX';
+                u.rate = 1;
+                u.pitch = 1;
+                u.volume = 1;
+
+                const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+                const esVoice = (voices || []).find(v => String(v.lang || '').toLowerCase().startsWith('es'));
+                if (esVoice) u.voice = esVoice;
+
+                // Cancelar cualquier cosa en cola y hablar
+                try { window.speechSynthesis.cancel(); } catch (_) {}
+                window.speechSynthesis.speak(u);
+            } catch (e) {
+                // No bloquear la UI si falla
+                console.warn('No se pudo reproducir voz:', e);
+            }
+        }
+
+        function startNewOrderAlert() {
+            if (_newOrderAlertIntervalId) return;
+
+            // Si aún no hay interacción, avisar una sola vez
+            if (!_audioUnlocked) {
+                showNotification('Nuevo pedido. Toca la pantalla para activar sonido.', 'success');
+            }
+
+            const tick = () => {
+                // Si ya no hay pendientes sin confirmar, parar
+                if (!hasAnyUnconfirmedPending(orders)) {
+                    stopNewOrderAlert();
+                    return;
+                }
+                playNotificationSound();
+                speakNewOrder();
+            };
+
+            // Ejecutar inmediato y luego repetir
+            tick();
+            _newOrderAlertIntervalId = setInterval(tick, 8000);
+        }
+
+        function stopNewOrderAlert() {
+            if (_newOrderAlertIntervalId) {
+                try { clearInterval(_newOrderAlertIntervalId); } catch (_) {}
+                _newOrderAlertIntervalId = null;
+            }
+            try {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            } catch (_) {}
+        }
+
+        function syncNewOrderNotifier(incomingOrders) {
+            const arr = Array.isArray(incomingOrders) ? incomingOrders : [];
+            const incomingIds = new Set(arr.map(o => String(o.id || '')));
+
+            if (!_orderNotifierInitialized) {
+                _orderNotifierInitialized = true;
+                _knownOrderIds = incomingIds;
+
+                // Si al abrir la página hay un pedido MUY reciente pendiente sin confirmar, alertar.
+                const hasRecent = arr.some(o => shouldAlertForOrder(o) && isRecentOrder(o, 120000));
+                if (hasRecent) startNewOrderAlert();
+                return;
+            }
+
+            const newPending = arr.filter(o => {
+                const id = String(o.id || '');
+                return id && !_knownOrderIds.has(id) && shouldAlertForOrder(o);
+            });
+
+            _knownOrderIds = incomingIds;
+
+            if (newPending.length) {
+                showNotification('¡Ha llegado un nuevo pedido!', 'success');
+                startNewOrderAlert();
+            } else {
+                // Sin nuevos, pero tal vez ya se confirmaron todos
+                if (!hasAnyUnconfirmedPending(arr)) stopNewOrderAlert();
+            }
+        }
+
         // Inicializar Modo Cocina por defecto para facilitar lectura
         document.addEventListener('DOMContentLoaded', () => {
             const enabled = localStorage.getItem('kitchenMode') !== '0'; // por defecto ON
@@ -978,6 +1112,8 @@
                 unsubscribeOrders = window.firebaseOrderManager.onOrdersChange((firebaseOrders) => {
                     console.log('📥 Pedidos recibidos de Firebase:', firebaseOrders.length);
                     orders = firebaseOrders;
+                    // Detectar llegada de nuevos pedidos y disparar alerta
+                    syncNewOrderNotifier(orders);
                     displayOrders();
                     updateStats();
                 });
@@ -1017,6 +1153,7 @@
                         console.log('✅ Pedido agregado a Firebase:', orderId);
                         showNotification('Nuevo pedido recibido!', 'success');
                         playNotificationSound();
+                        startNewOrderAlert();
                     })
                     .catch((error) => {
                         console.error('❌ Error al agregar pedido a Firebase:', error);
@@ -1046,6 +1183,7 @@
                 updateStats();
                 showNotification('Nuevo pedido recibido!', 'success');
                 playNotificationSound();
+                startNewOrderAlert();
             }
         }
 
@@ -1380,6 +1518,10 @@
                 window.firebaseOrderManager.updateOrder(orderId, { confirmed: true, confirmedAt: new Date().toISOString(), confirmedSent: true })
                     .then(() => {
             showNotification('Pedido confirmado', 'success');
+                        // Si ya no quedan pendientes sin confirmar, detener alerta
+                        setTimeout(() => {
+                            try { if (!hasAnyUnconfirmedPending(orders)) stopNewOrderAlert(); } catch (_) {}
+                        }, 250);
                     })
                     .catch((error) => {
                         console.error('Error al confirmar pedido:', error);
@@ -1396,6 +1538,8 @@
                     displayOrders();
                 }
         showNotification('Pedido confirmado', 'success');
+                // Si ya no quedan pendientes sin confirmar, detener alerta
+                try { if (!hasAnyUnconfirmedPending(orders)) stopNewOrderAlert(); } catch (_) {}
             }
         }
 
@@ -1826,8 +1970,16 @@
 
         // Reproducir sonido de notificación
         function playNotificationSound() {
-            // Crear un beep corto
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Crear un beep corto (reutiliza AudioContext si existe)
+            ensureAudioUnlocked();
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            if (!_notifAudioCtx) _notifAudioCtx = new Ctx();
+            const audioContext = _notifAudioCtx;
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {});
+            }
+
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
