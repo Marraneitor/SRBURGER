@@ -22,7 +22,7 @@ js/gmaps-key.local.js
 **/*firebase*service*account*.json
 
 # Backups
-js/script.js.backup
+# (ojo) js/script.js.backup se usa en producción como script core
 # Archivos del sistema
 .DS_Store
 Thumbs.db
