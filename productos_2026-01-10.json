@@ -1,0 +1,2429 @@
+{
+  "productos": [
+    {
+      "precio": 65,
+      "receta": [
+        {
+          "cantidad": 280,
+          "ingredienteId": "ing_1754735082679_husg"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_jxo7",
+          "cantidad": 35
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        }
+      ],
+      "costo": 27.450000000000003,
+      "categoria": "Complementos",
+      "tamano": "mediano",
+      "nombre": "PAPAS FRANCESAS MEDIANAS",
+      "estaciones": [],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754890892830_sbr7",
+      "descripcion": "Papas francesas medianas con queso nachos en charola.",
+      "estacion": "ninguna",
+      "clasificacion": "complemento"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "costo": 53.75,
+      "id": "p_1754890892842_792p",
+      "precio": 130,
+      "nombre": "PAPAS GAJO GRANDES",
+      "estacion": "freidora",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_fxe7",
+          "cantidad": 560
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 75,
+          "ingredienteId": "ing_1754735082679_jxo7"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        }
+      ],
+      "clasificacion": "complemento",
+      "descripcion": "Papas gajo grandes con queso nachos en charola grande.",
+      "categoria": "Complementos",
+      "tamano": "grande"
+    },
+    {
+      "tamano": "grande",
+      "nombre": "PAPAS FRANCESAS GRANDES",
+      "descripcion": "Papas francesas grandes con queso nachos en charola grande.",
+      "precio": 130,
+      "clasificacion": "complemento",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "costo": 53.75,
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_husg",
+          "cantidad": 560
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_jxo7",
+          "cantidad": 75
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        }
+      ],
+      "id": "p_1754890892854_3gfw",
+      "categoria": "Complementos",
+      "estacion": "freidora"
+    },
+    {
+      "costo": 29.029999999999994,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754890892889_1pr9",
+      "descripcion": "Hot dog jumbo con salchicha jumbo, tocino, vegetales y queso nachos.",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_vhz3",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_tipo"
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_7jxd"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_z0pa",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 15,
+          "ingredienteId": "ing_1754735082679_jxo7"
+        }
+      ],
+      "estacion": "freidora",
+      "nombre": "HOTDOG JUMBO",
+      "precio": 65,
+      "tamano": "",
+      "categoria": "Hotdogs",
+      "clasificacion": "hotdog"
+    },
+    {
+      "precio": 60,
+      "descripcion": "Hot dog con salchicha roja , jalapeño, queso gouda y tocino.",
+      "costo": 15.930000000000001,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754890892909_59xo",
+      "estacion": "freidora",
+      "clasificacion": "hotdog",
+      "nombre": "HOT DOG SALCHIROJA",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_vhz3",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 30,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_ji2l"
+        }
+      ],
+      "categoria": "Hotdogs"
+    },
+    {
+      "id": "p_1754893203915_csjg",
+      "estacion": "parrilla",
+      "categoria": "Hamburguesas",
+      "tamano": "",
+      "estaciones": [
+        "parrilla"
+      ],
+      "clasificacion": "hamburguesa",
+      "costo": 52.63166666666665,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "descripcion": "Hamburguesa Hawaiana",
+      "precio": 125,
+      "nombre": "HAWAIANA",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_pxl8"
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_k26g"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_z0pa",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_22s6"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_ji2l",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_3wci",
+          "cantidad": 40
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754976321635_y3ve"
+        }
+      ]
+    },
+    {
+      "precio": 125,
+      "categoria": "Hamburguesas",
+      "id": "p_1754893446108_7g09",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "CHISTORRA",
+      "clasificacion": "hamburguesa",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_vhz3"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735690356_6ak7"
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_ji2l",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 50,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "cantidad": 40,
+          "ingredienteId": "ing_1754977287336_srni"
+        }
+      ],
+      "costo": 51.9,
+      "tamano": "",
+      "descripcion": "Hamburguesa con chistorra\n",
+      "estacion": "parrilla"
+    },
+    {
+      "categoria": "Hamburguesas",
+      "nombre": "CHORIARGENTINA",
+      "receta": [
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_pxl8",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_z0pa",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_22s6"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_ji2l",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 50,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754977239878_0d2j"
+        }
+      ],
+      "clasificacion": "hamburguesa",
+      "tamano": "",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "costo": 66.5,
+      "precio": 125,
+      "descripcion": "Hamburguesa con carne arrachera, Chorizo argentino, queso manchego, cebolla caramelizada y aderezo",
+      "estacion": "parrilla",
+      "id": "p_1754893646671_4li3"
+    },
+    {
+      "nombre": "Cocacola 600ml",
+      "id": "p_1754894854102_13yz",
+      "receta": [
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754975770408_pgsk"
+        }
+      ],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "costo": 21,
+      "descripcion": "cocacola",
+      "clasificacion": "bebida",
+      "categoria": "Bebidas",
+      "estacion": "ninguna",
+      "precio": 25
+    },
+    {
+      "nombre": "CHESSCAKE DE FRESA",
+      "descripcion": "Chesscake Grande de fresa",
+      "categoria": "Postres",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "cantidad": 450,
+          "ingredienteId": "ing_1754735082679_atij"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_15x2"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 90
+        },
+        {
+          "cantidad": 4,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 8,
+          "ingredienteId": "ing_1754735082679_yll0"
+        }
+      ],
+      "precio": 550,
+      "costo": 212.5,
+      "clasificacion": "postre",
+      "id": "p_1754895757936_js6o"
+    },
+    {
+      "precio": 75,
+      "id": "p_1754896233697_n2rf",
+      "receta": [
+        {
+          "cantidad": 56.25,
+          "ingredienteId": "ing_1754735082679_atij"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_15x2",
+          "cantidad": 0.125
+        },
+        {
+          "cantidad": 11.25,
+          "ingredienteId": "ing_1754735082679_bamr"
+        },
+        {
+          "cantidad": 0.5,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 0.125
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        }
+      ],
+      "costo": 26.5625,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "clasificacion": "postre",
+      "nombre": "Rebanada de CHESSCAKE DE FRESA",
+      "parentId": "p_1754895757936_js6o",
+      "categoria": "Postres",
+      "descripcion": "Chesscake Grande de fresa (rebanada)"
+    },
+    {
+      "receta": [
+        {
+          "cantidad": 450,
+          "ingredienteId": "ing_1754735082679_atij"
+        },
+        {
+          "cantidad": 250,
+          "ingredienteId": "ing_1754976246895_70hm"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_15x2"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 90
+        },
+        {
+          "cantidad": 4,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "ingredienteId": "ing_1754980976279_9f2b",
+          "cantidad": 4
+        },
+        {
+          "cantidad": 8,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_ggyh",
+          "cantidad": 75
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lwea",
+          "cantidad": 200
+        }
+      ],
+      "clasificacion": "postre",
+      "costo": 291.08333333333337,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754896768017_u5ls",
+      "nombre": "CHESSCAKE AVELLANA/QUESO BOLA",
+      "descripcion": "Chesscake Grande de avellana y queso Bola",
+      "categoria": "Postres",
+      "precio": 600
+    },
+    {
+      "costo": 36.38541666666667,
+      "descripcion": "Chesscake De Avellana (rebanada)",
+      "derivedDivisor": 8,
+      "receta": [
+        {
+          "cantidad": 56.25,
+          "ingredienteId": "ing_1754735082679_atij"
+        },
+        {
+          "cantidad": 31.25,
+          "ingredienteId": "ing_1754976246895_70hm"
+        },
+        {
+          "cantidad": 0.125,
+          "ingredienteId": "ing_1754735082679_15x2"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 11.25
+        },
+        {
+          "ingredienteId": "ing_1754735082679_cxca",
+          "cantidad": 0.5
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 0.125
+        },
+        {
+          "cantidad": 0.5,
+          "ingredienteId": "ing_1754980976279_9f2b"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 9.375,
+          "ingredienteId": "ing_1754735082679_ggyh"
+        },
+        {
+          "cantidad": 25,
+          "ingredienteId": "ing_1754735082679_lwea"
+        }
+      ],
+      "estaciones": [],
+      "nombre": "Rebanada de CHESSCAKE AVELLANA/QUESO BOLA",
+      "parentId": "p_1754896768017_u5ls",
+      "estacion": "ninguna",
+      "clasificacion": "postre",
+      "id": "p_1754896975362_t2dp",
+      "precio": 80,
+      "categoria": "Postres",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "clasificacion": "postre",
+      "categoria": "Postres",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_atij",
+          "cantidad": 450
+        },
+        {
+          "ingredienteId": "ing_1754735082679_15x2",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 90
+        },
+        {
+          "ingredienteId": "ing_1754735082679_cxca",
+          "cantidad": 4
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 4,
+          "ingredienteId": "ing_1754980976279_9f2b"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_yll0",
+          "cantidad": 8
+        },
+        {
+          "cantidad": 75,
+          "ingredienteId": "ing_1754735082679_ggyh"
+        },
+        {
+          "ingredienteId": "ing_1754976350832_hhih",
+          "cantidad": 8
+        },
+        {
+          "cantidad": 250,
+          "ingredienteId": "ing_1754976246895_70hm"
+        }
+      ],
+      "descripcion": "Chesscake Grande de Kinder Delice",
+      "nombre": "CHESSCAKE Kinder Delice",
+      "id": "p_1754897100640_zbjn",
+      "costo": 324.4166666666667,
+      "precio": 650,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "clasificacion": "postre",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754897357009_buxp",
+      "precio": 650,
+      "categoria": "Postres",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_atij",
+          "cantidad": 450
+        },
+        {
+          "ingredienteId": "ing_1754976246895_70hm",
+          "cantidad": 250
+        },
+        {
+          "ingredienteId": "ing_1754735082679_15x2",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 90
+        },
+        {
+          "ingredienteId": "ing_1754735082679_cxca",
+          "cantidad": 4
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 4,
+          "ingredienteId": "ing_1754980976279_9f2b"
+        },
+        {
+          "cantidad": 8,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 100,
+          "ingredienteId": "ing_1754976582573_0fkw"
+        },
+        {
+          "ingredienteId": "ing_1754976595379_uaz1",
+          "cantidad": 240
+        }
+      ],
+      "costo": 348.03333333333336,
+      "descripcion": "Chesscake Crema Lotus",
+      "nombre": "CHESSCAKE Crema Lotus"
+    },
+    {
+      "clasificacion": "postre",
+      "precio": 85,
+      "descripcion": "Chesscake Grande de Kinder Delice (rebanada)",
+      "categoria": "Postres",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_atij",
+          "cantidad": 56.25
+        },
+        {
+          "cantidad": 0.125,
+          "ingredienteId": "ing_1754735082679_15x2"
+        },
+        {
+          "cantidad": 11.25,
+          "ingredienteId": "ing_1754735082679_bamr"
+        },
+        {
+          "cantidad": 0.5,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 0.125
+        },
+        {
+          "ingredienteId": "ing_1754980976279_9f2b",
+          "cantidad": 0.5
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 9.375,
+          "ingredienteId": "ing_1754735082679_ggyh"
+        },
+        {
+          "ingredienteId": "ing_1754976350832_hhih",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 31.25,
+          "ingredienteId": "ing_1754976246895_70hm"
+        }
+      ],
+      "id": "p_1754897366442_bymi",
+      "parentId": "p_1754897100640_zbjn",
+      "costo": 40.552083333333336,
+      "nombre": "Rebanada de CHESSCAKE Kinder Delice",
+      "derivedDivisor": 8
+    },
+    {
+      "categoria": "Postres",
+      "costo": 43.50416666666667,
+      "nombre": "Rebanada de CHESSCAKE Crema Lotus",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754897499394_8q18",
+      "derivedDivisor": 8,
+      "clasificacion": "postre",
+      "descripcion": "Chesscake Crema Lotus (rebanada)",
+      "precio": 85,
+      "parentId": "p_1754897357009_buxp",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_atij",
+          "cantidad": 56.25
+        },
+        {
+          "ingredienteId": "ing_1754976246895_70hm",
+          "cantidad": 31.25
+        },
+        {
+          "ingredienteId": "ing_1754735082679_15x2",
+          "cantidad": 0.125
+        },
+        {
+          "cantidad": 11.25,
+          "ingredienteId": "ing_1754735082679_bamr"
+        },
+        {
+          "cantidad": 0.5,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 0.125
+        },
+        {
+          "cantidad": 0.5,
+          "ingredienteId": "ing_1754980976279_9f2b"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 12.5,
+          "ingredienteId": "ing_1754976582573_0fkw"
+        },
+        {
+          "cantidad": 30,
+          "ingredienteId": "ing_1754976595379_uaz1"
+        }
+      ]
+    },
+    {
+      "tamano": "",
+      "clasificacion": "hamburguesa",
+      "descripcion": "Hamburguesa doble carne con queso manchego, tocino y vegetales.",
+      "precio": 130,
+      "categoria": "Hamburguesas",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "cantidad": 35,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_pxl8",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_u48q",
+          "cantidad": 10
+        },
+        {
+          "ingredienteId": "ing_1754735082679_k26g",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735690356_6ak7"
+        }
+      ],
+      "estacion": "parrilla",
+      "id": "p_1754899616223_9i2i",
+      "costo": 58.209999999999994,
+      "nombre": "Hamburguesa Doble"
+    },
+    {
+      "costo": 50.25,
+      "estacion": "parrilla",
+      "clasificacion": "hamburguesa",
+      "id": "p_1754976737269_cg0w",
+      "precio": 110,
+      "categoria": "Hamburguesas",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_pxl8",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_k26g",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_22s6"
+        },
+        {
+          "cantidad": 30,
+          "ingredienteId": "ing_1754735082679_zkt6"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_euyv",
+          "cantidad": 3
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        }
+      ],
+      "tamano": "",
+      "nombre": "HAMBURGUESA BBQ",
+      "descripcion": "Hamburguesa con salsa BBQ, tocino y vegetales."
+    },
+    {
+      "precio": 140,
+      "nombre": "HAMBURGUESA BBQ DOBLE",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "categoria": "Hamburguesas",
+      "estacion": "parrilla",
+      "id": "p_1754977060762_j56b",
+      "tamano": "",
+      "clasificacion": "hamburguesa",
+      "costo": 56.4,
+      "descripcion": "Hamburguesa con salsa BBQ, tocino y vegetales.",
+      "receta": [
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_pxl8",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 10,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_k26g"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 30,
+          "ingredienteId": "ing_1754735082679_zkt6"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735690356_6ak7"
+        }
+      ]
+    },
+    {
+      "categoria": "Complementos",
+      "id": "p_1754909826549_4qaa",
+      "costo": 13.950000000000001,
+      "nombre": "PAPAS GAJO complemento",
+      "descripcion": "Porción de papas gajo con queso nachos.",
+      "tamano": "chico",
+      "receta": [
+        {
+          "cantidad": 140,
+          "ingredienteId": "ing_1754735082679_fxe7"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_jxo7",
+          "cantidad": 35
+        }
+      ],
+      "precio": 25,
+      "clasificacion": "complemento",
+      "estacion": "freidora",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "clasificacion": "complemento",
+      "descripcion": "Porción de papas francesas con queso nachos.",
+      "tamano": "chico",
+      "costo": 13.950000000000001,
+      "id": "p_1754909826560_w16r",
+      "categoria": "Complementos",
+      "nombre": "PAPAS FRANCESAS complemento",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_husg",
+          "cantidad": 140
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_jxo7",
+          "cantidad": 35
+        }
+      ],
+      "precio": 25,
+      "estacion": "freidora"
+    },
+    {
+      "categoria": "Complementos",
+      "estacion": "freidora",
+      "costo": 27.450000000000003,
+      "clasificacion": "complemento",
+      "receta": [
+        {
+          "cantidad": 280,
+          "ingredienteId": "ing_1754735082679_fxe7"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 35,
+          "ingredienteId": "ing_1754735082679_jxo7"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        }
+      ],
+      "precio": 65,
+      "tamano": "mediano",
+      "descripcion": "Papas gajo medianas con queso nachos en charola.",
+      "nombre": "PAPAS GAJO MEDIANAS",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1754910418104_rwxo"
+    },
+    {
+      "precio": 65,
+      "nombre": "Cocacola 3 L",
+      "costo": 44,
+      "id": "p_1754970725945_qa5b",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "descripcion": "cocacola 3 Litros",
+      "clasificacion": "bebida",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754975796356_xe05",
+          "cantidad": 1
+        }
+      ],
+      "categoria": "Bebidas",
+      "tamano": ""
+    },
+    {
+      "categoria": "Hamburguesas",
+      "estacion": "parrilla",
+      "costo": 42.56999999999999,
+      "receta": [
+        {
+          "cantidad": 40,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_vhz3"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_u48q",
+          "cantidad": 10
+        },
+        {
+          "ingredienteId": "ing_1754735082679_k26g",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_22s6"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735690356_6ak7"
+        }
+      ],
+      "precio": 105,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "tamano": "",
+      "descripcion": "Hamburguesa doble carne con queso manchego, tocino y vegetales.",
+      "clasificacion": "hamburguesa",
+      "nombre": "PREMIUM",
+      "id": "p_1754972366631_m8xw"
+    },
+    {
+      "id": "p_1756014173469_ktfn",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_yll0",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 3
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_jxo7",
+          "cantidad": 30
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_ji2l"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_zn2w",
+          "cantidad": 30
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_22s6"
+        },
+        {
+          "cantidad": 15,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_pxl8",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735690356_6ak7"
+        },
+        {
+          "cantidad": 280,
+          "ingredienteId": "ing_1754735082679_fxe7"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_euyv",
+          "cantidad": 6
+        },
+        {
+          "ingredienteId": "ing_1754975770408_pgsk",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        }
+      ],
+      "precio": 185,
+      "nombre": "COMBO SUBLIME",
+      "costo": 107.34619047619049,
+      "descripcion": "Hamburguesa mas papas mas cocacola",
+      "clasificacion": "combo",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "receta": [
+        {
+          "cantidad": 40,
+          "ingredienteId": "ing_1754735082679_3wci"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_vhz3",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_u48q",
+          "cantidad": 15
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_k26g"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_tipo"
+        }
+      ],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "SALCHIBURGER",
+      "id": "p_1756182065160_w2yv",
+      "precio": 125,
+      "estacion": "parrilla",
+      "clasificacion": "hamburguesa",
+      "tamano": "",
+      "categoria": "Hamburguesas",
+      "costo": 51.919999999999995,
+      "descripcion": "Hamburguesa doble carne con queso manchego, tocino y vegetales."
+    },
+    {
+      "descripcion": "Papas francesas grandes con queso nachos en charola grande.",
+      "costo": 40.6,
+      "precio": 100,
+      "nombre": "Salchipapas Medianas",
+      "id": "p_1761972123399_s52g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "tamano": "mediano",
+      "clasificacion": "complemento",
+      "categoria": "Complementos",
+      "estacion": "freidora",
+      "receta": [
+        {
+          "cantidad": 300,
+          "ingredienteId": "ing_1754735082679_husg"
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 50,
+          "ingredienteId": "ing_1754735082679_jxo7"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_tipo",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Salchipapas XL",
+      "clasificacion": "complemento",
+      "estacion": "freidora",
+      "categoria": "Complementos",
+      "tamano": "grande",
+      "descripcion": "Papas francesas grandes con queso nachos en charola grande.",
+      "receta": [
+        {
+          "cantidad": 600,
+          "ingredienteId": "ing_1754735082679_husg"
+        },
+        {
+          "cantidad": 4,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 100,
+          "ingredienteId": "ing_1754735082679_jxo7"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_tipo"
+        }
+      ],
+      "precio": 140,
+      "costo": 78,
+      "id": "p_1761972171979_svb4"
+    },
+    {
+      "tamano": "",
+      "precio": 680,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Familiar",
+      "receta": [],
+      "descripcion": "",
+      "costo": 0,
+      "comboConfig": {
+        "complementos": {
+          "cantidad": 2
+        },
+        "hamburguesas": {
+          "cantidad": 5
+        },
+        "bebidas": {
+          "cantidad": 1
+        }
+      },
+      "tipo": "combo",
+      "clasificacion": "combo",
+      "id": "p_1762246721038_l53o"
+    },
+    {
+      "costo": 0,
+      "descripcion": "Papas gajo XL con queso nachos en charola grande.",
+      "precio": 120,
+      "estacion": "freidora",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "categoria": "Complementos",
+      "receta": [],
+      "nombre": "PAPAS GAJO XL",
+      "id": "p_1762302873739_fify"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precio": 120,
+      "id": "p_1762313759804_j5ad",
+      "estacion": "freidora",
+      "receta": [],
+      "categoria": "Complementos",
+      "descripcion": "Papas francesas XL con queso nachos en charola grande.",
+      "costo": 0,
+      "nombre": "PAPAS FRANCESAS XL"
+    },
+    {
+      "tamano": "mediano",
+      "costo": 27.53619047619048,
+      "id": "p_1762246692104_8ocy",
+      "categoria": "Complementos",
+      "nombre": "AROS MEDIANOS",
+      "estacion": "freidora",
+      "clasificacion": "complemento",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "cantidad": 8,
+          "ingredienteId": "ing_1754735082679_euyv"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 30,
+          "ingredienteId": "ing_1754735082679_zn2w"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        }
+      ],
+      "descripcion": "8 piezas de aros de cebolla.",
+      "precio": 50
+    },
+    {
+      "descripcion": "15 piezas de aros de cebolla.",
+      "costo": 52.53968253968254,
+      "clasificacion": "complemento",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1762246692147_p2oy",
+      "estacion": "freidora",
+      "nombre": "AROS XL",
+      "receta": [
+        {
+          "cantidad": 15,
+          "ingredienteId": "ing_1754735082679_euyv"
+        },
+        {
+          "cantidad": 2,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "cantidad": 55,
+          "ingredienteId": "ing_1754735082679_zn2w"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_yll0"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_puec",
+          "cantidad": 1
+        }
+      ],
+      "categoria": "Complementos",
+      "tamano": "grande",
+      "precio": 95
+    },
+    {
+      "comboConfig": {
+        "complementos": {
+          "cantidad": 2
+        },
+        "hamburguesas": {
+          "cantidad": 3
+        }
+      },
+      "nombre": "Amigos",
+      "descripcion": "",
+      "clasificacion": "combo",
+      "tamano": "",
+      "receta": [],
+      "id": "p_1762250264700_t4am",
+      "tipo": "combo",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "costo": 0,
+      "precio": 380
+    },
+    {
+      "precio": 190,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "tipo": "combo",
+      "receta": [],
+      "descripcion": "",
+      "tamano": "",
+      "nombre": "DUO",
+      "clasificacion": "combo",
+      "comboConfig": {
+        "hamburguesas": {
+          "cantidad": 1
+        },
+        "complementos": {
+          "cantidad": 1
+        },
+        "hotdogs": {
+          "cantidad": 1
+        }
+      },
+      "id": "p_1762250461918_yr88",
+      "costo": 0
+    },
+    {
+      "descripcion": "",
+      "tamano": "",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1762250304793_2l0s",
+      "costo": 0,
+      "nombre": "Triple DOG",
+      "tipo": "combo",
+      "clasificacion": "combo",
+      "comboConfig": {
+        "hotdogs": {
+          "cantidad": 3
+        },
+        "complementos": {
+          "cantidad": 1
+        }
+      },
+      "receta": [],
+      "precio": 215
+    },
+    {
+      "categoria": "Postres",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_atij",
+          "cantidad": 450
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_15x2"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_bamr",
+          "cantidad": 90
+        },
+        {
+          "cantidad": 760,
+          "ingredienteId": "ing_1754735082679_cxca"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "ingredienteId": "ing_1754980976279_9f2b",
+          "cantidad": 4
+        },
+        {
+          "cantidad": 8,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754976582573_0fkw",
+          "cantidad": 100
+        },
+        {
+          "ingredienteId": "ing_1754976595379_uaz1",
+          "cantidad": 9
+        },
+        {
+          "cantidad": 250,
+          "ingredienteId": "ing_1754976246895_70hm"
+        }
+      ],
+      "nombre": "CHESSCAKE Kinder Delice Lotus",
+      "costo": 261.6960359143658,
+      "precio": 680,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "clasificacion": "postre",
+      "id": "p_1764917396252_ih2q",
+      "tamano": "",
+      "descripcion": "Chesscake Grande de Kinder Delice"
+    },
+    {
+      "estacion": "parrilla",
+      "clasificacion": "hamburguesa",
+      "categoria": "Hamburguesas",
+      "nombre": "GuacamoleBurger",
+      "tamano": "",
+      "descripcion": "",
+      "costo": 55.669999999999995,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1765172388858_a0tj",
+      "precio": 140,
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_3wci",
+          "cantidad": 40
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_23rw"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_vhz3"
+        },
+        {
+          "cantidad": 15,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_k26g",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_lq9x"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_z0pa",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 40,
+          "ingredienteId": "ing_1765172361154_nu9t"
+        },
+        {
+          "ingredienteId": "ing_1765172348843_tvuc",
+          "cantidad": 1
+        }
+      ]
+    },
+    {
+      "precio": 150,
+      "costo": 67.02,
+      "clasificacion": "hamburguesa",
+      "descripcion": "",
+      "tamano": "",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_3wci",
+          "cantidad": 40
+        },
+        {
+          "ingredienteId": "ing_1754735082679_23rw",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_vhz3",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 15,
+          "ingredienteId": "ing_1754735082679_u48q"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_k26g"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_z0pa"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 150,
+          "ingredienteId": "ing_1764545628939_ygtp"
+        }
+      ],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "estacion": "parrilla",
+      "id": "p_1765173818175_4v01",
+      "nombre": "BonelesBurger",
+      "categoria": "Hamburguesas"
+    },
+    {
+      "descripcion": "Hamburguesa doble carne con queso manchego, tocino y vegetales.",
+      "costo": 31.94,
+      "tamano": "",
+      "receta": [
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_vhz3"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_u48q",
+          "cantidad": 10
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_k26g"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_z0pa",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735082679_22s6",
+          "cantidad": 1
+        },
+        {
+          "ingredienteId": "ing_1754735690356_6ak7",
+          "cantidad": 1
+        }
+      ],
+      "clasificacion": "hamburguesa",
+      "categoria": "Hamburguesas",
+      "id": "p_1765233687894_7fhh",
+      "precio": 90,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "estacion": "parrilla",
+      "nombre": "SENCILLA"
+    },
+    {
+      "comboConfig": {
+        "hamburguesas": {
+          "cantidad": 1
+        },
+        "complementos": {
+          "cantidad": 2
+        }
+      },
+      "costo": 45,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "clasificacion": "combo",
+      "precio": 215,
+      "id": "p_1767509530132_3lgr",
+      "tipo": "combo",
+      "categoria": "Combos",
+      "descripcion": "",
+      "nombre": "Combo Boneles"
+    },
+    {
+      "receta": [
+        {
+          "cantidad": 250,
+          "ingredienteId": "ing_1764545628939_ygtp"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_hg44"
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        }
+      ],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precio": 0,
+      "tipo": "individual",
+      "descripcion": "",
+      "clasificacion": "boneles",
+      "nombre": "Boneles",
+      "categoria": "Boneles",
+      "id": "p_1767512826451_lji2",
+      "costo": 43.199999999999996,
+      "tamano": ""
+    },
+    {
+      "clasificacion": "combo",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "tipo": "combo",
+      "comboConfig": {
+        "categorias": [
+          {
+            "categoria": "Boneles",
+            "cantidad": 2
+          },
+          {
+            "categoria": "Complementos",
+            "cantidad": 1
+          },
+          {
+            "categoria": "Salsas",
+            "cantidad": 2
+          }
+        ]
+      },
+      "id": "p_1767512982330_4l58",
+      "nombre": "Boneles 500Grs",
+      "precio": 250,
+      "categoria": "Boneles",
+      "descripcion": "500 gramos de boneles",
+      "costo": 0
+    },
+    {
+      "receta": [
+        {
+          "cantidad": 50,
+          "ingredienteId": "ing_1754735082679_zkt6"
+        }
+      ],
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "tamano": "",
+      "descripcion": "salsa bbq",
+      "nombre": "BBQ DULCE",
+      "costo": 3.5000000000000004,
+      "categoria": "Salsas",
+      "id": "p_1767511447339_fs8h",
+      "clasificacion": "salsas",
+      "tipo": "individual",
+      "precio": 0
+    },
+    {
+      "precio": 0,
+      "categoria": "Salsas",
+      "descripcion": "",
+      "tipo": "individual",
+      "nombre": "Parmesano",
+      "costo": 15.851984126984128,
+      "clasificacion": "salsas",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "p_1767511559565_vc2r",
+      "receta": [
+        {
+          "ingredienteId": "ing_1754735082679_zn2w",
+          "cantidad": 50
+        },
+        {
+          "cantidad": 35,
+          "ingredienteId": "ing_1767511480451_hx2x"
+        }
+      ],
+      "tamano": ""
+    },
+    {
+      "categoria": "Salsas",
+      "tipo": "individual",
+      "costo": 3.125,
+      "descripcion": "",
+      "nombre": "BBQ PICANTE",
+      "tamano": "",
+      "receta": [
+        {
+          "cantidad": 50,
+          "ingredienteId": "ing_1767511595826_dnh6"
+        }
+      ],
+      "precio": 0,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "clasificacion": "salsas",
+      "id": "p_1767511635316_swlm"
+    },
+    {
+      "clasificacion": "",
+      "costo": 43.199999999999996,
+      "precio": 0,
+      "tipo": "individual",
+      "categoria": "",
+      "descripcion": "",
+      "nombre": "Boneles 250grs",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "receta": [
+        {
+          "ingredienteId": "ing_1764545628939_ygtp",
+          "cantidad": 250
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_hg44",
+          "cantidad": 1
+        }
+      ],
+      "tamano": "",
+      "id": "p_1767512671227_c6e1"
+    },
+    {
+      "descripcion": "",
+      "categoria": "Boneles",
+      "comboConfig": {
+        "categorias": [
+          {
+            "categoria": "Boneles",
+            "cantidad": 1
+          },
+          {
+            "categoria": "Complementos",
+            "cantidad": 1
+          },
+          {
+            "categoria": "Salsas",
+            "cantidad": 1
+          }
+        ]
+      },
+      "tipo": "combo",
+      "clasificacion": "combo",
+      "costo": 0,
+      "nombre": "Boneles 250 Con papas",
+      "id": "p_1767512729905_mho1",
+      "precio": 130,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "precio": 70,
+      "descripcion": "",
+      "categoria": "Complementos",
+      "clasificacion": "complemento",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Dedos de queso",
+      "costo": 49.27619047619047,
+      "id": "p_1767834594702_tkef",
+      "tamano": "chico",
+      "tipo": "individual",
+      "receta": [
+        {
+          "ingredienteId": "ing_1767834513246_834n",
+          "cantidad": 6
+        },
+        {
+          "ingredienteId": "ing_1754735082679_zn2w",
+          "cantidad": 30
+        },
+        {
+          "ingredienteId": "ing_1754735082679_lq9x",
+          "cantidad": 1
+        },
+        {
+          "cantidad": 1,
+          "ingredienteId": "ing_1754735082679_puec"
+        },
+        {
+          "ingredienteId": "ing_1754735082679_yll0",
+          "cantidad": 1
+        }
+      ]
+    }
+  ],
+  "ingredientes": [
+    {
+      "nombre": "Galletas Marbu",
+      "unidad": "unidad",
+      "unidadesPaquete": 1,
+      "precioPaquete": 20,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754735082679_15x2"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 18,
+      "nombre": "Cocacola 600Ml",
+      "unidadesPaquete": 1,
+      "id": "ing_1754735082679_18da",
+      "unidad": "unidad"
+    },
+    {
+      "nombre": "Harina",
+      "id": "ing_1754735082679_1sep",
+      "precioPaquete": 20,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 1000,
+      "unidad": "g"
+    },
+    {
+      "nombre": "BIMBOLLO",
+      "unidad": "unidad",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 93.96,
+      "unidadesPaquete": 12,
+      "id": "ing_1754735082679_22s6"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "unidad",
+      "nombre": "TOCINO",
+      "id": "ing_1754735082679_23rw",
+      "unidadesPaquete": 20,
+      "precioPaquete": 75
+    },
+    {
+      "unidad": "g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754735082679_3wci",
+      "nombre": "QUESO MANCHEGO",
+      "precioPaquete": 172,
+      "unidadesPaquete": 1000
+    },
+    {
+      "id": "ing_1754735082679_7jxd",
+      "unidad": "unidad",
+      "nombre": "PAN HOTDOG",
+      "unidadesPaquete": 12,
+      "precioPaquete": 69.96,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "id": "ing_1754735082679_95rh",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 80,
+      "unidad": "g",
+      "nombre": "Azucar Mascabada",
+      "unidadesPaquete": 2000
+    },
+    {
+      "precioPaquete": 39,
+      "unidadesPaquete": 1,
+      "id": "ing_1754735082679_asp9",
+      "nombre": "Cocacola 1.75",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "unidad"
+    },
+    {
+      "id": "ing_1754735082679_atij",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 3920,
+      "precioPaquete": 264.4,
+      "nombre": "Crema lala 4L",
+      "unidad": "g"
+    },
+    {
+      "id": "ing_1754735082679_bamr",
+      "unidad": "g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 1170,
+      "precioPaquete": 269.1,
+      "nombre": "Mantequilla Gloria"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "g",
+      "nombre": "Cocoa",
+      "precioPaquete": 90,
+      "unidadesPaquete": 250,
+      "id": "ing_1754735082679_bsxk"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Queso Crema",
+      "unidadesPaquete": 1360,
+      "precioPaquete": 162,
+      "unidad": "g",
+      "id": "ing_1754735082679_cxca"
+    },
+    {
+      "nombre": "Maicena",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754735082679_dq0n",
+      "unidad": "g",
+      "precioPaquete": 30,
+      "unidadesPaquete": 300
+    },
+    {
+      "precioPaquete": 272,
+      "unidad": "unidad",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 100,
+      "id": "ing_1754735082679_euyv",
+      "nombre": "AROS DE CEBOLLA"
+    },
+    {
+      "id": "ing_1754735082679_fxe7",
+      "unidad": "g",
+      "unidadesPaquete": 2000,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "PAPAS GAJO",
+      "precioPaquete": 160
+    },
+    {
+      "unidad": "g",
+      "id": "ing_1754735082679_ggyh",
+      "nombre": "Crema Avellana",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 220,
+      "unidadesPaquete": 2000
+    },
+    {
+      "unidad": "unidad",
+      "unidadesPaquete": 50,
+      "nombre": "CHAROLA UNISEL",
+      "precioPaquete": 145,
+      "id": "ing_1754735082679_hg44",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "unidadesPaquete": 2000,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "g",
+      "precioPaquete": 160,
+      "nombre": "PAPAS FRANCESAS",
+      "id": "ing_1754735082679_husg"
+    },
+    {
+      "precioPaquete": 144,
+      "unidad": "unidad",
+      "nombre": "Catsup",
+      "id": "ing_1754735082679_ji2l",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 200
+    },
+    {
+      "nombre": "Costillas",
+      "unidadesPaquete": 1000,
+      "unidad": "g",
+      "id": "ing_1754735082679_jrzs",
+      "precioPaquete": 150,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "QUESO NACHOS",
+      "unidad": "g",
+      "id": "ing_1754735082679_jxo7",
+      "unidadesPaquete": 4000,
+      "precioPaquete": 200
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "QUESO AMERICANO",
+      "id": "ing_1754735082679_k26g",
+      "unidadesPaquete": 90,
+      "precioPaquete": 162.9,
+      "unidad": "unidad"
+    },
+    {
+      "id": "ing_1754735082679_l6jw",
+      "unidadesPaquete": 1000,
+      "precioPaquete": 200,
+      "unidad": "g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Chispas de Chocolate"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "BOTECITO",
+      "precioPaquete": 100,
+      "unidadesPaquete": 100,
+      "unidad": "unidad",
+      "id": "ing_1754735082679_lq9x"
+    },
+    {
+      "id": "ing_1754735082679_lwea",
+      "precioPaquete": 494,
+      "unidadesPaquete": 1900,
+      "nombre": "Queso Bola",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "g"
+    },
+    {
+      "precioPaquete": 86,
+      "id": "ing_1754735082679_ne1c",
+      "nombre": "AGUAS",
+      "unidad": "unidad",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 18
+    },
+    {
+      "unidad": "unidad",
+      "precioPaquete": 300,
+      "unidadesPaquete": 1000,
+      "id": "ing_1754735082679_puec",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "PAPEL GRADO ALIMENTICIO"
+    },
+    {
+      "unidad": "unidad",
+      "unidadesPaquete": 1,
+      "nombre": "Vegetales",
+      "id": "ing_1754735082679_pxl8",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 8
+    },
+    {
+      "unidadesPaquete": 20,
+      "nombre": "SALCHICHAS JUMBO",
+      "precioPaquete": 178,
+      "unidad": "unidad",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754735082679_tipo"
+    },
+    {
+      "precioPaquete": 306,
+      "id": "ing_1754735082679_u48q",
+      "unidadesPaquete": 3400,
+      "unidad": "g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "MAYONESA"
+    },
+    {
+      "nombre": "Pepinillos",
+      "precioPaquete": 140,
+      "id": "ing_1754735082679_uhxd",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 2000,
+      "unidad": "g"
+    },
+    {
+      "unidad": "unidad",
+      "nombre": "Vegetales Hotdog",
+      "unidadesPaquete": 1,
+      "precioPaquete": 4,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754735082679_vhz3"
+    },
+    {
+      "unidadesPaquete": 25,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "unidad",
+      "precioPaquete": 50,
+      "id": "ing_1754735082679_yll0",
+      "nombre": "CHAROLA PEQUEÑA"
+    },
+    {
+      "precioPaquete": 2,
+      "id": "ing_1754735082679_z0pa",
+      "nombre": "CHILES",
+      "unidad": "unidad",
+      "unidadesPaquete": 2,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "id": "ing_1754735082679_zcd1",
+      "unidad": "g",
+      "nombre": "Royal",
+      "unidadesPaquete": 500,
+      "precioPaquete": 30,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "nombre": "SALSA BBQ",
+      "id": "ing_1754735082679_zkt6",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 42,
+      "unidadesPaquete": 600,
+      "unidad": "g"
+    },
+    {
+      "nombre": "Ranch",
+      "id": "ing_1754735082679_zn2w",
+      "precioPaquete": 312,
+      "unidad": "mL",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 3780
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 10,
+      "id": "ing_1754735690356_6ak7",
+      "unidad": "pz",
+      "precioPaquete": 125,
+      "nombre": "CARNE HAMBURGUESA"
+    },
+    {
+      "unidad": "pz",
+      "nombre": "Cocacola 600 ml",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 390,
+      "id": "ing_1754975770408_pgsk",
+      "unidadesPaquete": 24
+    },
+    {
+      "unidadesPaquete": 1,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "pz",
+      "nombre": "Cocacola 3 L",
+      "id": "ing_1754975796356_xe05",
+      "precioPaquete": 44
+    },
+    {
+      "unidadesPaquete": 1000,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754976246895_70hm",
+      "nombre": "azucar",
+      "unidad": "g",
+      "precioPaquete": 20
+    },
+    {
+      "unidadesPaquete": 24,
+      "unidad": "PZ",
+      "precioPaquete": 121,
+      "nombre": "Piña",
+      "id": "ing_1754976321635_y3ve",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "precioPaquete": 160,
+      "unidad": "pz",
+      "nombre": "Kinder Delice",
+      "unidadesPaquete": 15,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754976350832_hhih"
+    },
+    {
+      "nombre": "Chantiyi",
+      "id": "ing_1754976386658_hw8w",
+      "unidad": "g",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 130,
+      "unidadesPaquete": 2000
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Mermelada de Fresa",
+      "unidadesPaquete": 1000,
+      "unidad": "g",
+      "precioPaquete": 70,
+      "id": "ing_1754976424915_cs2b"
+    },
+    {
+      "unidad": "g",
+      "nombre": "Crema lotus",
+      "id": "ing_1754976582573_0fkw",
+      "precioPaquete": 160,
+      "unidadesPaquete": 400,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "id": "ing_1754976595379_uaz1",
+      "unidadesPaquete": 128,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidad": "u",
+      "nombre": "Galleta lotus",
+      "precioPaquete": 260
+    },
+    {
+      "unidad": "pz",
+      "unidadesPaquete": 20,
+      "precioPaquete": 190,
+      "nombre": "Chorizo Argentino",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1754977239878_0d2j"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 210,
+      "unidadesPaquete": 1000,
+      "nombre": "Chistorra",
+      "id": "ing_1754977287336_srni",
+      "unidad": "g"
+    },
+    {
+      "unidadesPaquete": 30,
+      "unidad": "pz",
+      "id": "ing_1754980976279_9f2b",
+      "nombre": "Huevos",
+      "precioPaquete": 100,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "nombre": "Nachos",
+      "id": "ing_1755717629544_yc9z",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "precioPaquete": 40,
+      "unidad": "grs",
+      "unidadesPaquete": 500
+    },
+    {
+      "precioPaquete": 75,
+      "nombre": "empaque 3 Libras",
+      "unidadesPaquete": 50,
+      "id": "ing_1755717653335_yyai",
+      "unidad": "pz",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "BONELES",
+      "unidad": "g",
+      "unidadesPaquete": 1000,
+      "id": "ing_1764545628939_ygtp",
+      "precioPaquete": 160
+    },
+    {
+      "precioPaquete": 50,
+      "nombre": "Salchicha Roja",
+      "unidad": "unidad",
+      "id": "ing_1765172348843_tvuc",
+      "unidadesPaquete": 8,
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72"
+    },
+    {
+      "unidadesPaquete": 500,
+      "precioPaquete": 80,
+      "unidad": "g",
+      "nombre": "Guacamole",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "id": "ing_1765172361154_nu9t"
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "unidadesPaquete": 2000,
+      "unidad": "g",
+      "id": "ing_1767511480451_hx2x",
+      "nombre": "parmesano",
+      "precioPaquete": 670
+    },
+    {
+      "id": "ing_1767511595826_dnh6",
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "BBQ PICANTE",
+      "precioPaquete": 250,
+      "unidad": "g",
+      "unidadesPaquete": 4000
+    },
+    {
+      "userId": "Gi7lpYblceRCzebBIL6si5NoTU72",
+      "nombre": "Dedos de queso",
+      "precioPaquete": 290,
+      "id": "ing_1767834513246_834n",
+      "unidad": "pz",
+      "unidadesPaquete": 40
+    }
+  ],
+  "exportDate": "2026-01-10T23:57:49.103Z",
+  "version": "1.0"
+}

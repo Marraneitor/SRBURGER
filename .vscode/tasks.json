@@ -4,7 +4,24 @@
 		{
 			"type": "shell",
 			"label": "Abrir web local Burger",
-			"command": "start msedge index.html"
+			"command": "start msedge paginaburger.html"
+		},
+		{
+			"type": "shell",
+			"label": "Abrir página de combos",
+			"command": "start msedge paginaburger.html"
+		},
+		{
+			"label": "Run server",
+			"type": "shell",
+			"command": "npm start",
+			"group": "build"
+		},
+		{
+			"label": "Run dev LAN",
+			"type": "shell",
+			"command": "npm run dev:lan",
+			"group": "build"
 		}
 	]
 }

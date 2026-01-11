@@ -1,0 +1,390 @@
+/* SR & SRA BURGER — Global UI Theme (UI-only)
+   - Paleta: verdes, blancos, grises oscuros premium
+   - No toca IDs ni lógica: solo estética
+*/
+
+:root{
+  --sr-green: #16A34A;
+  --sr-green-dark: #15803D;
+  --sr-green-darker: #14532D;
+  --sr-red: #DC2626;
+  --sr-bg: #F8F9FA;
+  --sr-surface: #FFFFFF;
+  --sr-surface-2: #F1F5F9;
+  --sr-text: #0F172A;
+  --sr-muted: #64748B;
+  --sr-border: #E2E8F0;
+  --sr-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --sr-shadow-hover: 0 18px 45px rgba(15, 23, 42, 0.14);
+  --sr-radius: 24px;
+  --sr-radius-lg: 28px;
+  --sr-transition: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Spacing tokens */
+  --sr-space-1: 0.25rem;
+  --sr-space-2: 0.5rem;
+  --sr-space-3: 0.75rem;
+  --sr-space-4: 1rem;
+  --sr-space-5: 1.25rem;
+  --sr-space-6: 1.5rem;
+}
+
+/* === Dark Theme (activar con <html class="sr-dark">) === */
+html.sr-dark{
+  color-scheme: dark;
+  --sr-bg: #0B1220;
+  --sr-surface: #0F172A;
+  --sr-surface-2: #111827;
+  --sr-text: #E5E7EB;
+  --sr-muted: #94A3B8;
+  --sr-border: rgba(148,163,184,0.18);
+  --sr-shadow: 0 12px 35px rgba(0,0,0,0.45);
+  --sr-shadow-hover: 0 18px 60px rgba(0,0,0,0.55);
+}
+
+html, body {
+  font-family: Inter, Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+body{
+  background: linear-gradient(180deg, var(--sr-bg) 0%, #FFFFFF 70%, var(--sr-bg) 100%);
+  color: var(--sr-text);
+}
+
+html.sr-dark body{
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(22,163,74,0.18), rgba(0,0,0,0) 55%),
+    radial-gradient(900px 500px at 80% 0%, rgba(59,130,246,0.10), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, var(--sr-bg) 0%, #060B14 70%, var(--sr-bg) 100%);
+  color: var(--sr-text);
+}
+
+html.sr-dark header{
+  background-color: rgba(15, 23, 42, 0.70) !important;
+  border-bottom: 1px solid var(--sr-border);
+}
+
+/* Remapeo masivo de Tailwind utility colors (para no reescribir todo el HTML) */
+html.sr-dark [class*="bg-white"]{ background-color: var(--sr-surface) !important; }
+html.sr-dark [class*="bg-gray-50"]{ background-color: rgba(15,23,42,0.55) !important; }
+html.sr-dark [class*="bg-gray-100"]{ background-color: rgba(15,23,42,0.75) !important; }
+
+/* Imágenes: mejor escalado en pantallas de alta densidad */
+img{
+  image-rendering: auto;
+  image-rendering: smooth;
+}
+
+/* Skeleton shimmer (placeholder visual mientras carga la imagen) */
+@keyframes sr-skeleton-loading{
+  0%{ background-position: -200px 0; }
+  100%{ background-position: calc(200px + 100%) 0; }
+}
+
+.sr-skeleton{
+  background: linear-gradient(
+    90deg,
+    rgba(148,163,184,0.16) 25%,
+    rgba(148,163,184,0.26) 50%,
+    rgba(148,163,184,0.16) 75%
+  );
+  background-size: 200px 100%;
+  animation: sr-skeleton-loading 1.5s infinite;
+}
+
+html.dark .sr-skeleton,
+html.sr-dark .sr-skeleton{
+  background: linear-gradient(
+    90deg,
+    rgba(148,163,184,0.10) 25%,
+    rgba(148,163,184,0.18) 50%,
+    rgba(148,163,184,0.10) 75%
+  );
+  background-size: 200px 100%;
+}
+
+/* Fade-in suave cuando la imagen ya cargó */
+.sr-img-init{ opacity: 0; }
+.sr-img-loaded{ opacity: 1; transition: opacity 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+html.sr-dark [class*="border-gray-100"],
+html.sr-dark [class*="border-gray-200"],
+html.sr-dark [class*="border-slate-200"],
+html.sr-dark [class*="border-slate-300"]{ border-color: var(--sr-border) !important; }
+
+html.sr-dark [class*="text-gray-900"],
+html.sr-dark [class*="text-slate-900"],
+html.sr-dark [class*="text-gray-800"]{ color: var(--sr-text) !important; }
+html.sr-dark [class*="text-gray-600"],
+html.sr-dark [class*="text-gray-500"],
+html.sr-dark [class*="text-slate-600"],
+html.sr-dark [class*="text-slate-500"]{ color: var(--sr-muted) !important; }
+
+html.sr-dark [class*="shadow" ]{ box-shadow: var(--sr-shadow) !important; }
+
+/* Inputs (dark) */
+html.sr-dark input,
+html.sr-dark select,
+html.sr-dark textarea{
+  background-color: rgba(2, 6, 23, 0.35);
+  color: var(--sr-text);
+  border-color: var(--sr-border);
+}
+
+html.sr-dark input::placeholder,
+html.sr-dark textarea::placeholder{
+  color: rgba(148,163,184,0.85);
+}
+
+/* Links */
+html.sr-dark a{ color: inherit; }
+
+/* Consistencia header/footer */
+header{
+  backdrop-filter: blur(10px);
+}
+
+/* Cards premium */
+.sr-card{
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  box-shadow: var(--sr-shadow);
+}
+
+.sr-card-soft{
+  background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(241,245,249,0.75));
+  border: 1px solid rgba(226,232,240,0.9);
+  border-radius: var(--sr-radius);
+  box-shadow: var(--sr-shadow);
+}
+
+/* sr-dark: sr-card-soft debe ser oscuro para buen contraste */
+html.sr-dark .sr-card-soft{
+  background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(17,24,39,0.80));
+  border-color: var(--sr-border);
+}
+
+/* Botones premium (micro-interacciones) */
+.sr-btn{
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  border-radius: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: transform var(--sr-transition), box-shadow var(--sr-transition), filter var(--sr-transition), background-color var(--sr-transition), border-color var(--sr-transition);
+  will-change: transform;
+  touch-action: manipulation;
+}
+
+.sr-btn:hover{
+  transform: translateY(-2px);
+  box-shadow: var(--sr-shadow-hover);
+  filter: saturate(1.05);
+}
+
+.sr-btn:active{
+  transform: translateY(-1px);
+}
+
+.sr-btn-primary{
+  background: linear-gradient(135deg, var(--sr-green) 0%, var(--sr-green-dark) 55%, var(--sr-green-darker) 100%);
+  color: #fff;
+}
+
+.sr-btn-secondary{
+  background: rgba(22,163,74,0.10);
+  border: 1px solid rgba(22,163,74,0.30);
+  color: var(--sr-text);
+}
+
+.sr-btn-ghost{
+  background: rgba(15,23,42,0.04);
+  border: 1px solid rgba(15,23,42,0.10);
+  color: var(--sr-text);
+}
+
+.sr-btn-danger{
+  background: rgba(220,38,38,0.08);
+  border: 1px solid rgba(220,38,38,0.22);
+  color: var(--sr-red);
+}
+
+.sr-btn:disabled,
+.sr-btn[aria-disabled="true"]{
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Badges / chips */
+.sr-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(241,245,249,0.8);
+  color: var(--sr-text);
+}
+.sr-badge--success{
+  border-color: rgba(22,163,74,0.25);
+  background: rgba(22,163,74,0.10);
+  color: var(--sr-green-dark);
+}
+.sr-badge--info{
+  border-color: rgba(59,130,246,0.22);
+  background: rgba(59,130,246,0.10);
+  color: #1D4ED8;
+}
+.sr-badge--danger{
+  border-color: rgba(220,38,38,0.22);
+  background: rgba(220,38,38,0.10);
+  color: var(--sr-red);
+}
+
+/* Touch targets helper */
+.sr-touch{
+  min-height: 44px;
+}
+
+/* Media square for product thumbs */
+.sr-media-square{
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(148,163,184,0.16);
+}
+.sr-media-square > img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Skeleton blocks for lists */
+.sr-skeleton-block{
+  border-radius: 16px;
+  border: 1px solid rgba(148,163,184,0.20);
+  background: rgba(148,163,184,0.10);
+}
+
+.sr-btn-ghost{
+  background: rgba(15,23,42,0.04);
+  border: 1px solid rgba(15,23,42,0.10);
+  color: var(--sr-text);
+}
+
+/* Títulos hero */
+.sr-title{
+  letter-spacing: -0.02em;
+}
+
+/* === Remapeo de acentos amarillos -> verde (sin reescribir todo el HTML) === */
+.text-yellow-600,
+.text-yellow-500{
+  color: var(--sr-green-dark) !important;
+}
+
+.bg-yellow-600,
+.bg-yellow-500{
+  background-color: var(--sr-green) !important;
+}
+
+.border-yellow-400,
+.border-yellow-500{
+  border-color: rgba(22,163,74,0.55) !important;
+}
+
+.ring-yellow-300,
+.ring-yellow-400,
+.focus\:ring-yellow-300:focus,
+.focus\:ring-yellow-400:focus,
+.focus\:ring-yellow-500:focus{
+  --tw-ring-color: rgba(34,197,94,0.55) !important;
+}
+
+.focus\:border-yellow-400:focus,
+.focus\:border-yellow-500:focus{
+  border-color: rgba(34,197,94,0.70) !important;
+}
+
+.from-yellow-400{ --tw-gradient-from: var(--sr-green) !important; --tw-gradient-to: rgba(22,163,74,0) !important; }
+.to-yellow-600{ --tw-gradient-to: var(--sr-green-dark) !important; }
+.via-yellow-400{ --tw-gradient-stops: var(--sr-green), var(--sr-green), var(--sr-green-dark) !important; }
+
+/* Inputs más premium sin tocar estructura */
+input, select, textarea{
+  border-radius: 14px;
+}
+
+/* Reducir bordes “toscos” en tablas, manteniendo legibilidad */
+table{
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Dark-ish pages: mantener estética premium sin romper contraste */
+.bg-slate-950{
+  background-color: #060B14 !important;
+}
+
+.bg-slate-900{
+  background-color: #0B1220 !important;
+}
+
+.border-slate-800{
+  border-color: rgba(148,163,184,0.16) !important;
+}
+
+.text-slate-50{
+  color: #F8FAFC !important;
+}
+
+/* Sutil upgrade a sombras Tailwind comunes */
+.shadow-lg{ box-shadow: var(--sr-shadow) !important; }
+.shadow-xl{ box-shadow: var(--sr-shadow-hover) !important; }
+
+/* Imagen específica: Combo Dúo (ID 15) -> mostrar completa (sin recorte) */
+img[data-item-id="15"]{
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Sticky cart (móvil): evita que tape contenido */
+body.sr-sticky-cart-visible{
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Accesibilidad: focus visible consistente */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+  outline: 2px solid rgba(22,163,74,0.65);
+  outline-offset: 2px;
+}
+
+/* Respeta Reduced Motion */
+@media (prefers-reduced-motion: reduce){
+  html:focus-within{ scroll-behavior: auto !important; }
+  *, *::before, *::after{
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin,
+  .sr-skeleton{
+    animation: none !important;
+  }
+  .menu-card,
+  .sr-btn{
+    transform: none !important;
+  }
+}

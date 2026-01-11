@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-users text-slate-900"></i>
+        </div>
+        <div>
+          <div class="font-bold text-lg">Panel de clientes</div>
+          <div class="text-xs text-slate-400">SR &amp; SRA BURGER</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-xs">
+        <a href="admin.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+          <i class="fas fa-sliders"></i>
+          <span>Panel de productos</span>
+        </a>
+        <a href="paginaburger.html" class="px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 flex items-center gap-1">
+          <i class="fas fa-store"></i>
+          <span>Ver web</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h1 class="text-xl font-black flex items-center gap-2">
+          <i class="fas fa-user-shield text-yellow-400"></i>
+          Clientes registrados
+        </h1>
+        <p class="text-xs text-slate-400">Solo se muestra información básica: nombre, teléfono, dirección y puntos.</p>
+      </div>
+      <div class="flex flex-col items-end gap-1 text-xs">
+        <div id="admin-auth-status" class="text-slate-400">Panel ADMIN protegido por contraseña.</div>
+      </div>
+    </section>
+
+    <section id="admin-guard" class="bg-red-950/40 border border-red-800 text-red-100 rounded-2xl p-4">
+      <div class="flex items-start gap-3">
+        <i class="fas fa-lock text-xl mt-0.5"></i>
+        <div class="flex-1 space-y-2">
+          <div>
+            <p class="font-semibold mb-1">Acceso solo para administrador</p>
+            <p class="text-xs">Ingresa la contraseña de administrador para ver todos los clientes y sus compras.</p>
+          </div>
+          <form id="admin-login-form" class="flex flex-col sm:flex-row gap-2 text-xs">
+            <input
+              id="admin-password"
+              type="password"
+              autocomplete="off"
+              placeholder="Contraseña de administrador"
+              class="flex-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-red-400/60 text-red-50 placeholder:text-red-200/60 focus:outline-none focus:ring-1 focus:ring-red-400"
+            />
+            <button
+              id="admin-login-btn"
+              type="submit"
+              class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-xs font-semibold flex items-center gap-1">
+              <i class="fas fa-unlock"></i>
+              <span>Entrar al panel ADMIN</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin-content" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-4 hidden">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-300">
+            <i class="fas fa-users"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400">Total de clientes</p>
+            <p id="clientes-count" class="text-lg font-bold">0</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1 max-w-xs">
+            <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input id="search-input" type="text" placeholder="Buscar por nombre..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400" />
+          </div>
+          <button id="reload-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1">
+            <i class="fas fa-rotate"></i>
+            <span>Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="clientes-empty" class="text-xs text-slate-400 py-4 hidden">
+        No hay clientes registrados aún.
+      </div>
+
+       <div class="overflow-x-auto">
+         <table class="min-w-full text-xs">
+           <thead class="bg-slate-900 text-slate-400 border-b border-slate-800">
+             <tr>
+               <th class="px-3 py-2 text-left font-semibold">Nombre</th>
+               <th class="px-3 py-2 text-left font-semibold">Teléfono</th>
+               <th class="px-3 py-2 text-left font-semibold">Dirección</th>
+               <th class="px-3 py-2 text-right font-semibold">Puntos</th>
+               <th class="px-3 py-2 text-right font-semibold">Acciones</th>
+             </tr>
+           </thead>
+           <tbody id="clientes-body" class="divide-y divide-slate-800"></tbody>
+         </table>
+       </div>
+    </section>
+  </main>
+
+  <!-- Modal de historial de compras por cliente -->
+  <div id="orders-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-30 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col">
+      <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400">Historial de compras</p>
+          <h2 id="orders-modal-title" class="text-sm font-bold">Cliente</h2>
+        </div>
+        <button id="orders-modal-close" class="text-slate-400 hover:text-slate-100 text-lg">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      <div class="px-4 py-2 text-xs text-slate-400 border-b border-slate-800" id="orders-modal-subtitle"></div>
+      <div class="flex-1 overflow-y-auto">
+        <div id="orders-modal-empty" class="p-4 text-xs text-slate-400 hidden">
+          Este cliente aún no tiene compras registradas.
+        </div>
+        <div id="orders-modal-table" class="overflow-x-auto hidden">
+          <table class="min-w-full text-xs">
+            <thead class="bg-slate-900/80 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-3 py-2 text-left font-semibold">Fecha</th>
+                <th class="px-3 py-2 text-left font-semibold">Detalle</th>
+                <th class="px-3 py-2 text-right font-semibold">Total</th>
+                <th class="px-3 py-2 text-right font-semibold">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="orders-modal-body" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="px-4 py-2 border-t border-slate-800 text-[11px] text-slate-500">
+        Nota: Al eliminar un pedido solo se borra del historial y del panel de envíos. (Podemos ajustar puntos más adelante si lo necesitas.)
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script>
+    (function() {
+      const byId = (id) => document.getElementById(id);
+      function show(el) { el.classList.remove('hidden'); }
+      function hide(el) { el.classList.add('hidden'); }
+
+      function waitForClientManager(cb) {
+        let tries = 0;
+        const max = 50;
+        (function check() {
+          if (window.firebaseClientManager && window.firebaseAuth) {
+            cb(window.firebaseClientManager, window.firebaseAuth);
+          } else if (tries++ < max) {
+            setTimeout(check, 100);
+          } else {
+            const status = byId('admin-auth-status');
+            if (status) status.textContent = 'No se pudo inicializar Firebase.';
+          }
+        })();
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const guard = byId('admin-guard');
+        const content = byId('admin-content');
+        const status = byId('admin-auth-status');
+        const body = byId('clientes-body');
+        const empty = byId('clientes-empty');
+        const countEl = byId('clientes-count');
+        const searchInput = byId('search-input');
+        const reloadBtn = byId('reload-btn');
+        const adminPasswordInput = byId('admin-password');
+        const adminLoginBtn = byId('admin-login-btn');
+        const adminLoginForm = byId('admin-login-form');
+        const ordersModal = byId('orders-modal');
+        const ordersModalTitle = byId('orders-modal-title');
+        const ordersModalSubtitle = byId('orders-modal-subtitle');
+        const ordersModalClose = byId('orders-modal-close');
+        const ordersModalEmpty = byId('orders-modal-empty');
+        const ordersModalTable = byId('orders-modal-table');
+        const ordersModalBody = byId('orders-modal-body');
+
+        let allClients = [];
+        let currentManager = null;
+
+        waitForClientManager(function(manager, auth) {
+          currentManager = manager;
+          if (status) {
+            status.textContent = 'Ingresa la contraseña SEÑORBURGERADMIN para acceder al panel ADMIN.';
+          }
+
+          function handleAdminLogin(event) {
+            if (event && typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+            const password = (adminPasswordInput && adminPasswordInput.value ? adminPasswordInput.value : '').trim();
+            if (password === 'SEÑORBURGERADMIN') {
+              if (status) status.textContent = 'Panel ADMIN desbloqueado.';
+              hide(guard);
+              show(content);
+              loadClients(manager);
+            } else {
+              alert('Contraseña de administrador incorrecta.');
+              if (adminPasswordInput) {
+                adminPasswordInput.focus();
+                adminPasswordInput.select();
+              }
+            }
+          }
+
+          if (adminLoginForm) {
+            adminLoginForm.addEventListener('submit', handleAdminLogin);
+          }
+          if (adminLoginBtn) {
+            adminLoginBtn.addEventListener('click', handleAdminLogin);
+          }
+          if (adminPasswordInput) {
+            adminPasswordInput.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                handleAdminLogin(e);
+              }
+            });
+          }
+
+          if (reloadBtn) {
+            reloadBtn.addEventListener('click', () => loadClients(manager));
+          }
+
+          if (searchInput) {
+            searchInput.addEventListener('input', () => {
+              const term = searchInput.value.trim().toLowerCase();
+              const filtered = !term
+                ? allClients
+                : allClients.filter((c) => String(c.nombre || '').toLowerCase().includes(term));
+              renderClients(filtered);
+            });
+          }
+
+          if (ordersModalClose && ordersModal) {
+            ordersModalClose.addEventListener('click', () => hide(ordersModal));
+            ordersModal.addEventListener('click', (e) => {
+              if (e.target === ordersModal) hide(ordersModal);
+            });
+          }
+
+          if (body) {
+            body.addEventListener('click', async (e) => {
+              if (!currentManager) return;
+              const btnOpen = e.target.closest('button[data-action="open-orders"]');
+              const btnReset = e.target.closest('button[data-action="reset-points"]');
+              const btn = btnOpen || btnReset;
+              if (!btn) return;
+              const tr = btn.closest('tr[data-client-id]');
+              if (!tr) return;
+              const clientId = tr.getAttribute('data-client-id');
+              const client = allClients.find((c) => String(c.id) === String(clientId));
+              if (!client) return;
+
+              if (btnOpen) {
+                await openOrdersModal(currentManager, client);
+              } else if (btnReset) {
+                await resetClientPointsFromAdmin(currentManager, client);
+              }
+            });
+          }
+        });
+
+        async function loadClients(manager) {
+          try {
+            allClients = await manager.getAllClients();
+            if (countEl) countEl.textContent = String(allClients.length);
+            if (!allClients.length) {
+              show(empty);
+            } else {
+              hide(empty);
+            }
+            renderClients(allClients);
+          } catch (e) {
+            console.error('Error cargando clientes:', e);
+          }
+        }
+
+        function formatDate(iso) {
+          try {
+            const d = new Date(iso);
+            return d.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+          } catch (_) { return iso || ''; }
+        }
+
+        function formatMoney(n) {
+          try {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n || 0));
+          } catch (_) {
+            return '$' + (n || 0);
+          }
+        }
+
+        function renderClients(list) {
+          body.innerHTML = list.map((c) => {
+            const d = c.direccion || {};
+            const dir = [d.calle, d.numero, d.colonia].filter(Boolean).join(' ');
+            const puntos = c.puntos != null ? c.puntos : 0;
+            return `
+              <tr class="hover:bg-slate-900/60" data-client-id="${escapeHtml(c.id || '')}" data-client-phone="${escapeHtml(c.telefono || '')}">
+                <td class="px-3 py-2 align-top text-slate-50">${escapeHtml(c.nombre || '')}</td>
+                <td class="px-3 py-2 align-top text-slate-300 whitespace-nowrap">${escapeHtml(c.telefono || '')}</td>
+                <td class="px-3 py-2 align-top text-slate-300">${escapeHtml(dir || '')}</td>
+                <td class="px-3 py-2 align-top text-right font-semibold text-yellow-300">${puntos}</td>
+                <td class="px-3 py-2 align-top text-right space-x-2">
+                  <button class="text-xs px-2 py-1 rounded border border-slate-600 text-slate-100 hover:bg-slate-800" data-action="open-orders">
+                    <i class="fas fa-receipt mr-1"></i>Compras
+                  </button>
+                  <button class="text-xs px-2 py-1 rounded border border-red-500 text-red-300 hover:bg-red-500 hover:text-white" data-action="reset-points">
+                    <i class="fas fa-eraser mr-1"></i>Reset puntos
+                  </button>
+                </td>
+              </tr>`;
+          }).join('');
+        }
+
+        function escapeHtml(text) {
+          const str = String(text == null ? '' : text);
+          return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        }
+
+        async function openOrdersModal(manager, client) {
+          if (!ordersModal || !ordersModalTitle || !ordersModalSubtitle || !ordersModalBody) return;
+
+          ordersModalTitle.textContent = client.nombre || client.correo || client.telefono || 'Cliente';
+          const d = client.direccion || {};
+          const dir = [d.calle, d.numero, d.colonia].filter(Boolean).join(' ');
+          ordersModalSubtitle.textContent = `Tel: ${client.telefono || '—'}  •  Dirección: ${dir || '—'}`;
+
+          ordersModalBody.innerHTML = '';
+          hide(ordersModalEmpty);
+          hide(ordersModalTable);
+
+          show(ordersModal);
+
+          try {
+            // Para ADMIN: usar todos los pedidos y filtrarlos aquí para evitar
+            // cualquier problema de IDs o formatos de teléfono.
+            const telefonoRaw = client && client.telefono ? String(client.telefono) : '';
+            const telefonoDigits = telefonoRaw.replace(/\D/g, '');
+            const uid = client.id ? String(client.id) : null;
+
+            let allOrders = [];
+            if (window.firebaseOrderManager && typeof window.firebaseOrderManager.getOrders === 'function') {
+              allOrders = await window.firebaseOrderManager.getOrders();
+            } else if (typeof manager.getClientOrdersForAdmin === 'function') {
+              // Fallback por si no existe firebaseOrderManager
+              allOrders = await manager.getClientOrdersForAdmin(uid, telefonoRaw);
+            }
+
+            const orders = (allOrders || []).filter((o) => {
+              const orderClientId = o.clienteId ? String(o.clienteId) : null;
+              const orderPhone = o.customer && o.customer.phone ? String(o.customer.phone) : '';
+              const orderPhoneDigits = orderPhone.replace(/\D/g, '');
+              const orderEmail = o.customer && o.customer.email ? String(o.customer.email).toLowerCase() : '';
+              const clientEmail = client.correo ? String(client.correo).toLowerCase() : '';
+
+              if (uid && orderClientId && uid === orderClientId) return true;
+              if (telefonoDigits && orderPhoneDigits && telefonoDigits === orderPhoneDigits) return true;
+              if (clientEmail && orderEmail && clientEmail === orderEmail) return true;
+              return false;
+            });
+
+            if (!orders || !orders.length) {
+              show(ordersModalEmpty);
+              return;
+            }
+
+            ordersModalBody.innerHTML = orders.map((o) => {
+              const fecha = formatDate(o.timestamp);
+              const rawTotal = Number(o.total || 0);
+              const total = formatMoney(rawTotal);
+              const detalle = Array.isArray(o.items)
+                ? o.items.map((it) => `${it.quantity || 1}x ${it.name || ''}`).join(', ')
+                : '';
+              return `
+                <tr data-order-id="${escapeHtml(o.id || '')}" data-order-total="${escapeHtml(rawTotal)}">
+                  <td class="px-3 py-2 align-top whitespace-nowrap text-slate-200">${escapeHtml(fecha)}</td>
+                  <td class="px-3 py-2 align-top text-slate-300">${escapeHtml(detalle || '—')}</td>
+                  <td class="px-3 py-2 align-top text-right font-semibold text-yellow-300">${escapeHtml(total)}</td>
+                  <td class="px-3 py-2 align-top text-right">
+                    <button class="text-red-400 hover:text-red-200 text-[11px] font-semibold" data-action="delete-order">
+                      <i class="fas fa-trash-alt mr-1"></i>Eliminar
+                    </button>
+                  </td>
+                </tr>`;
+            }).join('');
+
+            show(ordersModalTable);
+
+            // Delegar clicks en botones de eliminar
+            ordersModalBody.onclick = async function(e) {
+              const btn = e.target.closest('button[data-action="delete-order"]');
+              if (!btn) return;
+              const tr = btn.closest('tr[data-order-id]');
+              if (!tr) return;
+              const orderId = tr.getAttribute('data-order-id');
+              if (!orderId) return;
+              const totalRaw = Number(tr.getAttribute('data-order-total') || 0);
+
+              const confirmDelete = window.confirm('¿Eliminar este pedido del historial? Esta acción no se puede deshacer.');
+              if (!confirmDelete) return;
+
+              try {
+                if (window.firebaseOrderManager && typeof window.firebaseOrderManager.deleteOrder === 'function') {
+                  await window.firebaseOrderManager.deleteOrder(orderId);
+                }
+
+                // Restar puntos del cliente en base al total del pedido eliminado
+                try {
+                  if (window.firebaseClientManager && typeof window.firebaseClientManager.removePointsFromOrder === 'function' && totalRaw > 0) {
+                    await window.firebaseClientManager.removePointsFromOrder(totalRaw, client.id);
+                    // Recargar lista de clientes para reflejar los nuevos puntos
+                    await loadClients(manager);
+                  }
+                } catch (pointsErr) {
+                  console.warn('Error ajustando puntos del cliente:', pointsErr);
+                  alert('El pedido se eliminó, pero hubo un problema al ajustar los puntos del cliente.');
+                }
+
+                tr.remove();
+                if (!ordersModalBody.children.length) {
+                  hide(ordersModalTable);
+                  show(ordersModalEmpty);
+                }
+              } catch (err) {
+                console.error('Error eliminando pedido:', err);
+                alert('No se pudo eliminar el pedido. Revisa la consola para más detalles.');
+              }
+            };
+          } catch (e) {
+            console.error('Error cargando pedidos del cliente:', e);
+            show(ordersModalEmpty);
+          }
+        }
+
+        async function resetClientPointsFromAdmin(manager, client) {
+          const confirmed = window.confirm(`¿Resetear los puntos de ${client.nombre || client.correo || 'este cliente'} a 0?`);
+          if (!confirmed) return;
+          try {
+            if (typeof manager.resetClientPoints === 'function') {
+              await manager.resetClientPoints(client.id);
+              await loadClients(manager);
+              alert('Puntos del cliente reseteados a 0.');
+            }
+          } catch (e) {
+            console.error('Error reseteando puntos del cliente:', e);
+            alert('No se pudieron resetear los puntos. Revisa la consola para más detalles.');
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

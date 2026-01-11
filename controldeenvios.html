@@ -1,27 +1,34 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es" class="scroll-smooth sr-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Control de Envíos - SR & SRA BURGER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/sr-ui.css">
     
     <style>
+    /* Base font scaling for readability */
+    html { font-size: 16px; }
+    html.kitchen-mode { font-size: 22px; } /* Mayor legibilidad por defecto */
+
         :root {
-            --primary-gold: #FFC72C;
-            --primary-gold-dark: #E5B800;
-            --primary-red: #DA291C;
-            --text-primary: #292929;
-            --text-secondary: #666666;
+            --primary-gold: #16A34A; /* remap UI accent to SR green */
+            --primary-gold-dark: #15803D;
+            --primary-red: #0B1220;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
             --bg-light: #FFFFFF;
             --bg-section: #F8F9FA;
-            --border-light: #E9ECEF;
-            --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
-            --border-radius: 16px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-light: #E2E8F0;
+            --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --shadow-hover: 0 18px 45px rgba(15, 23, 42, 0.14);
+            --border-radius: 24px;
+            --transition: all 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         body {
@@ -154,6 +161,7 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 199, 44, 0.1));
             transition: width 0.3s ease;
+            pointer-events: none; /* No bloquear clics en botones */
         }
 
         .order-card:hover::before {
@@ -218,12 +226,88 @@
             margin-bottom: 8px;
         }
 
+        .order-item.checked {
+            background: #d1fae5;
+            border-color: #10b981;
+            opacity: 0.8;
+            text-decoration: line-through;
+        }
+
+        .order-item .checkmark {
+            display: none;
+            color: #10b981;
+            margin-left: 8px;
+        }
+
+        .order-item.checked .checkmark {
+            display: inline;
+        }
+
+        .breakdown-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .breakdown-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .breakdown-item.checked {
+            background-color: #d1fae5;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .breakdown-item.checked::after {
+            content: ' ✓';
+            color: #10b981;
+            font-weight: bold;
+        }
+
+    /* Kitchen mode: bigger, clearer UI */
+    html.kitchen-mode body { line-height: 1.7; }
+    html.kitchen-mode .card-modern { padding: 28px; }
+    html.kitchen-mode .status-badge { font-size: 0.9rem; padding: 8px 14px; }
+    html.kitchen-mode .btn-primary,
+    html.kitchen-mode .btn-success,
+    html.kitchen-mode .btn-info { font-size: 1rem; padding: 14px 28px; }
+    html.kitchen-mode .order-item { padding: 20px; }
+    html.kitchen-mode header .h-16 { height: 4.5rem; }
+    html.kitchen-mode .floating-stats { font-size: 1rem; }
+    html.kitchen-mode .customer-info { font-size: 1.1rem; }
+    html.kitchen-mode h3 { font-size: 1.5rem; }
+    html.kitchen-mode h4 { font-size: 1.25rem; }
+    html.kitchen-mode .text-sm { font-size: 0.95rem; }
+    html.kitchen-mode .text-xs { font-size: 0.9rem; }
+    html.kitchen-mode .order-card { border-left-width: 6px; }
+
         .customer-info {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border-radius: 12px;
             padding: 16px;
             border: 1px solid #f59e0b;
+            pointer-events: none; /* Evita bloquear clics; su contenido no es interactivo */
+            font-size: 1.02rem;
         }
+
+    /* Productos más grandes y legibles */
+    .order-products .item-title { font-size: 1.25rem; font-weight: 800; color: #111827; }
+    .order-products .item-price { font-size: 1.25rem; font-weight: 800; color: #111827; }
+    .order-products .breakdown { font-size: 1.12rem; }
+        .order-products .breakdown .text-sm,
+    .order-products .breakdown .text-xs { font-size: 1.12rem; }
+        .order-products .breakdown .text-xs span,
+        .order-products .breakdown .text-sm span { padding: 4px 10px; border-radius: 9999px; display: inline-block; }
+
+    html.kitchen-mode .order-products .item-title { font-size: 1.9rem; }
+    html.kitchen-mode .order-products .item-price { font-size: 1.9rem; }
+    html.kitchen-mode .order-products .breakdown { font-size: 1.35rem; }
+        html.kitchen-mode .order-products .breakdown .text-sm,
+    html.kitchen-mode .order-products .breakdown .text-xs { font-size: 1.35rem; }
+    html.kitchen-mode .order-total .amount { font-size: 2.2rem; }
 
         @media (max-width: 768px) {
             .card-modern {
@@ -331,11 +415,17 @@
         .action-button:hover::before {
             left: 100%;
         }
+        /* Asegurar clics en zona de acciones */
+        .order-card .btn-primary,
+        .order-card .btn-success,
+        .order-card .btn-info,
+        .order-card button {
+            pointer-events: auto;
+        }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-lg sticky top-0 z-40">
+    </head>
+    <body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-sm">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-4">
@@ -343,20 +433,23 @@
                         <i class="fas fa-hamburger text-white text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold font-poppins text-gray-900">
-                            SR & SRA <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">BURGER</span>
-                        </h1>
-                        <p class="text-sm text-gray-500 font-medium">Control de Envíos</p>
+                        <div class="font-poppins text-lg font-bold">SR &amp; SRA BURGER</div>
+                        <div class="text-xs text-gray-500">Modo Cocina</div>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="refreshOrders()" class="btn-primary flex items-center space-x-2">
-                        <i class="fas fa-sync-alt"></i>
-                        <span>Actualizar</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleKitchenMode()" class="btn-primary">Modo Cocina</button>
+                    <button onclick="toggleFullscreen()" class="btn-info">Pantalla Completa</button>
+                    <button onclick="zoomOut()" class="btn-primary" title="Reducir tamaño">A-</button>
+                    <button onclick="zoomIn()" class="btn-primary" title="Aumentar tamaño">A+</button>
+                    <button onclick="refreshOrders()" class="btn-primary">
+                        <i class="fas fa-sync-alt mr-1"></i>Actualizar
                     </button>
-                    <a href="paginaburger.html" class="btn-info flex items-center space-x-2">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Volver al Menú</span>
+                    <a href="repartidor.html" class="btn-success">
+                        <i class="fas fa-motorcycle mr-1"></i>Repartidor
+                    </a>
+                    <a href="paginaburger.html" class="btn-info">
+                        <i class="fas fa-arrow-left mr-1"></i>Volver al Menú
                     </a>
                 </div>
             </div>
@@ -412,9 +505,9 @@
                 <button onclick="filterOrders('delivering')" class="filter-btn btn-info" data-filter="delivering">
                     <i class="fas fa-truck mr-2"></i>En Camino
                 </button>
-                <button onclick="filterOrders('delivered')" class="filter-btn btn-info" data-filter="delivered">
-                    <i class="fas fa-check-circle mr-2"></i>Entregados
-                </button>
+                <a href="Historialdepedidos.html" class="filter-btn btn-info inline-flex items-center" data-filter="history">
+                    <i class="fas fa-clock-rotate-left mr-2"></i>Historial
+                </a>
             </div>
         </div>
 
@@ -467,19 +560,419 @@
         let orders = [];
         let currentFilter = 'all';
         let unsubscribeOrders = null;
+        let baseFontPx = parseInt(localStorage.getItem('kitchenBaseFontPx') || '22', 10); // default 22px
+        let comboConfigurations = {}; // Configuraciones de combos
+        let localAutoRefreshId = null;
+
+        // Inicializar Modo Cocina por defecto para facilitar lectura
+        document.addEventListener('DOMContentLoaded', () => {
+            const enabled = localStorage.getItem('kitchenMode') !== '0'; // por defecto ON
+            if (enabled) document.documentElement.classList.add('kitchen-mode');
+            // Aplicar tamaño base guardado
+            applyFontSize(baseFontPx);
+        });
+
+        function applyFontSize(px) {
+            baseFontPx = Math.max(16, Math.min(24, px)); // limitar entre 16 y 24 px
+            if (document.documentElement.classList.contains('kitchen-mode')) {
+                document.documentElement.style.fontSize = baseFontPx + 'px';
+            } else {
+                document.documentElement.style.fontSize = '16px';
+            }
+            localStorage.setItem('kitchenBaseFontPx', String(baseFontPx));
+        }
+
+        function toggleKitchenMode() {
+            const root = document.documentElement;
+            const willEnable = !root.classList.contains('kitchen-mode');
+            root.classList.toggle('kitchen-mode', willEnable);
+            localStorage.setItem('kitchenMode', willEnable ? '1' : '0');
+            // Reaplicar tamaño
+            applyFontSize(willEnable ? baseFontPx : 16);
+        }
+
+        function zoomIn() { applyFontSize(baseFontPx + 2); }
+        function zoomOut() { applyFontSize(baseFontPx - 2); }
+
+        async function toggleFullscreen() {
+            try {
+                if (!document.fullscreenElement) {
+                    await document.documentElement.requestFullscreen();
+                } else {
+                    await document.exitFullscreen();
+                }
+            } catch (_) {}
+        }
+
+        // Cargar configuraciones de combos
+        function loadComboConfigurations() {
+            const savedCombos = localStorage.getItem('burgerCombos');
+            if (savedCombos) {
+                const combos = JSON.parse(savedCombos);
+                comboConfigurations = {};
+                combos.forEach(combo => {
+                    comboConfigurations[combo.name.toLowerCase().replace(/\s+/g, '')] = combo;
+                });
+                console.log('📋 Configuraciones de combos cargadas:', comboConfigurations);
+            } else {
+                // Configuraciones por defecto con todos los combos
+                comboConfigurations = {
+                    'combofamiliar': {
+                        name: 'Combo Familiar',
+                        type: 'familiar',
+                        color: 'amber',
+                        items: [
+                            { type: 'fries', name: 'Papas Grandes', quantity: 1, icon: '🍟' },
+                            { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' },
+                            { type: 'drink', name: 'Coca-Cola 3L', quantity: 1, icon: '🥤' }
+                        ]
+                    },
+                    'comboduo': {
+                        name: 'Combo Dúo',
+                        type: 'duo',
+                        color: 'purple',
+                        items: [
+                            { type: 'burger', name: 'Hamburguesa', quantity: 1, icon: '🍔' },
+                            { type: 'hotdog', name: 'Hot Dog Jumbo', quantity: 1, icon: '🌭' },
+                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
+                        ]
+                    },
+                    'combopareja': {
+                        name: 'Combo Pareja',
+                        type: 'pareja',
+                        color: 'pink',
+                        items: [
+                            { type: 'burger', name: 'Hamburguesa', quantity: 2, icon: '🍔' },
+                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
+                            { type: 'onion-rings', name: 'Aros de Cebolla', quantity: 1, icon: '🧅' }
+                        ]
+                    },
+                    'comboamigos': {
+                        name: 'Combo Amigos',
+                        type: 'amigos',
+                        color: 'green',
+                        items: [
+                            { type: 'burger', name: 'Hamburguesa', quantity: 3, icon: '🍔' },
+                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
+                        ]
+                    },
+                    'combodoblesdobles': {
+                        name: 'DOBLES DOBLES',
+                        type: 'dobles',
+                        color: 'red',
+                        items: [
+                            { type: 'burger', name: 'Hamburguesa Doble', quantity: 2, icon: '🍔' }
+                        ]
+                    },
+                    'combodoblesdoblesbbq': {
+                        name: 'DOBLES DOBLES BBQ',
+                        type: 'bbq',
+                        color: 'orange',
+                        items: [
+                            { type: 'burger', name: 'Hamburguesa BBQ', quantity: 2, icon: '🍔' }
+                        ]
+                    }
+                };
+                console.log('📋 Usando configuraciones por defecto con todos los combos:', comboConfigurations);
+            }
+        }
+
+        // Función para detectar si un item es un combo y obtener su configuración
+        function getComboConfig(itemName) {
+            if (!comboConfigurations) return null;
+            
+            // Normalizar el nombre del item para comparación
+            const normalizedName = itemName.toLowerCase().trim();
+            
+            // Buscar en las configuraciones de combos
+            for (const [key, config] of Object.entries(comboConfigurations)) {
+                if (normalizedName.includes(key) || 
+                    normalizedName.includes(config.name.toLowerCase())) {
+                    return { ...config, key };
+                }
+            }
+            
+            return null;
+        }
+
+        function splitComboChoices(text) {
+            return String(text || '').split(/\s*\|\s*/).filter(Boolean);
+        }
+        function parseChoiceText(choiceText) {
+            const res = { name: '', qty: 1, toppings: [], fries: null, sauce: null, onionRings: false, extras: [], includeLine: false, drinks: [] };
+            let t = String(choiceText || '').trim();
+            const qtyMatch = t.match(/^(\d+)\s*x\s*/i);
+            if (qtyMatch) { res.qty = parseInt(qtyMatch[1], 10) || 1; t = t.slice(qtyMatch[0].length).trim(); }
+            const nameMatch = t.match(/^[^,(]+/);
+            res.name = nameMatch ? nameMatch[0].trim() : t;
+            if (/^Incluye\s*:/i.test(String(choiceText || ''))) {
+                res.includeLine = true;
+            }
+            const topMatch = t.match(/\(\+\s*([^\)]+)\)/);
+            if (topMatch && topMatch[1]) res.toppings = topMatch[1].split(/\s*,\s*/).filter(Boolean);
+            const friesMatch = t.match(/Papas\s*(?::|\s)\s*([^,]+)/i);
+            if (friesMatch) res.fries = friesMatch[1].trim();
+            const sauceMatch = t.match(/Salsas?\s*:\s*([^,|\)]+)/i);
+            if (sauceMatch) res.sauce = sauceMatch[1].trim();
+            if (/Aros\s+de\s+Cebolla/i.test(t)) res.onionRings = true;
+            
+            // Mejorar detección de Coca-Cola
+            const cocaMatch = t.match(/Coca(?:-Cola)?\s*([\d.,]+)\s*[Ll]/i);
+            if (cocaMatch) {
+                res.drinks.push(`Coca-Cola ${cocaMatch[1]}L`);
+            } else if (/Coca(?:-Cola)?\s*3\s*[Ll]/i.test(t)) {
+                res.drinks.push('Coca-Cola 3L');
+            } else if (/Coca(?:-Cola)/i.test(t)) {
+                res.drinks.push('Coca-Cola');
+            }
+            
+            const extraItems = t.match(/\b(\d+)x\s+([^,|]+)/g);
+            if (extraItems) {
+                extraItems.forEach(e => { const m = e.match(/(\d+)x\s+(.+)/); if (m) res.extras.push({ quantity: parseInt(m[1], 10), name: m[2].trim() }); });
+            }
+            return res;
+        }
+
+        // Escapar texto para evitar inyectar HTML en nombres de productos/toppings
+        function escapeHtml(text) {
+            const str = String(text == null ? '' : text);
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function parseSingleDetails(text) {
+            const res = { toppings: [], fries: null, sauce: null, onionRings: false, extras: [], hotdog: false };
+            const parts = String(text || '').split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+            parts.forEach(p => {
+                if (/^\+\s*/.test(p)) {
+                    const tops = p.replace(/^\+\s*/, '').split(/\s*,\s*/).filter(Boolean);
+                    res.toppings.push(...tops);
+                } else if (/^Papas\s*(?::|\s)/i.test(p)) {
+                    res.fries = p.replace(/^Papas\s*(?::|\s)\s*/i, '').trim();
+                } else if (/^Salsas?\s*:/i.test(p)) {
+                    res.sauce = p.replace(/^Salsas?\s*:\s*/i, '').trim();
+                } else if (/^Salsa\s*:/i.test(p)) {
+                    res.sauce = p.replace(/^Salsa\s*:\s*/i, '').trim();
+                } else if (/Aros\s+de\s+Cebolla/i.test(p)) {
+                    res.onionRings = true;
+                } else if (/Hot\s*dog/i.test(p) || /Perro\s+caliente/i.test(p)) {
+                    res.hotdog = true;
+                } else if (/^\d+x\s+/i.test(p)) {
+                    const m = p.match(/(\d+)x\s+(.+)/); 
+                    if (m) {
+                        const extraName = m[2].trim();
+                        // Detectar Coca-Cola específicamente
+                        if (/Coca(?:-Cola)?/i.test(extraName)) {
+                            res.extras.push({ quantity: parseInt(m[1], 10), name: 'Coca-Cola 3L' });
+                        } else {
+                            res.extras.push({ quantity: parseInt(m[1], 10), name: extraName });
+                        }
+                    }
+                } else if (/Coca(?:-Cola)?/i.test(p)) {
+                    // Detectar Coca-Cola en cualquier parte del texto
+                    res.extras.push({ quantity: 1, name: 'Coca-Cola 3L' });
+                }
+            });
+            return res;
+        }
+        function renderBadges(list, color, orderId, itemIndex, subKey) {
+            if (!list || !list.length) return '';
+            const cls = color === 'green' ? 'bg-green-100 text-green-800 border-green-200' : 
+                       color === 'blue' ? 'bg-blue-100 text-blue-800 border-blue-200' : 
+                       color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                       color === 'red' ? 'bg-red-100 text-red-800 border-red-200' :
+                       color === 'orange' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                       color === 'purple' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                       color === 'pink' ? 'bg-pink-100 text-pink-800 border-pink-200' :
+                       'bg-gray-100 text-gray-800 border-gray-200';
+            return `<div class="mt-1 flex flex-wrap gap-1">${list.map((v, idx) => {
+                const key = subKey ? `${subKey}_${idx}` : `badge_${idx}`;
+                const isChecked = isItemChecked(orderId, itemIndex, key);
+                return `<span class="text-xs px-2 py-0.5 rounded-full border breakdown-item ${cls} ${isChecked ? 'checked' : ''}" onclick="event.stopPropagation(); toggleItemChecked('${orderId}', ${itemIndex}, '${key}')">${escapeHtml(v)}</span>`;
+            }).join('')}</div>`;
+        }
+        function renderItemBreakdown(item, orderId, itemIndex) {
+            const c = String(item.customizations || '').trim();
+            if (!c) return '';
+
+            // Detectar si es un combo configurado
+            const comboConfig = getComboConfig(item.name);
+
+            // Si es combo: mantener checklist visual + también mostrar detalles (papas/salsas/etc.)
+            const comboChecklistHtml = comboConfig ? (() => {
+                return `
+                    <div class="mt-2 p-3 rounded-lg border-2 border-${comboConfig.color}-200 bg-${comboConfig.color}-50">
+                        <div class="text-sm text-gray-700 font-semibold mb-2 flex items-center">
+                            <i class="fas fa-${comboConfig.type === 'duo' ? 'users' : 'box'} text-${comboConfig.color}-600 mr-2"></i>
+                            Elementos del ${comboConfig.name}:
+                        </div>
+                        <div class="space-y-2">
+                            ${comboConfig.items.map((comboItem, idx) => {
+                                const itemKey = `${comboConfig.key}_${comboItem.type}_${idx}`;
+                                const isChecked = isItemChecked(orderId, itemIndex, itemKey);
+                                const colorMap = {
+                                    'amber': 'yellow',
+                                    'purple': 'purple',
+                                    'blue': 'blue',
+                                    'green': 'green',
+                                    'red': 'red',
+                                    'orange': 'orange',
+                                    'pink': 'pink'
+                                };
+                                const badgeColor = colorMap[comboConfig.color] || 'gray';
+                                return `
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-xs text-gray-600 font-medium">${comboItem.icon} ${comboItem.name}:</span>
+                                        <span class="text-xs px-2 py-0.5 rounded-full border bg-${badgeColor}-100 text-${badgeColor}-800 border-${badgeColor}-200 breakdown-item ${isChecked ? 'checked' : ''}" onclick="event.stopPropagation(); toggleItemChecked('${orderId}', ${itemIndex}, '${itemKey}')">Listo</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            })() : '';
+            
+            let detailsHtml = '';
+
+            if (c.includes(' | ')) {
+                const choices = splitComboChoices(c).map(parseChoiceText);
+                const includePieces = choices.filter(ch => ch.includeLine || /^Incluye/i.test(ch.name));
+                const normalChoices = choices.filter(ch => !(ch.includeLine || /^Incluye/i.test(ch.name)));
+
+                // Aggregate included details
+                const friesBadges = [];
+                const sauceBadges = [];
+                const drinkBadges = [];
+                let hasOnion = false;
+                includePieces.forEach(ch => {
+                    if (ch.fries) friesBadges.push(`Tipo ${ch.fries}`);
+                    if (ch.sauce) sauceBadges.push(ch.sauce);
+                    if (ch.drinks && ch.drinks.length) drinkBadges.push(...ch.drinks);
+                    if (ch.onionRings) hasOnion = true;
+                });
+
+                return `
+                    <div class="mt-2 space-y-2">
+                        ${normalChoices.map((ch, chIdx) => `
+                            <div class="p-2 rounded-lg border border-gray-200 bg-white">
+                                <div class="text-sm font-semibold text-gray-800">${ch.qty}x ${escapeHtml(ch.name)}</div>
+                                ${ch.toppings && ch.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(ch.toppings, 'amber', orderId, itemIndex, 'toppings_' + chIdx)}</div>` : ''}
+                                ${ch.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${ch.fries}`], 'blue', orderId, itemIndex, 'fries_' + chIdx)}</div>` : ''}
+                                ${ch.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([ch.sauce], 'pink', orderId, itemIndex, 'sauce_' + chIdx)}</div>` : ''}
+                                ${ch.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges(['Aros de Cebolla'], 'green', orderId, itemIndex, 'onion_' + chIdx)}</div>` : ''}
+                                ${ch.extras && ch.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(ch.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras_' + chIdx)}</div>` : ''}
+                            </div>
+                        `).join('')}
+                        ${includePieces.length ? `
+                            <div class=\"p-3 rounded-lg border-2 border-amber-200 bg-amber-50\">
+                                <div class=\"text-sm text-gray-700 font-semibold mb-2 flex items-center\">
+                                    <i class=\"fas fa-box text-amber-600 mr-2\"></i>
+                                    ${comboConfig ? `Elementos del ${comboConfig.name}:` : 'Incluye:'}
+                                </div>
+                                <div class=\"space-y-2\">
+                                    ${friesBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🍟 Papas:</span>${renderBadges(friesBadges, 'blue', orderId, itemIndex, 'include_fries')}</div>` : ''}
+                                    ${sauceBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🥫 Salsa:</span>${renderBadges([sauceBadges[0]], 'pink', orderId, itemIndex, 'include_sauce')}</div>` : ''}
+                                    ${hasOnion ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🧅 Aros de Cebolla Medianos:</span>${renderBadges(['Listo'], 'green', orderId, itemIndex, 'include_onion')}</div>` : ''}
+                                    ${drinkBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🥤 Coca-Cola 3L:</span>${renderBadges(['Listo'], 'green', orderId, itemIndex, 'include_drinks')}</div>` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // Para items individuales o combos simples
+            const d = parseSingleDetails(c);
+            
+            return `
+                <div class="mt-1">
+                    ${d.toppings && d.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(d.toppings, 'amber', orderId, itemIndex, 'toppings')}</div>` : ''}
+                    ${d.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${d.fries}`], 'blue', orderId, itemIndex, 'fries')}</div>` : ''}
+                    ${d.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([d.sauce], 'pink', orderId, itemIndex, 'sauce')}</div>` : ''}
+                    ${d.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges(['Aros de Cebolla'], 'green', orderId, itemIndex, 'onion')}</div>` : ''}
+                    ${d.extras && d.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(d.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras')}</div>` : ''}
+                </div>
+            `;
+        }
+
+        // === Checklist Functions ===
+        function getCheckedItems(orderId) {
+            const key = `checkedItems_${orderId}`;
+            const stored = localStorage.getItem(key);
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        function saveCheckedItems(orderId, checkedItems) {
+            const key = `checkedItems_${orderId}`;
+            localStorage.setItem(key, JSON.stringify(checkedItems));
+        }
+
+        function toggleItemChecked(orderId, itemIndex, subItemKey = null) {
+            const checkedItems = getCheckedItems(orderId);
+            const key = subItemKey ? `${itemIndex}_${subItemKey}` : itemIndex.toString();
+            checkedItems[key] = !checkedItems[key];
+            saveCheckedItems(orderId, checkedItems);
+            displayOrders(); // Refresh display
+        }
+
+        function isItemChecked(orderId, itemIndex, subItemKey = null) {
+            const checkedItems = getCheckedItems(orderId);
+            const key = subItemKey ? `${itemIndex}_${subItemKey}` : itemIndex.toString();
+            return !!checkedItems[key];
+        }
 
         // Inicializar la página
         document.addEventListener('DOMContentLoaded', function() {
-            // Esperar a que Firebase se configure
-            setTimeout(() => {
-                initializeFirebase();
-            }, 1000);
+            // Cargar combos (no depende de Firebase)
+            loadComboConfigurations();
+
+            // Esperar a que Firebase (módulo) exponga window.firebaseOrderManager
+            waitForFirebaseAndInit();
         });
+
+        function waitForFirebaseAndInit(attempt = 0) {
+            // Ya conectado
+            if (unsubscribeOrders) return;
+
+            if (window.firebaseOrderManager && typeof window.firebaseOrderManager.onOrdersChange === 'function') {
+                initializeFirebase();
+                return;
+            }
+
+            // Intentar por ~15s (60 * 250ms)
+            if (attempt === 0) {
+                console.log('⏳ Esperando Firebase...');
+                showNotification('Conectando con Firebase...', 'success');
+            }
+
+            if (attempt < 60) {
+                setTimeout(() => waitForFirebaseAndInit(attempt + 1), 250);
+                return;
+            }
+
+            // Si no apareció Firebase, usar modo local
+            console.warn('⚠️ Firebase no disponible tras esperar. Usando modo local.');
+            showNotification('Firebase no disponible. Usando modo local.', 'error');
+            loadOrdersFromLocalStorage();
+            setupAutoRefresh();
+        }
 
         // Inicializar Firebase
         function initializeFirebase() {
+            if (unsubscribeOrders) return;
+
             if (window.firebaseOrderManager) {
                 console.log('🔥 Conectando con Firebase...');
+
+                // Si veníamos de modo local, apagar auto-refresh
+                if (localAutoRefreshId) {
+                    try { clearInterval(localAutoRefreshId); } catch (_) {}
+                    localAutoRefreshId = null;
+                }
                 
                 // Configurar listener en tiempo real
                 unsubscribeOrders = window.firebaseOrderManager.onOrdersChange((firebaseOrders) => {
@@ -542,7 +1035,9 @@
                     estimatedTime: calculateEstimatedTime(orderData.items),
                     confirmed: false,
                     onWaySent: false,
-                    arrivedSent: false
+                    arrivedSent: false,
+                    paid: false,
+                    paidAt: null
                 };
                 
                 orders.unshift(newOrder);
@@ -554,24 +1049,32 @@
             }
         }
 
+        // Determinar si una orden está cancelada (por status o bandera)
+        function isOrderCanceled(order) {
+            if (!order) return false;
+            if (order.canceled || order.cancelled) return true;
+            const s = String(order.status || '').toLowerCase();
+            return s.includes('cancel'); // 'canceled', 'cancelled', 'cancelado'
+        }
+
         // Mostrar órdenes
         function displayOrders() {
             const container = document.getElementById('orders-container');
             const emptyState = document.getElementById('empty-state');
             
-            let filteredOrders = orders;
+            // Ocultar siempre las órdenes canceladas
+            let filteredOrders = orders.filter(o => !isOrderCanceled(o) && String(o.status || '').toLowerCase() !== 'delivered');
             if (currentFilter !== 'all') {
-                filteredOrders = orders.filter(order => order.status === currentFilter);
+                filteredOrders = filteredOrders.filter(order => order.status === currentFilter);
             }
-            
+
             if (filteredOrders.length === 0) {
                 container.innerHTML = '';
                 emptyState.classList.remove('hidden');
                 return;
             }
-            
+
             emptyState.classList.add('hidden');
-            
             container.innerHTML = filteredOrders.map(order => createOrderCard(order)).join('');
         }
 
@@ -579,7 +1082,9 @@
         function createOrderCard(order) {
             const statusInfo = getStatusInfo(order.status);
             const timeAgo = getTimeAgo(order.timestamp);
-            
+            const customer = order && order.customer ? order.customer : {};
+            const items = Array.isArray(order.items) ? order.items : [];
+
             return `
                 <div class="order-card card-modern" data-order-id="${order.id}" data-status="${order.status}">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -587,43 +1092,47 @@
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3">
-                                    <h3 class="text-lg font-bold text-gray-900">Pedido #${order.id.slice(-6)}</h3>
+                                    <h3 class="text-lg font-bold text-gray-900">Pedido #${String(order.id || '').slice(-6)}</h3>
                                     <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
                                 </div>
                                 <div class="text-sm text-gray-500">${timeAgo}</div>
                             </div>
-                            
+
                             <!-- Customer Info -->
                             <div class="customer-info mb-4">
                                 <div class="flex items-center space-x-3 mb-2">
                                     <i class="fas fa-user text-yellow-600"></i>
-                                    <span class="font-semibold text-gray-900">${order.customer.name}</span>
+                                    <span class="font-semibold text-gray-900">${escapeHtml(customer.name || '')}</span>
                                 </div>
                                 <div class="flex items-center space-x-3 mb-2">
                                     <i class="fas fa-phone text-yellow-600"></i>
-                                    <span class="text-gray-700">${order.customer.phone}</span>
+                                    <span class="text-gray-700">${escapeHtml(customer.phone || '')}</span>
                                 </div>
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-map-marker-alt text-yellow-600"></i>
-                                    <span class="text-gray-700">${order.customer.address}</span>
+                                    <span class="text-gray-700">${escapeHtml(customer.address || '')}</span>
                                 </div>
                             </div>
-                            
+
                             <!-- Order Items -->
-                            <div class="mb-4">
+                            <div class="mb-4 order-products">
                                 <h4 class="font-semibold text-gray-900 mb-2">
                                     <i class="fas fa-shopping-bag text-gray-600 mr-2"></i>
-                                    Productos (${order.items.length} items)
+                                    Productos (${items.length} items)
                                 </h4>
                                 <div class="space-y-2">
-                                    ${order.items.map(item => `
-                                        <div class="order-item">
-                                            <div class="flex justify-between items-center">
-                                                <div>
-                                                    <span class="font-medium">${item.quantity}x ${item.name}</span>
-                                                    ${item.customizations ? `<div class="text-sm text-gray-600 mt-1">${item.customizations}</div>` : ''}
+                                    ${items.map((item, itemIndex) => `
+                                        <div class="order-item ${isItemChecked(order.id, itemIndex) ? 'checked' : ''}" onclick="toggleItemChecked('${order.id}', ${itemIndex})">
+                                            <div class="flex justify-between items-start gap-3">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="item-title">${Number(item.quantity || 1)}x ${escapeHtml(item.name || '')}</div>
+                                                    <div class="checkmark"><i class="fas fa-check"></i></div>
+                                                    <div class="breakdown" onclick="event.stopPropagation()">${item.customizations ? renderItemBreakdown(item, order.id, itemIndex) : ''}</div>
+                                                    ${item.specifications ? `<div class=\"mt-1 text-xs text-red-700 font-semibold flex items-start gap-1\"><span>📝</span><span>Especificaciones: ${escapeHtml(item.specifications)}</span></div>` : ''}
                                                 </div>
-                                                <span class="font-semibold text-gray-900">$${item.price}</span>
+                                                <div class="text-right whitespace-nowrap">
+                                                    <span class="item-price">$${Number(item.price || 0)}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -631,26 +1140,26 @@
                                 <div class="mt-3 pt-3 border-t border-gray-200">
                                     <div class="flex justify-between items-center">
                                         <span class="text-lg font-bold text-gray-900">Total:</span>
-                                        <span class="text-xl font-bold text-yellow-600">$${order.total}</span>
+                                        <span class="text-xl font-bold text-yellow-600 amount">$${Number(order.total || 0)}</span>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             ${order.notes ? `
                                 <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                     <h5 class="font-semibold text-blue-900 mb-1">
                                         <i class="fas fa-sticky-note text-blue-600 mr-2"></i>
                                         Notas especiales:
                                     </h5>
-                                    <p class="text-blue-800">${order.notes}</p>
+                                    <p class="text-blue-800">${escapeHtml(order.notes)}</p>
                                 </div>
                             ` : ''}
                         </div>
-                        
+
                         <!-- Action Buttons -->
                         <div class="lg:w-64 flex flex-col space-y-3">
                             ${getActionButtons(order)}
-                            
+
                             <!-- Time Info -->
                             <div class="text-center p-3 bg-gray-50 rounded-lg">
                                 <div class="text-sm text-gray-600">Tiempo estimado</div>
@@ -663,24 +1172,45 @@
         }
 
         // Obtener información del estado
-        function getStatusInfo(status) {
+    function getStatusInfo(status) {
             const statusMap = {
                 'pending': { text: 'Pendiente', class: 'status-pending' },
                 'preparing': { text: 'Preparando', class: 'status-preparing' },
                 'ready': { text: 'Listo', class: 'status-ready' },
                 'delivering': { text: 'En Camino', class: 'status-delivering' },
-                'delivered': { text: 'Entregado', class: 'status-delivered' }
+        'delivered': { text: 'Entregado', class: 'status-delivered' },
+        'canceled': { text: 'Cancelado', class: 'status-delivered' },
+        'cancelled': { text: 'Cancelado', class: 'status-delivered' },
+        'cancelado': { text: 'Cancelado', class: 'status-delivered' }
             };
             return statusMap[status] || statusMap['pending'];
         }
 
         // Obtener botones de acción según el estado
         function getActionButtons(order) {
+            const locationButton = `
+                <button onclick="viewLocation('${order.id}')" class="btn-primary w-full action-button">
+                    <i class="fas fa-location-dot mr-2"></i>
+                    Ver ubicación
+                </button>
+            `;
+
+            const paidButton = isOrderCanceled(order) ? '' : `
+                <button onclick="markOrderPaid('${order.id}')" class="btn-success w-full ${order.paid ? 'opacity-75 pointer-events-none' : ''}">
+                    ${order.paid ? '<i class="fas fa-check mr-2"></i>Pagado ✓' : '<i class="fas fa-dollar-sign mr-2"></i>PAGADO'}
+                </button>
+            `;
             switch (order.status) {
                 case 'pending':
                     return `
-                        <button onclick="confirmOrder('${order.id}')" class="btn-success w-full ${order.confirmed ? 'opacity-75' : ''}">
-                            ${order.confirmed ? '<i class="fas fa-check mr-2"></i>Pedido Confirmado ✓' : '<i class="fas fa-whatsapp mr-2"></i>Confirmar Pedido'}
+                        ${locationButton}
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Contactar cliente
+                        </button>
+                        ${paidButton}
+                        <button onclick="confirmOrder('${order.id}')" class="btn-success w-full ${order.confirmed ? 'opacity-75 pointer-events-none' : ''}">
+                            ${order.confirmed ? '<i class="fas fa-check mr-2"></i>Pedido Confirmado ✓' : '<i class="fas fa-clipboard-check mr-2"></i>Confirmar Pedido'}
                         </button>
                         <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="btn-info w-full">
                             <i class="fas fa-utensils mr-2"></i>
@@ -693,6 +1223,12 @@
                     `;
                 case 'preparing':
                     return `
+                        ${locationButton}
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Contactar cliente
+                        </button>
+                        ${paidButton}
                         <button onclick="updateOrderStatus('${order.id}', 'ready')" class="btn-success w-full">
                             <i class="fas fa-check mr-2"></i>
                             Marcar como Listo
@@ -704,6 +1240,12 @@
                     `;
                 case 'ready':
                     return `
+                        ${locationButton}
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Contactar cliente
+                        </button>
+                        ${paidButton}
                         <button onclick="sendOnWayMessage('${order.id}')" class="btn-info w-full ${order.onWaySent ? 'opacity-75' : ''}">
                             ${order.onWaySent ? '<i class="fas fa-check mr-2"></i>En Camino Enviado ✓' : '<i class="fas fa-truck mr-2"></i>Vamos en Camino'}
                         </button>
@@ -718,6 +1260,12 @@
                     `;
                 case 'delivering':
                     return `
+                        ${locationButton}
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Contactar cliente
+                        </button>
+                        ${paidButton}
                         <button onclick="sendArrivedMessage('${order.id}')" class="btn-success w-full ${order.arrivedSent ? 'opacity-75' : ''}">
                             ${order.arrivedSent ? '<i class="fas fa-check mr-2"></i>Llegada Notificada ✓' : '<i class="fas fa-home mr-2"></i>Notificar Llegada'}
                         </button>
@@ -732,6 +1280,12 @@
                     `;
                 case 'delivered':
                     return `
+                        ${locationButton}
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button mb-2">
+                            <i class="fab fa-whatsapp mr-2"></i>
+                            Contactar cliente
+                        </button>
+                        ${paidButton}
                         <div class="text-center p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
                             <i class="fas fa-check-circle text-green-600 text-xl mb-2"></i>
                             <div class="text-green-800 font-semibold">Pedido Completado</div>
@@ -744,6 +1298,28 @@
                 default:
                     return '';
             }
+        }
+
+        // Abrir ubicación del cliente en Google Maps
+        function viewLocation(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order || !order.customer) return;
+
+            const coords = order.customer.coordinates;
+            let url = '';
+
+            if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
+                const q = `${coords.lat},${coords.lng}`;
+                url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+            } else if (order.customer.address) {
+                url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.customer.address)}`;
+            } else {
+                showNotification('Este pedido no tiene dirección para mostrar en el mapa', 'error');
+                return;
+            }
+
+            window.open(url, '_blank');
+            showNotification('Abriendo ubicación en Google Maps', 'success');
         }
 
         // Contactar cliente por WhatsApp
@@ -759,18 +1335,51 @@
         }
 
         // Confirmar pedido (nuevo)
-        function confirmOrder(orderId) {
+    function confirmOrder(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
-            
-            const message = encodeURIComponent('Hola, soy el Sr Burger 🍔 He recibido tu pedido y empezaré a prepararlo de inmediato. Te avisaré cuando esté listo. ¡Gracias por tu preferencia!');
-            const whatsappUrl = `https://wa.me/${order.customer.phone.replace(/\D/g, '')}?text=${message}`;
+
+            if (order.confirmed) {
+                showNotification('Este pedido ya estaba confirmado', 'success');
+                return;
+            }
+
+            // Armar mensaje + link de rastreo
+            const customerName = order.customer && order.customer.name ? String(order.customer.name) : '';
+            const orderNumber = order.orderNumber ? String(order.orderNumber) : '';
+            let trackingBase = '';
+            try {
+                if (window.location && window.location.origin) {
+                    const origin = String(window.location.origin);
+                    trackingBase = (origin && origin !== 'null') ? origin.replace(/\/$/, '') : '';
+                }
+            } catch (_) {
+                trackingBase = '';
+            }
+            const trackingUrl = orderNumber
+                ? (trackingBase ? `${trackingBase}/tuenvio.html?order=${encodeURIComponent(orderNumber)}` : `tuenvio.html?order=${encodeURIComponent(orderNumber)}`)
+                : '';
+
+            const msgLines = [];
+            msgLines.push(`Hola${customerName ? ' ' + customerName : ''} ✅`);
+            msgLines.push('Recibimos tu pedido. En unos momentos lo empezaremos a preparar. 🍔🔥');
+            if (orderNumber) msgLines.push(`\n*Número de orden:* ${orderNumber}`);
+            if (trackingUrl) {
+                msgLines.push('\n📦 *Rastrea tu pedido:*');
+                msgLines.push(trackingUrl);
+            }
+            const message = encodeURIComponent(msgLines.join('\n'));
+            const phone = (order.customer && order.customer.phone ? String(order.customer.phone) : '').replace(/\D/g, '');
+            if (phone) {
+                const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+                window.open(whatsappUrl, '_blank');
+            }
             
             // Actualizar en Firebase o localStorage
             if (window.firebaseOrderManager) {
-                window.firebaseOrderManager.updateOrder(orderId, { confirmed: true })
+                window.firebaseOrderManager.updateOrder(orderId, { confirmed: true, confirmedAt: new Date().toISOString(), confirmedSent: true })
                     .then(() => {
-                        showNotification('Pedido confirmado - Mensaje enviado al cliente', 'success');
+            showNotification('Pedido confirmado', 'success');
                     })
                     .catch((error) => {
                         console.error('Error al confirmar pedido:', error);
@@ -781,13 +1390,104 @@
                 const orderIndex = orders.findIndex(o => o.id === orderId);
                 if (orderIndex !== -1) {
                     orders[orderIndex].confirmed = true;
+                    orders[orderIndex].confirmedAt = new Date().toISOString();
+                    orders[orderIndex].confirmedSent = true;
                     saveOrdersToLocalStorage();
                     displayOrders();
                 }
-                showNotification('Pedido confirmado - Mensaje enviado al cliente', 'success');
+        showNotification('Pedido confirmado', 'success');
             }
-            
-            window.open(whatsappUrl, '_blank');
+        }
+
+        // Marcar pedido como pagado
+        async function markOrderPaid(orderId) {
+            const orderIndex = orders.findIndex(o => o.id === orderId);
+            const hadLocal = orderIndex !== -1;
+
+            if (hadLocal && orders[orderIndex].paid) {
+                showNotification('Este pedido ya estaba marcado como pagado', 'success');
+                return;
+            }
+
+            // Optimistic UI update
+            let prevPaid = null;
+            let prevPaidAt = null;
+            if (hadLocal) {
+                prevPaid = !!orders[orderIndex].paid;
+                prevPaidAt = orders[orderIndex].paidAt || null;
+                orders[orderIndex].paid = true;
+                orders[orderIndex].paidAt = new Date().toISOString();
+                displayOrders();
+                updateStats();
+            }
+
+            const payload = { paid: true, paidAt: new Date().toISOString() };
+
+            const canCallApi = (location && (location.protocol === 'http:' || location.protocol === 'https:'));
+            if (canCallApi) {
+                try {
+                    const storedKey = localStorage.getItem('sr_admin_key') || '';
+                    const doRequest = async (key) => {
+                        const r = await fetch('/api/mark-paid', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(key ? { 'x-admin-key': key } : {})
+                            },
+                            body: JSON.stringify({ orderId })
+                        });
+                        const data = await r.json().catch(() => ({}));
+                        return { status: r.status, ok: r.ok, data };
+                    };
+
+                    let apiRes = await doRequest(storedKey);
+                    if (apiRes.status === 401) {
+                        const entered = prompt('Clave admin requerida para marcar PAGADO (ADMIN_KEY):');
+                        const key = (entered || '').trim();
+                        if (key) {
+                            localStorage.setItem('sr_admin_key', key);
+                            apiRes = await doRequest(key);
+                        }
+                    }
+
+                    if (!apiRes.ok || !apiRes.data || apiRes.data.ok !== true) {
+                        throw new Error((apiRes.data && apiRes.data.error) || 'No se pudo marcar como pagado (API)');
+                    }
+
+                    showNotification(
+                        apiRes.data.pointsCredited
+                            ? `Pedido marcado como pagado (+${apiRes.data.pointsAdded || 0} pts)`
+                            : 'Pedido marcado como pagado',
+                        'success'
+                    );
+                    return;
+                } catch (error) {
+                    console.error('Error al marcar como pagado (API):', error);
+                    // Continue below to fallback
+                }
+            }
+
+            if (window.firebaseOrderManager) {
+                try {
+                    await window.firebaseOrderManager.updateOrder(orderId, payload);
+                    showNotification('Pedido marcado como pagado', 'success');
+                } catch (error) {
+                    console.error('Error al marcar como pagado:', error);
+                    // Revert optimistic change on error
+                    if (hadLocal) {
+                        orders[orderIndex].paid = prevPaid;
+                        orders[orderIndex].paidAt = prevPaidAt;
+                        displayOrders();
+                        updateStats();
+                    }
+                    showNotification('Error al marcar el pedido como pagado', 'error');
+                }
+            } else {
+                // Fallback localStorage
+                if (!hadLocal) return;
+                saveOrdersToLocalStorage();
+                showNotification('Pedido marcado como pagado', 'success');
+            }
         }
 
         // Enviar mensaje "Vamos en camino"
@@ -926,6 +1626,55 @@
 
         // Actualizar estado de orden
         function updateOrderStatus(orderId, newStatus) {
+            const orderIndex = orders.findIndex(o => o.id === orderId);
+            const hadLocal = orderIndex !== -1;
+
+            // Caso especial: al marcar ENTREGADO, solo actualizar status (el Control lo oculta)
+            if (String(newStatus).toLowerCase() === 'delivered') {
+                // Optimistic UI: marcar delivered localmente para que desaparezca por el filtro
+                let prevStatus = null;
+                if (hadLocal) {
+                    prevStatus = orders[orderIndex].status;
+                    orders[orderIndex].status = 'delivered';
+                    orders[orderIndex].deliveredAt = new Date().toISOString();
+                    displayOrders();
+                    updateStats();
+                }
+
+                const payload = { status: 'delivered', deliveredAt: new Date().toISOString() };
+
+                if (window.firebaseOrderManager) {
+                    window.firebaseOrderManager.updateOrder(orderId, payload)
+                        .then(() => {
+                            showNotification('Pedido marcado como entregado', 'success');
+                        })
+                        .catch((error) => {
+                            console.error('Error al marcar entregado:', error);
+                            // Revert optimistic change on error
+                            if (hadLocal && prevStatus != null) {
+                                orders[orderIndex].status = prevStatus;
+                                displayOrders();
+                                updateStats();
+                            }
+                            showNotification('Error al marcar el pedido como entregado', 'error');
+                        });
+                } else {
+                    if (!hadLocal) return;
+                    saveOrdersToLocalStorage();
+                    showNotification('Pedido marcado como entregado', 'success');
+                }
+                return;
+            }
+
+            // Optimistic UI update
+            let prevStatus = null;
+            if (hadLocal) {
+                prevStatus = orders[orderIndex].status;
+                orders[orderIndex].status = newStatus;
+                displayOrders();
+                updateStats();
+            }
+
             if (window.firebaseOrderManager) {
                 window.firebaseOrderManager.updateOrder(orderId, { status: newStatus })
                     .then(() => {
@@ -934,20 +1683,18 @@
                     })
                     .catch((error) => {
                         console.error('Error al actualizar estado:', error);
+                        // Revert optimistic change on error
+                        if (hadLocal && prevStatus) {
+                            orders[orderIndex].status = prevStatus;
+                            displayOrders();
+                            updateStats();
+                        }
                         showNotification('Error al actualizar el pedido', 'error');
                     });
             } else {
                 // Fallback localStorage
-                const orderIndex = orders.findIndex(o => o.id === orderId);
-                if (orderIndex === -1) return;
-                
-                const order = orders[orderIndex];
-                order.status = newStatus;
-                
+                if (!hadLocal) return;
                 saveOrdersToLocalStorage();
-                displayOrders();
-                updateStats();
-                
                 const statusText = getStatusInfo(newStatus).text;
                 showNotification(`Pedido actualizado a: ${statusText}`, 'success');
             }
@@ -976,7 +1723,8 @@
         // Configurar auto-refresh (solo para localStorage)
         function setupAutoRefresh() {
             if (!window.firebaseOrderManager) {
-                setInterval(() => {
+                if (localAutoRefreshId) return;
+                localAutoRefreshId = setInterval(() => {
                     loadOrdersFromLocalStorage();
                 }, 30000); // Refresh cada 30 segundos
             }
@@ -1002,19 +1750,19 @@
         }
 
         // Actualizar estadísticas
-        function updateStats() {
+    function updateStats() {
             const stats = {
-                pending: orders.filter(o => o.status === 'pending').length,
-                preparing: orders.filter(o => o.status === 'preparing').length,
-                delivering: orders.filter(o => o.status === 'delivering').length,
-                delivered: orders.filter(o => o.status === 'delivered').length
+        pending: orders.filter(o => !isOrderCanceled(o) && o.status === 'pending').length,
+        preparing: orders.filter(o => !isOrderCanceled(o) && o.status === 'preparing').length,
+        delivering: orders.filter(o => !isOrderCanceled(o) && o.status === 'delivering').length
             };
             
             // Desktop stats
             document.getElementById('pending-count').textContent = stats.pending;
             document.getElementById('preparing-count').textContent = stats.preparing;
             document.getElementById('delivering-count').textContent = stats.delivering;
-            document.getElementById('completed-count').textContent = stats.delivered;
+            const completedEl = document.getElementById('completed-count');
+            if (completedEl) completedEl.textContent = '0';
             
             // Mobile stats
             document.getElementById('mobile-pending').textContent = stats.pending;
@@ -1053,31 +1801,6 @@
             const whatsappUrl = `https://wa.me/${order.customer.phone.replace(/\D/g, '')}?text=${message}`;
             
             window.open(whatsappUrl, '_blank');
-        }
-
-        // Calcular tiempo estimado
-        function calculateEstimatedTime(items) {
-            // Tiempo base + tiempo por item
-            const baseTime = 15;
-            const timePerItem = 5;
-            return baseTime + (items.length * timePerItem);
-        }
-
-        // Obtener tiempo transcurrido
-        function getTimeAgo(timestamp) {
-            const now = new Date();
-            const orderTime = new Date(timestamp);
-            const diffMs = now - orderTime;
-            const diffMins = Math.floor(diffMs / 60000);
-            
-            if (diffMins < 1) return 'Ahora mismo';
-            if (diffMins < 60) return `Hace ${diffMins} min`;
-            
-            const diffHours = Math.floor(diffMins / 60);
-            if (diffHours < 24) return `Hace ${diffHours}h`;
-            
-            const diffDays = Math.floor(diffHours / 24);
-            return `Hace ${diffDays}d`;
         }
 
         // Mostrar notificación
@@ -1134,10 +1857,28 @@
                         address: 'Calle Principal #123, Minatitlán'
                     },
                     items: [
+                        { 
+                            name: 'DOBLES DOBLES', 
+                            quantity: 1, 
+                            price: 220, 
+                            customizations: '2 Hamburguesas a tu elección' 
+                        },
+                        { 
+                            name: 'Combo Pareja', 
+                            quantity: 1, 
+                            price: 250, 
+                            customizations: '2 Hamburguesas + Papas Medianas + 7 Aros de Cebolla' 
+                        },
+                        { 
+                            name: 'Combo Familiar', 
+                            quantity: 1, 
+                            price: 280, 
+                            customizations: 'Incluye: Papas Francesas, Aros Medianos, Coca-Cola 3L' 
+                        },
                         { name: 'Hamburguesa Clásica', quantity: 2, price: 140, customizations: 'Sin cebolla, extra queso' },
                         { name: 'Papas Grandes', quantity: 1, price: 45 }
                     ],
-                    total: 325,
+                    total: 685,
                     notes: 'Entregar en la puerta principal',
                     estimatedTime: 25,
                     confirmed: false,
@@ -1145,19 +1886,30 @@
                     arrivedSent: false
                 },
                 {
-                    id: '1704117500000',
-                    timestamp: new Date(Date.now() - 900000).toISOString(), // 15 min ago
+                    id: '1704117600001',
+                    timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 min ago
                     status: 'preparing',
                     customer: {
-                        name: 'María González',
-                        phone: '9227654321',
-                        address: 'Av. Revolución #456, Col. Centro'
+                        name: 'Carlos Rodríguez',
+                        phone: '9229876543',
+                        address: 'Av. Universidad #234, Col. Centro'
                     },
                     items: [
-                        { name: 'Combo Supremo', quantity: 1, price: 195 }
+                        { 
+                            name: 'Combo Amigos', 
+                            quantity: 1, 
+                            price: 360, 
+                            customizations: '3 Hamburguesas + Papas Medianas' 
+                        },
+                        { 
+                            name: 'DOBLES DOBLES BBQ', 
+                            quantity: 1, 
+                            price: 220, 
+                            customizations: '2 Hamburguesas BBQ' 
+                        }
                     ],
-                    total: 195,
-                    notes: '',
+                    total: 580,
+                    notes: 'Cliente frecuente - pedido especial',
                     estimatedTime: 20,
                     confirmed: true,
                     onWaySent: false,
@@ -1166,8 +1918,40 @@
             ];
             
             orders = sampleOrders;
-            saveOrders();
+            // Guardar en localStorage usando la función correcta de respaldo
+            if (typeof saveOrdersToLocalStorage === 'function') {
+                saveOrdersToLocalStorage();
+            } else {
+                try {
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                } catch (e) {
+                    console.warn('No se pudo guardar orders de ejemplo en localStorage:', e);
+                }
+            }
         }
+
+    // Limpieza al salir de la página: desuscribir listener de Firebase si existe
+        window.addEventListener('beforeunload', () => {
+            try {
+                if (typeof unsubscribeOrders === 'function') {
+                    unsubscribeOrders();
+                }
+            } catch (e) {
+                // noop
+            }
+        });
+
+    // Exponer handlers al scope global para soporte de atributos onclick
+    window.refreshOrders = refreshOrders;
+    window.filterOrders = filterOrders;
+    window.confirmOrder = confirmOrder;
+    window.updateOrderStatus = updateOrderStatus;
+    window.deleteOrder = deleteOrder;
+    window.cancelDelete = cancelDelete;
+    window.confirmDelete = confirmDelete;
+    window.sendOnWayMessage = sendOnWayMessage;
+    window.sendArrivedMessage = sendArrivedMessage;
+    window.toggleItemChecked = toggleItemChecked;
 
         // Función para ser llamada desde paginaburger.html
         window.addOrderToControl = addOrder;

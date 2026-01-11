@@ -1,3 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel local
+.vercel/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Env / secrets
+.env
+.env.*
+*.local
+
+# Local keys / credentials (DO NOT COMMIT)
+js/gmaps-key.local.js
+**/*serviceAccount*.json
+**/*firebase*service*account*.json
+
+# Backups
+js/script.js.backup
 # Archivos del sistema
 .DS_Store
 Thumbs.db
@@ -20,3 +45,7 @@ node_modules/
 
 # Archivos de audio grandes (opcional, pero el MP3 es grande)
 *.mp3
+.vercel
+
+# Google Maps key local (no subir)
+js/gmaps-key.local.js

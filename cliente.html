@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi cuenta - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+</head>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <header class="bg-white shadow-sm sticky top-0 z-20">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-hamburger text-white"></i>
+        </div>
+        <div>
+          <div class="font-bold text-lg">SR &amp; SRA <span class="text-yellow-600">BURGER</span></div>
+          <div class="text-xs text-gray-500">Mi cuenta</div>
+        </div>
+      </div>
+      <a href="paginaburger.html" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+        <i class="fas fa-arrow-left"></i>
+        Volver al menú
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <section class="bg-white rounded-2xl shadow border border-gray-100 p-5 mb-8">
+      <h2 class="text-base font-black flex items-center gap-2">
+        <i class="fas fa-truck text-orange-600"></i>
+        ¿Cómo pedir a domicilio?
+      </h2>
+      <ol class="mt-2 text-sm text-gray-700 space-y-1">
+        <li><strong>1)</strong> Crea tu cuenta o inicia sesión.</li>
+        <li><strong>2)</strong> En <strong>Verificar dirección (mapa)</strong>, escribe tu dirección, pulsa <strong>Verificar</strong> y ajusta el pin si hace falta.</li>
+        <li><strong>3)</strong> Guarda la ubicación. Se guarda también la <strong>distancia</strong>, el <strong>tiempo</strong> y el <strong>costo del envío</strong>.</li>
+        <li><strong>4)</strong> Regresa al menú y en el carrito elige <strong>Envío a domicilio</strong> y selecciona tu dirección guardada.</li>
+      </ol>
+      <p class="mt-2 text-xs text-gray-500">
+        Nota: el envío se calcula a <strong>$8 por KM</strong> (máximo <strong>12 km</strong> desde Coahuila 36). El redondeo es al entero más cercano.
+      </p>
+    </section>
+
+    <div id="auth-section" class="grid gap-6 md:grid-cols-2 mb-8">
+      <!-- Registro -->
+      <section class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <h2 class="text-xl font-black mb-4 flex items-center gap-2">
+          <i class="fas fa-user-plus text-yellow-500"></i>
+          Crear cuenta
+        </h2>
+        <div class="mb-4 p-4 rounded-2xl border border-yellow-300 bg-gradient-to-r from-yellow-50 via-white to-amber-50">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-yellow-500 text-white flex items-center justify-center shrink-0">
+              <i class="fas fa-gift"></i>
+            </div>
+            <div>
+              <p class="text-base sm:text-lg font-black text-gray-900">Regístrate y obtén un 10% de descuento en tu primera compra</p>
+              <p class="text-sm text-gray-700 mt-1">Al crear tu cuenta, el bono se activa automáticamente y se aplica cuando hagas tu primer pedido desde el menú.</p>
+            </div>
+          </div>
+        </div>
+        <form id="register-form" class="space-y-3 text-sm">
+          <div>
+            <label class="block mb-1 font-medium">Nombre completo</label>
+            <input id="reg-nombre" type="text" required class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" />
+          </div>
+          <div>
+            <label class="block mb-1 font-medium">Correo electrónico</label>
+            <input id="reg-correo" type="email" required class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" />
+          </div>
+          <div>
+            <label class="block mb-1 font-medium">Teléfono</label>
+            <input id="reg-telefono" type="tel" required class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" placeholder="Ej. 9221234567" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block mb-1 font-medium">Contraseña</label>
+              <input id="reg-pass" type="password" required minlength="6" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" />
+            </div>
+            <div>
+              <label class="block mb-1 font-medium">Confirmar contraseña</label>
+              <input id="reg-pass2" type="password" required minlength="6" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" />
+            </div>
+          </div>
+          <p class="text-xs text-gray-500">Tus datos se usan para identificarte y guardar tu historial. La dirección se agrega después en “Verificar dirección (mapa)”.</p>
+          <button id="reg-submit" type="submit" class="sr-btn sr-btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60">
+            <span>Crear cuenta</span>
+            <span id="reg-spinner" class="hidden w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+          </button>
+          <p id="reg-error" class="mt-2 text-xs text-red-600 hidden"></p>
+          <p id="reg-success" class="mt-2 text-xs text-green-600 hidden"></p>
+        </form>
+      </section>
+
+      <!-- Login -->
+      <section class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <h2 class="text-xl font-black mb-4 flex items-center gap-2">
+          <i class="fas fa-right-to-bracket text-blue-500"></i>
+          Iniciar sesión
+        </h2>
+        <form id="login-form" class="space-y-3 text-sm">
+          <div>
+            <label class="block mb-1 font-medium">Correo electrónico</label>
+            <input id="login-correo" type="email" required class="w-full border rounded-lg px-3 py-2 focus:ring-blue-400 focus:border-blue-400" />
+          </div>
+          <div>
+            <label class="block mb-1 font-medium">Contraseña</label>
+            <input id="login-pass" type="password" required class="w-full border rounded-lg px-3 py-2 focus:ring-blue-400 focus:border-blue-400" />
+          </div>
+          <button id="login-submit" type="submit" class="sr-btn sr-btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60">
+            <span>Entrar</span>
+            <span id="login-spinner" class="hidden w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+          </button>
+          <button id="forgot-pass-btn" type="button" class="sr-btn sr-btn-ghost w-full flex items-center justify-center gap-2 text-sm disabled:opacity-60">
+            <span>Olvidé mi contraseña</span>
+            <span id="forgot-pass-spinner" class="hidden w-4 h-4 border-2 border-gray-900/25 border-t-gray-900 rounded-full animate-spin"></span>
+          </button>
+          <p id="login-error" class="mt-2 text-xs text-red-600 hidden"></p>
+          <p id="forgot-pass-success" class="mt-2 text-xs text-green-600 hidden"></p>
+        </form>
+        <p class="mt-4 text-xs text-gray-500">
+          Si ya hiciste un pedido pero no tenías cuenta, puedes crearla usando el mismo correo y teléfono para vincular tus futuros pedidos.
+        </p>
+      </section>
+    </div>
+
+    <!-- Dashboard de cliente autenticado -->
+    <section id="dashboard" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p class="text-sm text-gray-500">Bienvenido(a)</p>
+          <h1 id="dash-nombre" class="text-2xl font-black">—</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="logout-btn" class="sr-btn sr-btn-ghost flex items-center gap-2 text-sm">
+            <i class="fas fa-right-from-bracket"></i>
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+
+      <div id="dash-welcome-reward" class="hidden bg-gradient-to-r from-yellow-50 via-white to-amber-50 border border-yellow-200 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-yellow-500 text-white flex items-center justify-center shrink-0">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <div>
+            <p class="text-base sm:text-lg font-black text-gray-900">10% de descuento activo</p>
+            <p id="dash-welcome-reward-text" class="text-sm text-gray-700 mt-1">Se aplicará automáticamente en tu siguiente pedido (primera compra).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="bg-white rounded-2xl shadow border border-gray-100 p-4 flex flex-col justify-between">
+          <div>
+            <p class="text-xs text-gray-500 mb-1">Puntos acumulados</p>
+            <p id="dash-puntos" class="text-3xl font-black text-yellow-600">0</p>
+          </div>
+          <p class="mt-1 text-[11px] text-gray-500">Ganas 1 punto por cada $10 MXN de consumo.</p>
+          <div class="mt-3 space-y-2 text-xs">
+            <p class="text-[11px] text-gray-500 mb-1">Canjea tus puntos:</p>
+            <!-- 10% descuento -->
+            <button
+              id="btn-reward-10"
+              class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border border-yellow-400/60 bg-gradient-to-r from-yellow-50/70 via-white/40 to-amber-50/70 backdrop-blur-md shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-[11px] font-medium text-gray-800">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-400/90 text-white shadow"><i class="fas fa-ticket-alt text-[10px]"></i></span>
+                <span class="leading-tight">10% de descuento</span>
+              </div>
+              <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-yellow-500 text-[10px] font-bold text-white shadow-inner">
+                75 pts
+              </span>
+            </button>
+            <!-- 25% descuento -->
+            <button
+              id="btn-reward-25"
+              class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border border-amber-500/70 bg-gradient-to-r from-amber-50/70 via-white/40 to-orange-100/80 backdrop-blur-md shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-[11px] font-medium text-gray-900">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-white shadow"><i class="fas fa-crown text-[10px]"></i></span>
+                <span class="leading-tight">25% de descuento</span>
+              </div>
+              <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-600 text-[10px] font-bold text-white shadow-inner">
+                150 pts
+              </span>
+            </button>
+            <!-- Envío gratis -->
+            <button
+              id="btn-reward-envio"
+              class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border border-green-500/70 bg-gradient-to-r from-emerald-50/70 via-white/40 to-green-100/80 backdrop-blur-md shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-[11px] font-medium text-gray-900">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white shadow"><i class="fas fa-truck-fast text-[10px]"></i></span>
+                <span class="leading-tight">Envío gratis</span>
+              </div>
+              <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-green-600 text-[10px] font-bold text-white shadow-inner">
+                75 pts
+              </span>
+            </button>
+            <div id="reward-message" class="mt-3 hidden text-sm font-semibold text-amber-900 bg-amber-50 border border-amber-200 p-3 rounded-xl"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow border border-gray-100 p-4 md:col-span-2">
+          <p class="text-xs text-gray-500 mb-1">Direcciones registradas</p>
+          <p id="dash-direccion" class="text-sm font-medium text-gray-800">—</p>
+          <div id="dash-direcciones-list" class="mt-2 space-y-1 text-sm text-gray-700"></div>
+        </div>
+      </div>
+
+      <section class="bg-white rounded-2xl shadow border border-gray-100 p-4">
+        <h2 class="text-base font-black flex items-center gap-2">
+          <i class="fas fa-location-dot text-green-600"></i>
+          Verificar dirección (mapa)
+        </h2>
+        <p class="text-xs text-gray-500 mt-1">
+          Escribe tu dirección, pulsa <strong>Verificar</strong> y ajusta el pin en el minimapa.
+          Aquí mismo verás la distancia y el costo ($8 por KM, redondeo al entero más cercano).
+        </p>
+
+        <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto] items-end">
+          <div>
+            <label class="block mb-1 text-sm font-medium text-gray-700">Tu dirección</label>
+            <input
+              id="client-address-input"
+              type="text"
+              class="w-full border rounded-lg px-3 py-2 focus:ring-green-400 focus:border-green-400"
+              placeholder="Ej. Vicente Guerrero 19, Patria Libre"
+            />
+          </div>
+          <button
+            id="client-verify-btn"
+            type="button"
+            class="sr-btn sr-btn-primary w-full md:w-auto flex items-center justify-center gap-2">
+            <i class="fas fa-check"></i>
+            Verificar
+          </button>
+        </div>
+
+        <div class="mt-3 text-xs text-gray-600">
+          <strong>Dirección detectada:</strong> <span id="client-selected-address">—</span>
+        </div>
+
+        <div id="client-map-section" class="hidden mt-4">
+          <div class="text-xs text-gray-500 mb-2">
+            Tip: puedes mover el pin o dar clic en el mapa para ajustar tu ubicación.
+          </div>
+          <div id="client-mini-map" class="w-full rounded-xl border border-gray-200 overflow-hidden" style="height: 320px;"></div>
+        </div>
+
+        <div id="client-distance-result" class="text-sm mt-3"></div>
+
+        <div class="mt-3 flex flex-col md:flex-row md:items-center gap-3">
+          <button
+            id="client-save-btn"
+            type="button"
+            disabled
+            class="sr-btn sr-btn-primary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-save"></i>
+            Aceptar y guardar ubicación
+          </button>
+          <button
+            id="client-add-address-btn"
+            type="button"
+            disabled
+            class="sr-btn sr-btn-secondary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-plus"></i>
+            Agregar dirección
+          </button>
+          <div id="client-save-msg" class="text-xs text-gray-500"></div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow border border-gray-100 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-black flex items-center gap-2">
+            <i class="fas fa-receipt text-gray-600"></i>
+            Historial de compras
+          </h2>
+          <span id="dash-count" class="text-xs text-gray-500"></span>
+        </div>
+        <div id="dash-empty" class="text-xs text-gray-500 py-6 hidden">
+          Aún no hemos encontrado pedidos asociados a tu cuenta. Cuando compres desde el menú usando este correo, aparecerán aquí.
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs">
+            <thead class="bg-gray-50 text-gray-500">
+              <tr>
+                <th class="px-3 py-2 text-left font-semibold">Fecha</th>
+                <th class="px-3 py-2 text-left font-semibold">Detalle</th>
+                <th class="px-3 py-2 text-right font-semibold">Total</th>
+              </tr>
+            </thead>
+            <tbody id="dash-orders" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Sticky cart CTA (móvil): lee el carrito del menú desde localStorage -->
+  <div id="client-sticky-cart" class="fixed bottom-0 left-0 right-0 md:hidden z-30 hidden">
+    <div class="mx-auto max-w-4xl px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+      <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg flex items-center justify-between gap-3 p-3">
+        <div class="min-w-0">
+          <div id="client-sticky-title" class="text-sm font-black text-gray-900 dark:text-gray-100">Tu carrito</div>
+          <div id="client-sticky-sub" class="text-xs text-gray-600 dark:text-gray-300 truncate">0 artículos · $0</div>
+        </div>
+        <a id="client-sticky-btn" href="paginaburger.html" class="sr-btn sr-btn-primary inline-flex items-center justify-center px-4 text-sm font-black" aria-label="Ir al menú">
+          Explorar combos
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script>
+    (function() {
+      const byId = (id) => document.getElementById(id);
+
+      function setText(id, value) {
+        const el = byId(id);
+        if (el) el.textContent = value;
+      }
+
+      function show(el) { el.classList.remove('hidden'); }
+      function hide(el) { el.classList.add('hidden'); }
+
+      function formatDate(iso) {
+        try {
+          const d = new Date(iso);
+          return d.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+        } catch (_) { return iso || ''; }
+      }
+
+      function formatMoney(n) {
+        try {
+          return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n || 0));
+        } catch (_) {
+          return '$' + (n || 0);
+        }
+      }
+
+      function formatDistanceCost(distanceKm, deliveryPrice, durationMin) {
+        const km = Number(distanceKm);
+        const fee = Number(deliveryPrice);
+        const eta = Number(durationMin);
+        const parts = [];
+        if (Number.isFinite(km) && km > 0) parts.push(`${km.toFixed(1)} km`);
+        if (Number.isFinite(fee) && fee >= 0) parts.push(formatMoney(fee));
+        if (Number.isFinite(eta) && eta > 0) parts.push(`${Math.round(eta)} min`);
+        return parts.length ? parts.join(' • ') : '';
+      }
+
+      function waitForClientManager(callback) {
+        const maxTries = 50;
+        let tries = 0;
+        (function check() {
+          if (window.firebaseClientManager && window.firebaseAuth) {
+            callback(window.firebaseClientManager);
+          } else if (tries++ < maxTries) {
+            setTimeout(check, 100);
+          } else {
+            const err = byId('login-error');
+            if (err) {
+              err.textContent = 'No se pudo conectar con el servidor. Intenta recargar la página.';
+              err.classList.remove('hidden');
+            }
+          }
+        })();
+      }
+
+      let lastClienteSnapshot = null;
+      let lastDireccionesSnapshot = [];
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function makeAddressKey(it) {
+        if (!it) return '';
+        const id = it.id ? String(it.id) : '';
+        if (id) return `id:${id}`;
+        const formatted = it.formatted ? String(it.formatted).trim() : '';
+        const lat = it.lat != null ? Number(it.lat) : null;
+        const lng = it.lng != null ? Number(it.lng) : null;
+        const latKey = isFinite(lat) ? lat.toFixed(6) : '';
+        const lngKey = isFinite(lng) ? lng.toFixed(6) : '';
+        return `v:${formatted}|${latKey}|${lngKey}`;
+      }
+
+      function renderRegisteredAddresses(cliente) {
+        const listEl = byId('dash-direcciones-list');
+        if (!listEl) return;
+
+        const d = (cliente && cliente.direccion) ? cliente.direccion : {};
+        const principalText = (d.formatted || '').trim() || [d.calle, d.numero, d.colonia].filter(Boolean).join(' ');
+
+        const itemsRaw = Array.isArray(cliente && cliente.direcciones) ? cliente.direcciones : [];
+        // Deduplicar (por id o por formatted+coords)
+        const seen = new Set();
+        const items = [];
+        for (const it of itemsRaw) {
+          const formatted = (it && it.formatted) ? String(it.formatted).trim() : '';
+          if (!formatted) continue;
+          const key = makeAddressKey(it);
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          items.push(it);
+        }
+
+        if (!items.length) {
+          listEl.innerHTML = '';
+          return;
+        }
+
+        const principalLat = d && d.lat != null ? Number(d.lat) : null;
+        const principalLng = d && d.lng != null ? Number(d.lng) : null;
+        const hasPrincipalCoords = isFinite(principalLat) && isFinite(principalLng);
+
+        listEl.innerHTML = items
+          .map((it) => {
+            const formatted = (it && it.formatted) ? String(it.formatted).trim() : '';
+            const lat = it && it.lat != null ? Number(it.lat) : null;
+            const lng = it && it.lng != null ? Number(it.lng) : null;
+            const meta = formatDistanceCost(it && it.distanceKm, it && it.deliveryPrice, it && it.durationMin);
+            const isPrincipal = hasPrincipalCoords && isFinite(lat) && isFinite(lng)
+              ? (Math.abs(lat - principalLat) < 1e-8 && Math.abs(lng - principalLng) < 1e-8)
+              : (principalText && formatted === principalText);
+            const badge = isPrincipal
+              ? '<span class="sr-badge sr-badge--success ml-2">Principal</span>'
+              : '';
+            const key = makeAddressKey(it);
+            return `
+              <div class="sr-card-soft p-3 sm:p-4">
+                <div class="flex items-start gap-3">
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-sm sm:text-base font-black text-gray-900 leading-snug break-words">
+                      ${escapeHtml(formatted)}${badge}
+                    </h3>
+                    ${meta ? `<div class="text-[11px] text-gray-600 mt-1">Cerca de ${escapeHtml(meta)}</div>` : ''}
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button data-action="use" data-key="${escapeHtml(key)}" class="sr-btn sr-btn-primary sr-touch px-3 text-xs">Usar</button>
+                    <button data-action="delete" data-key="${escapeHtml(key)}" class="sr-btn sr-btn-danger sr-touch px-3 text-xs">Eliminar</button>
+                  </div>
+                </div>
+              </div>`;
+          })
+          .join('');
+      }
+
+      function renderAddressesSkeleton() {
+        const listEl = byId('dash-direcciones-list');
+        if (!listEl) return;
+        listEl.innerHTML = Array.from({ length: 3 }).map(() => `
+          <div class="sr-skeleton sr-skeleton-block p-3 sm:p-4">
+            <div class="h-4 w-4/5 rounded bg-white/10"></div>
+            <div class="h-3 w-2/5 rounded bg-white/10 mt-2"></div>
+            <div class="h-9 w-40 rounded bg-white/10 mt-3"></div>
+          </div>
+        `).join('');
+      }
+
+      function renderOrdersSkeleton() {
+        const tbody = byId('dash-orders');
+        if (!tbody) return;
+        tbody.innerHTML = Array.from({ length: 4 }).map(() => `
+          <tr>
+            <td class="px-3 py-2"><div class="sr-skeleton sr-skeleton-block h-4 w-24"></div></td>
+            <td class="px-3 py-2"><div class="sr-skeleton sr-skeleton-block h-4 w-64"></div></td>
+            <td class="px-3 py-2 text-right"><div class="sr-skeleton sr-skeleton-block h-4 w-20 ml-auto"></div></td>
+          </tr>
+        `).join('');
+      }
+
+      function showToast(message) {
+        const msg = String(message || '').trim();
+        if (!msg) return;
+        const el = document.createElement('div');
+        el.setAttribute('role', 'status');
+        el.className = 'fixed bottom-24 right-4 z-[80] bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-sm font-semibold opacity-0 translate-y-2 transition-all duration-300';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => {
+          el.classList.remove('opacity-0', 'translate-y-2');
+        });
+        setTimeout(() => {
+          el.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => el.remove(), 320);
+        }, 1800);
+      }
+
+      function updateClientStickyCart() {
+        const bar = byId('client-sticky-cart');
+        const title = byId('client-sticky-title');
+        const sub = byId('client-sticky-sub');
+        const btn = byId('client-sticky-btn');
+        if (!bar || !title || !sub || !btn) return;
+
+        let cart = [];
+        try {
+          const raw = localStorage.getItem('cart');
+          const parsed = raw ? JSON.parse(raw) : [];
+          cart = Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+          cart = [];
+        }
+
+        const count = cart.reduce((acc, it) => acc + Number(it && it.quantity ? it.quantity : 1), 0);
+        const total = cart.reduce((acc, it) => acc + (Number(it && it.price ? it.price : 0) * Number(it && it.quantity ? it.quantity : 1)), 0);
+
+        bar.classList.remove('hidden');
+        document.body.classList.add('sr-sticky-cart-visible');
+
+        if (count > 0) {
+          title.textContent = 'Tu carrito';
+          sub.textContent = `${count} artículo${count === 1 ? '' : 's'} · $${total.toFixed(0)}`;
+          btn.textContent = 'Ver carrito';
+          btn.href = 'paginaburger.html?openCart=1#menu';
+          btn.setAttribute('aria-label', 'Ver carrito en el menú');
+        } else {
+          title.textContent = 'Carrito vacío';
+          sub.textContent = 'Explora combos y arma tu pedido';
+          btn.textContent = 'Explorar combos';
+          btn.href = 'paginaburger.html#menu';
+          btn.setAttribute('aria-label', 'Explorar combos en el menú');
+        }
+      }
+
+      function mapAuthError(e, defaultMsg) {
+        const code = e && e.code ? String(e.code) : '';
+        switch (code) {
+          case 'EMAIL_ALREADY_REGISTERED':
+          case 'auth/email-already-in-use':
+            return 'Este correo ya está registrado. Intenta iniciar sesión.';
+          case 'PHONE_ALREADY_REGISTERED':
+            return 'Este teléfono ya está registrado. Intenta iniciar sesión.';
+          case 'auth/missing-email':
+            return 'Escribe tu correo para continuar.';
+          case 'auth/invalid-email':
+            return 'El correo no es válido. Revisa el formato.';
+          case 'auth/weak-password':
+            return 'La contraseña es muy débil. Usa al menos 6 caracteres.';
+          case 'auth/too-many-requests':
+            return 'Demasiados intentos. Intenta de nuevo más tarde.';
+          case 'auth/invalid-credential':
+          case 'auth/wrong-password':
+          case 'auth/user-not-found':
+            return 'Correo o contraseña incorrectos.';
+          case 'auth/configuration-not-found':
+            return 'El inicio de sesión por correo/contraseña no está habilitado en Firebase. El administrador debe activarlo en Authentication > Métodos de acceso.';
+          default:
+            return defaultMsg || 'Ocurrió un error inesperado. Intenta de nuevo.';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const authSection = byId('auth-section');
+        const dashboard = byId('dashboard');
+        const regForm = byId('register-form');
+        const regBtn = byId('reg-submit');
+        const regSpinner = byId('reg-spinner');
+        const regError = byId('reg-error');
+        const regSuccess = byId('reg-success');
+        const loginForm = byId('login-form');
+        const loginBtn = byId('login-submit');
+        const loginSpinner = byId('login-spinner');
+        const loginError = byId('login-error');
+        const forgotBtn = byId('forgot-pass-btn');
+        const forgotSpinner = byId('forgot-pass-spinner');
+        const forgotSuccess = byId('forgot-pass-success');
+        const logoutBtn = byId('logout-btn');
+        const ordersTbody = byId('dash-orders');
+        const dashEmpty = byId('dash-empty');
+        const dashCount = byId('dash-count');
+        const rewardMsg = byId('reward-message');
+        const btnReward10 = byId('btn-reward-10');
+        const btnReward25 = byId('btn-reward-25');
+        const btnRewardEnvio = byId('btn-reward-envio');
+
+        function updateRewardButtons(points, activeReward) {
+          const safePoints = Number(points || 0);
+          const mapping = [
+            { btn: btnReward10, cost: 75 },
+            { btn: btnReward25, cost: 150 },
+            { btn: btnRewardEnvio, cost: 75 }
+          ];
+
+          mapping.forEach(({ btn, cost }) => {
+            if (!btn) return;
+            const enabled = safePoints >= cost;
+            btn.disabled = !enabled;
+            btn.classList.toggle('opacity-40', !enabled);
+            btn.classList.toggle('cursor-not-allowed', !enabled);
+          });
+
+          if (rewardMsg) {
+            if (activeReward && activeReward.label) {
+              const isWelcome = String(activeReward.type || '') === 'WELCOME_10' || /primera\s*compra/i.test(String(activeReward.label || ''));
+              if (isWelcome) {
+                rewardMsg.textContent = '🎁 Tienes activo el 10% de tu primera compra. Se aplicará automáticamente al finalizar tu pedido en el menú.';
+              } else {
+                rewardMsg.textContent = `🏷️ Tienes una recompensa activa: ${activeReward.label}. Se aplicará automáticamente en tu siguiente compra.`;
+              }
+              rewardMsg.classList.remove('hidden');
+            } else if (!rewardMsg.dataset.locked) {
+              rewardMsg.textContent = '';
+              rewardMsg.classList.add('hidden');
+            }
+          }
+        }
+
+        // Sticky cart CTA (móvil)
+        try {
+          updateClientStickyCart();
+          window.addEventListener('storage', (e) => {
+            if (e && e.key === 'cart') updateClientStickyCart();
+          });
+          setInterval(updateClientStickyCart, 2500);
+        } catch (_) {}
+
+        waitForClientManager(function(manager) {
+          // Reaccionar a cambios de sesión
+          manager.onAuthChange(async (user) => {
+            if (user) {
+              hide(authSection);
+              show(dashboard);
+              loginError.classList.add('hidden');
+              await loadDashboard(manager, user.uid);
+            } else {
+              show(authSection);
+              hide(dashboard);
+            }
+          });
+
+          // Cuando cliente-location.js guarda/agrega una dirección, refrescar la lista
+          document.addEventListener('sr:clientLocationSaved', async () => {
+            try {
+              const current = manager.getCurrentUser();
+              if (current && current.uid) {
+                await loadDashboard(manager, current.uid);
+              }
+            } catch (_) {}
+          });
+
+          // Seleccionar/Eliminar direcciones desde la lista
+          const listEl = byId('dash-direcciones-list');
+          if (listEl) {
+            listEl.addEventListener('click', async (ev) => {
+              const btn = ev.target && ev.target.closest ? ev.target.closest('button[data-action]') : null;
+              if (!btn) return;
+              const action = btn.getAttribute('data-action');
+              const key = btn.getAttribute('data-key') || '';
+              if (!action || !key) return;
+
+              const currentUser = manager.getCurrentUser();
+              if (!currentUser || !currentUser.uid) return;
+
+              const list = Array.isArray(lastDireccionesSnapshot) ? lastDireccionesSnapshot : [];
+              const entry = list.find((it) => makeAddressKey(it) === key);
+              if (!entry) return;
+
+              if (action === 'use') {
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-wait');
+                try {
+                  if (typeof manager.setPrimaryClientLocation === 'function') {
+                    await manager.setPrimaryClientLocation(entry);
+                    await loadDashboard(manager, currentUser.uid);
+                    showToast('Dirección seleccionada');
+                  }
+                } catch (e) {
+                  console.error('No se pudo seleccionar dirección:', e);
+                } finally {
+                  btn.classList.remove('cursor-wait');
+                }
+                return;
+              }
+
+              if (action === 'delete') {
+                const ok = confirm('¿Eliminar esta dirección?');
+                if (!ok) return;
+
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-wait');
+                try {
+                  const d = (lastClienteSnapshot && lastClienteSnapshot.direccion) ? lastClienteSnapshot.direccion : {};
+                  const principalLat = d && d.lat != null ? Number(d.lat) : null;
+                  const principalLng = d && d.lng != null ? Number(d.lng) : null;
+                  const entryLat = entry && entry.lat != null ? Number(entry.lat) : null;
+                  const entryLng = entry && entry.lng != null ? Number(entry.lng) : null;
+                  const deletingPrincipal = isFinite(principalLat) && isFinite(principalLng) && isFinite(entryLat) && isFinite(entryLng)
+                    ? (Math.abs(entryLat - principalLat) < 1e-8 && Math.abs(entryLng - principalLng) < 1e-8)
+                    : false;
+
+                  if (typeof manager.removeClientLocation === 'function') {
+                    await manager.removeClientLocation(entry);
+                  }
+
+                  await loadDashboard(manager, currentUser.uid);
+                  showToast('Dirección eliminada');
+
+                  // Si se borró la principal, seleccionar otra si existe; si no, limpiar principal
+                  if (deletingPrincipal) {
+                    const after = Array.isArray(lastDireccionesSnapshot) ? lastDireccionesSnapshot : [];
+                    const remaining = after.filter((it) => makeAddressKey(it) !== key);
+                    if (remaining.length && typeof manager.setPrimaryClientLocation === 'function') {
+                      await manager.setPrimaryClientLocation(remaining[0]);
+                      await loadDashboard(manager, currentUser.uid);
+                    } else if (!remaining.length && typeof manager.clearPrimaryClientLocation === 'function') {
+                      await manager.clearPrimaryClientLocation();
+                      await loadDashboard(manager, currentUser.uid);
+                    }
+                  }
+                } catch (e) {
+                  console.error('No se pudo eliminar dirección:', e);
+                } finally {
+                  btn.classList.remove('cursor-wait');
+                }
+              }
+            });
+          }
+
+          if (regForm) {
+            regForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              regError.classList.add('hidden');
+              regSuccess.classList.add('hidden');
+
+              const nombre = byId('reg-nombre').value.trim();
+              const correo = byId('reg-correo').value.trim();
+              const telefono = byId('reg-telefono').value.trim();
+              const pass = byId('reg-pass').value;
+              const pass2 = byId('reg-pass2').value;
+
+              if (pass !== pass2) {
+                regError.textContent = 'Las contraseñas no coinciden.';
+                regError.classList.remove('hidden');
+                return;
+              }
+
+              regBtn.disabled = true;
+              regSpinner.classList.remove('hidden');
+
+              try {
+                await manager.registerClient({ nombre, correo, telefono, password: pass });
+                regSuccess.textContent = 'Cuenta creada correctamente. Ya puedes usarla para tus pedidos.';
+                regSuccess.classList.remove('hidden');
+                regForm.reset();
+              } catch (e) {
+                console.error(e);
+                regError.textContent = mapAuthError(e, 'Ocurrió un error al registrar la cuenta.');
+                regError.classList.remove('hidden');
+              } finally {
+                regBtn.disabled = false;
+                regSpinner.classList.add('hidden');
+              }
+            });
+          }
+
+          if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              loginError.classList.add('hidden');
+              forgotSuccess && forgotSuccess.classList.add('hidden');
+              const correo = byId('login-correo').value.trim();
+              const pass = byId('login-pass').value;
+
+              loginBtn.disabled = true;
+              loginSpinner.classList.remove('hidden');
+              try {
+                await manager.login(correo, pass);
+                // onAuthChange se encargará de mostrar el dashboard
+              } catch (e) {
+                console.error(e);
+                loginError.textContent = mapAuthError(e, 'No se pudo iniciar sesión. Revisa tu correo y contraseña.');
+                loginError.classList.remove('hidden');
+              } finally {
+                loginBtn.disabled = false;
+                loginSpinner.classList.add('hidden');
+              }
+            });
+          }
+
+          if (forgotBtn) {
+            forgotBtn.addEventListener('click', async () => {
+              const correoInput = byId('login-correo');
+              const correo = correoInput ? correoInput.value.trim() : '';
+
+              loginError.classList.add('hidden');
+              forgotSuccess && forgotSuccess.classList.add('hidden');
+
+              if (!correo) {
+                loginError.textContent = 'Escribe tu correo para enviarte el enlace de recuperación.';
+                loginError.classList.remove('hidden');
+                correoInput && correoInput.focus();
+                return;
+              }
+
+              if (correoInput && typeof correoInput.checkValidity === 'function' && !correoInput.checkValidity()) {
+                loginError.textContent = 'Ingresa un correo válido.';
+                loginError.classList.remove('hidden');
+                correoInput.focus();
+                return;
+              }
+
+              forgotBtn.disabled = true;
+              forgotBtn.classList.add('cursor-wait');
+              forgotSpinner && forgotSpinner.classList.remove('hidden');
+
+              try {
+                if (typeof manager.sendPasswordReset !== 'function') {
+                  throw new Error('La recuperación de contraseña no está disponible.');
+                }
+                await manager.sendPasswordReset(correo);
+                const msg = 'Te enviamos un enlace de recuperación. Revisa tu correo (también Spam).';
+                if (forgotSuccess) {
+                  forgotSuccess.textContent = msg;
+                  forgotSuccess.classList.remove('hidden');
+                }
+                showToast('Enlace de recuperación enviado');
+              } catch (e) {
+                console.error(e);
+                const code = e && e.code ? String(e.code) : '';
+                if (code === 'auth/user-not-found') {
+                  // Evitar revelar si el correo existe o no.
+                  const msg = 'Si el correo está registrado, recibirás un enlace de recuperación. Revisa tu bandeja (y Spam).';
+                  if (forgotSuccess) {
+                    forgotSuccess.textContent = msg;
+                    forgotSuccess.classList.remove('hidden');
+                  }
+                  showToast('Revisa tu correo');
+                } else {
+                  loginError.textContent = mapAuthError(e, 'No se pudo enviar el enlace de recuperación. Intenta de nuevo.');
+                  loginError.classList.remove('hidden');
+                }
+              } finally {
+                forgotBtn.disabled = false;
+                forgotBtn.classList.remove('cursor-wait');
+                forgotSpinner && forgotSpinner.classList.add('hidden');
+              }
+            });
+          }
+
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+              try { await manager.logout(); } catch (_) {}
+            });
+          }
+
+          function setupRewardButton(button, type) {
+            if (!button) return;
+            button.addEventListener('click', async () => {
+              if (!manager || button.disabled) return;
+
+              if (rewardMsg) {
+                rewardMsg.dataset.locked = '1';
+                rewardMsg.textContent = '';
+                rewardMsg.classList.add('hidden');
+              }
+
+              button.disabled = true;
+              button.classList.add('opacity-60', 'cursor-wait');
+
+              try {
+                await manager.redeemReward(type);
+                if (rewardMsg) {
+                  rewardMsg.textContent = 'Recompensa canjeada correctamente. Tus puntos se han actualizado.';
+                  rewardMsg.classList.remove('hidden');
+                }
+                showToast('Recompensa aplicada');
+                const current = manager.getCurrentUser();
+                if (current) {
+                  await loadDashboard(manager, current.uid);
+                }
+              } catch (e) {
+                console.error('Error al canjear recompensa:', e);
+                if (rewardMsg) {
+                  let msg;
+                  if (e && e.code === 'INSUFFICIENT_POINTS') {
+                    msg = 'No tienes puntos suficientes para esta recompensa.';
+                  } else {
+                    msg = e && e.message ? e.message : 'No se pudo canjear la recompensa. Intenta de nuevo.';
+                  }
+                  rewardMsg.textContent = msg;
+                  rewardMsg.classList.remove('hidden');
+                }
+              } finally {
+                button.classList.remove('cursor-wait');
+                rewardMsg && delete rewardMsg.dataset.locked;
+              }
+            });
+          }
+
+          setupRewardButton(btnReward10, 'DESC_10');
+          setupRewardButton(btnReward25, 'DESC_25');
+          setupRewardButton(btnRewardEnvio, 'ENVIO_GRATIS');
+        });
+
+        async function loadDashboard(manager, uid) {
+          try {
+            renderAddressesSkeleton();
+            renderOrdersSkeleton();
+            const cliente = await manager.getClient(uid);
+            if (cliente) {
+              lastClienteSnapshot = cliente;
+              lastDireccionesSnapshot = Array.isArray(cliente.direcciones) ? cliente.direcciones : [];
+              setText('dash-nombre', cliente.nombre || cliente.correo || 'Cliente');
+              const puntos = Number(cliente.puntos != null ? cliente.puntos : 0);
+              setText('dash-puntos', String(puntos));
+              const d = cliente.direccion || {};
+              const direccionTexto = (d.formatted || '').trim() || [d.calle, d.numero, d.colonia].filter(Boolean).join(' ');
+              const principalMeta = formatDistanceCost(d.distanceKm, d.deliveryPrice, d.durationMin);
+              setText('dash-direccion', (direccionTexto || 'Sin dirección registrada') + (principalMeta ? ` (${principalMeta})` : ''));
+              renderRegisteredAddresses(cliente);
+              updateRewardButtons(puntos, cliente.activeReward || null);
+
+              // Banner grande para bono de primera compra (10%)
+              const welcomeBanner = byId('dash-welcome-reward');
+              const welcomeText = byId('dash-welcome-reward-text');
+              try {
+                const r = cliente.activeReward || null;
+                const isWelcome = !!(r && (String(r.type || '') === 'WELCOME_10' || /primera\s*compra/i.test(String(r.label || ''))) && Number(r.discountPercent || 0) === 10);
+                if (welcomeBanner) {
+                  if (isWelcome) {
+                    if (welcomeText) welcomeText.textContent = 'Se aplicará automáticamente en tu siguiente pedido (primera compra).';
+                    welcomeBanner.classList.remove('hidden');
+                  } else {
+                    welcomeBanner.classList.add('hidden');
+                  }
+                }
+              } catch (_) {
+                if (welcomeBanner) welcomeBanner.classList.add('hidden');
+              }
+
+              // Notificar a la sección de mapa (cliente-location.js) para precargar ubicación y habilitar guardado
+              try {
+                document.dispatchEvent(new CustomEvent('sr:clientLoaded', {
+                  detail: {
+                    uid,
+                    direccion: {
+                      formatted: d.formatted || null,
+                      calle: d.calle || null,
+                      numero: d.numero || null,
+                      colonia: d.colonia || null,
+                      lat: d.lat != null ? Number(d.lat) : null,
+                      lng: d.lng != null ? Number(d.lng) : null,
+                    }
+                  }
+                }));
+              } catch (_) {}
+            } else {
+              lastClienteSnapshot = null;
+              lastDireccionesSnapshot = [];
+              updateRewardButtons(0, null);
+              const welcomeBanner = byId('dash-welcome-reward');
+              if (welcomeBanner) welcomeBanner.classList.add('hidden');
+              const listEl = byId('dash-direcciones-list');
+              if (listEl) listEl.innerHTML = '';
+            }
+
+            const telefonoFallback = cliente && cliente.telefono ? String(cliente.telefono).replace(/\D/g, '') : null;
+            const orders = await manager.getClientOrders(uid, telefonoFallback || null);
+
+            // Acreditar puntos SOLO cuando el pedido está pagado.
+            // Esto se hace aquí (en la cuenta del cliente) porque es donde el usuario está autenticado y tiene permisos.
+            try {
+              if (orders && orders.length && window.firebaseOrderManager && typeof window.firebaseOrderManager.updateOrder === 'function') {
+                for (const o of orders) {
+                  if (!o) continue;
+                  const isPaid = !!o.paid;
+                  if (!isPaid) continue;
+
+                  // Solo aplicar a pedidos nuevos (evita duplicar puntos de pedidos antiguos)
+                  const hasPointsEarnedField = typeof o.pointsEarned === 'number';
+                  if (!hasPointsEarnedField) continue;
+
+                  const credited = !!o.pointsCredited;
+                  const pointsAdded = Number(o.pointsAdded || 0);
+                  const shouldCredit = !credited || pointsAdded <= 0;
+
+                  // Si ya está marcado credited y pointsAdded>0, no volver a sumar
+                  if (!shouldCredit) continue;
+
+                  const total = Number(o.total || 0);
+                  if (!isFinite(total) || total <= 0) continue;
+
+                  // Sumar puntos al cliente autenticado
+                  const added = await manager.addPointsFromPaidOrderOnce(total, uid, o.id);
+                  if (Number(added || 0) > 0) {
+                    await window.firebaseOrderManager.updateOrder(o.id, {
+                      pointsCredited: true,
+                      pointsAdded: Number(added || 0),
+                      pointsCreditedAt: new Date().toISOString(),
+                      // Si el pedido venía por teléfono y no tenía clienteId, lo vinculamos para futuros filtros
+                      clienteId: uid
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('No se pudieron acreditar puntos pendientes:', e);
+            }
+
+            if (!orders || !orders.length) {
+              show(dashEmpty);
+              setText('dash-count', '0 pedidos');
+              ordersTbody.innerHTML = '';
+              return;
+            }
+
+            hide(dashEmpty);
+            setText('dash-count', `${orders.length} pedido${orders.length === 1 ? '' : 's'}`);
+            ordersTbody.innerHTML = orders.map((o) => {
+              const fecha = formatDate(o.timestamp);
+              const total = formatMoney(o.total);
+              const detalle = Array.isArray(o.items)
+                ? o.items.map((it) => `${it.quantity || 1}x ${it.name || ''}`).join(', ')
+                : '';
+              return `
+                <tr class="hover:bg-gray-50">
+                  <td class="px-3 py-2 align-top whitespace-nowrap">${fecha}</td>
+                  <td class="px-3 py-2 align-top text-gray-700">${detalle || '—'}</td>
+                  <td class="px-3 py-2 align-top text-right font-semibold">${total}</td>
+                </tr>`;
+            }).join('');
+          } catch (e) {
+            console.error('Error cargando dashboard:', e);
+          }
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    // Google Maps: API key (misma que paginaburger.html)
+    // Nota: maps-loader.js usará esta key si existe
+    window.GMAPS_API_KEY = window.GMAPS_API_KEY || 'AIzaSyBBl4jAWjUWqTZN9pZiyf44d6X1bVpKeIU';
+  </script>
+  <script src="js/cliente-location.js"></script>
+  <script src="js/maps-loader.js"></script>
+</body>
+</html>

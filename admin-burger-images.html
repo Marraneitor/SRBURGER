@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin • Orden de imágenes (Burger)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white border-b">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-extrabold">Admin • Orden de imágenes (paginaburger)</h1>
+      <a class="text-sm font-bold text-blue-700 hover:underline" href="admin.html">Volver</a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <div id="status" class="hidden mb-4 rounded-xl border p-3 text-sm"></div>
+
+    <div class="bg-white border rounded-2xl p-4">
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between">
+        <div class="flex-1">
+          <label class="block text-sm font-bold text-gray-800">URL de imagen</label>
+          <input id="newUrl" class="mt-1 w-full rounded-xl border px-3 py-2" placeholder="https://..." />
+        </div>
+        <button id="addBtn" class="rounded-xl bg-gray-900 text-white font-extrabold px-4 py-2">
+          Agregar
+        </button>
+      </div>
+
+      <div class="mt-4 text-xs text-gray-600">
+        Arrastra para reordenar. Luego presiona <span class="font-bold">Guardar</span>.
+      </div>
+
+      <ul id="list" class="mt-4 space-y-3"></ul>
+
+      <div class="mt-5 flex items-center gap-3">
+        <button id="saveBtn" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-5 py-2">
+          Guardar en Firebase
+        </button>
+        <button id="reloadBtn" class="rounded-xl bg-white border hover:bg-gray-50 font-extrabold px-5 py-2">
+          Recargar
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module">
+    import { getBurgerImagesOrder, setBurgerImagesOrder } from "./js/sr-burger-images-order.js";
+
+    const statusEl = document.getElementById("status");
+    const listEl = document.getElementById("list");
+    const newUrlEl = document.getElementById("newUrl");
+    const addBtn = document.getElementById("addBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+
+    let images = [];
+
+    function setStatus(msg, kind = "info") {
+      const styles = {
+        info: "bg-blue-50 border-blue-200 text-blue-800",
+        ok: "bg-green-50 border-green-200 text-green-800",
+        err: "bg-red-50 border-red-200 text-red-800"
+      };
+      if (!msg) { statusEl.classList.add("hidden"); return; }
+      statusEl.className = `mb-4 rounded-xl border p-3 text-sm ${styles[kind] || styles.info}`;
+      statusEl.textContent = msg;
+      statusEl.classList.remove("hidden");
+    }
+
+    function render() {
+      listEl.innerHTML = images.map((url, idx) => `
+        <li class="border rounded-2xl p-3 bg-white flex gap-3 items-center"
+            draggable="true"
+            data-idx="${idx}">
+          <div class="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+            <img src="${url}" alt="" class="w-full h-full object-cover" onerror="this.style.display='none'">
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-gray-500 font-bold">#${idx + 1}</div>
+            <div class="text-sm font-semibold text-gray-900 break-all">${url}</div>
+          </div>
+          <button class="removeBtn rounded-xl border px-3 py-2 text-sm font-extrabold hover:bg-gray-50" data-idx="${idx}">
+            Quitar
+          </button>
+        </li>
+      `).join("");
+
+      // remove
+      listEl.querySelectorAll(".removeBtn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const i = Number(btn.dataset.idx);
+          images.splice(i, 1);
+          render();
+        });
+      });
+
+      // drag & drop (simple)
+      let dragFrom = null;
+      listEl.querySelectorAll("li[draggable=true]").forEach(li => {
+        li.addEventListener("dragstart", () => { dragFrom = Number(li.dataset.idx); });
+        li.addEventListener("dragover", (e) => { e.preventDefault(); });
+        li.addEventListener("drop", () => {
+          const to = Number(li.dataset.idx);
+          if (dragFrom == null || to === dragFrom) return;
+          const [moved] = images.splice(dragFrom, 1);
+          images.splice(to, 0, moved);
+          dragFrom = null;
+          render();
+        });
+      });
+    }
+
+    async function load() {
+      try {
+        setStatus("Cargando orden desde Firebase…", "info");
+        images = await getBurgerImagesOrder();
+        render();
+        setStatus("Listo.", "ok");
+      } catch (e) {
+        console.error(e);
+        setStatus(String(e && e.message ? e.message : e), "err");
+      }
+    }
+
+    addBtn.addEventListener("click", () => {
+      const url = String(newUrlEl.value || "").trim();
+      if (!url) return;
+      images.push(url);
+      newUrlEl.value = "";
+      render();
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      try {
+        setStatus("Guardando…", "info");
+        await setBurgerImagesOrder(images);
+        setStatus("Guardado en Firebase.", "ok");
+      } catch (e) {
+        console.error(e);
+        setStatus(String(e && e.message ? e.message : e), "err");
+      }
+    });
+
+    reloadBtn.addEventListener("click", load);
+
+    // init
+    load();
+  </script>
+</body>
+</html>

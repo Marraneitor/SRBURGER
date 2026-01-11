@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ideas para Mejoras - SR & SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+</head>
+
+<body class="min-h-screen bg-white text-gray-900">
+  <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-2xl bg-gray-100"></div>
+        <div>
+          <div class="font-[Poppins] text-lg font-extrabold leading-tight">SR &amp; SRA BURGER</div>
+          <div class="text-sm text-gray-600">Ideas para agregar al proyecto</div>
+        </div>
+      </div>
+
+      <nav class="flex flex-wrap items-center gap-2">
+        <a href="master.html" class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50">Inicio</a>
+        <a href="controldeenvios.html" class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50">Control de Envíos</a>
+        <a href="repartidor.html" class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50">Repartidor</a>
+        <a href="paginaburger.html" class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50">Tienda</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto w-full max-w-6xl px-4 py-8">
+    <section class="mb-8">
+      <h1 class="text-2xl font-extrabold tracking-tight">Ideas priorizadas para implementar</h1>
+      <p class="mt-2 max-w-3xl text-sm text-gray-600">
+        Esta página es un backlog de mejoras (UX, diseño, operación, fidelización y seguridad). Cada tarjeta tiene un objetivo claro y un "cómo" corto (sin entrar en código).
+      </p>
+    </section>
+
+    <section class="grid gap-4 md:grid-cols-2">
+      <!-- UX / Checkout -->
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">1) Checkout más rápido (menos pasos)</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UX</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Reducir fricción: menos clics para terminar compra.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Autollenar teléfono/nombre desde perfil (si existe).</li>
+          <li>Mostrar resumen fijo del total y envío.</li>
+          <li>Validar campos en vivo y mostrar errores claros.</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">2) Estado del pedido tipo "línea de tiempo"</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Tracking</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">En [tuenvio.html](tuenvio.html) mostrar pasos visuales (recibido → preparando → listo → en camino → entregado).</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Mostrar hora estimada y última actualización.</li>
+          <li>Explicar qué significa cada estado.</li>
+          <li>Botón de WhatsApp "Necesito ayuda" con el número de orden.</li>
+        </ul>
+      </article>
+
+      <!-- Operación -->
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">3) Impresión de tickets (cocina)</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Operación</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Imprimir un ticket simple por pedido (para cocina y entrega).</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Vista "ticket" (CSS print) con items, notas, total y dirección.</li>
+          <li>Botón "Imprimir" en Control de Envíos.</li>
+          <li>Formato grande (modo cocina).</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">4) Historial operativo + búsqueda rápida</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Operación</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Encontrar pedidos por teléfono, nombre o #orden en segundos.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Campo de búsqueda arriba de la lista.</li>
+          <li>Filtro rápido de hoy/ayer/semana.</li>
+          <li>Exportación simple a CSV.</li>
+        </ul>
+      </article>
+
+      <!-- Fidelización -->
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">5) Recompensas más claras en el checkout</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Puntos</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Que el cliente entienda cuándo gana y cuánto le falta para la siguiente recompensa.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Barra de progreso de puntos en el carrito.</li>
+          <li>Mensaje: "Con esta compra ganas X puntos" (solo si se paga).</li>
+          <li>Mostrar recompensa activa y cómo se aplica.</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">6) Cupones por código</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Ventas</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Crear códigos como SR10, ENVIOGRATIS, etc. con reglas simples.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Validez por fecha y usos máximos.</li>
+          <li>Porcentaje o monto fijo.</li>
+          <li>Restricción a monto mínimo.</li>
+        </ul>
+      </article>
+
+      <!-- Seguridad / Infra -->
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">7) Panel protegido (login admin)</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Seguridad</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Evitar que cualquiera en la red marque pedidos o acceda a datos.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Login con Firebase Auth para roles de staff.</li>
+          <li>Reglas Firestore por roles (cocina / repartidor / admin).</li>
+          <li>Eliminar el prompt de clave y usar sesión.</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">8) Notificaciones automáticas (sin abrir WhatsApp)</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Infra</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Enviar WhatsApp/SMS automático al cliente (confirmado / en camino / entregado).</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Backend/Cloud Functions que observe cambios del pedido.</li>
+          <li>Plantillas de mensajes consistentes.</li>
+          <li>Control de reintentos y deduplicación.</li>
+        </ul>
+      </article>
+
+      <!-- Datos / Rendimiento -->
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">9) Reportes (ventas / envío / tiempos)</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Datos</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Ver qué se vende, cuánto tardan pedidos y cuánto cuesta el envío promedio.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Top productos por semana.</li>
+          <li>Tiempo promedio: pending→ready→delivered.</li>
+          <li>Mapa de colonias más frecuentes (sin mostrar ubicación exacta).</li>
+        </ul>
+      </article>
+
+      <article class="rounded-2xl border border-gray-200 bg-white p-5">
+        <div class="flex items-start justify-between gap-3">
+          <h2 class="text-lg font-bold">10) Catálogo editable desde admin</h2>
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Admin</span>
+        </div>
+        <p class="mt-2 text-sm text-gray-600">Modificar menú/precios/extras sin tocar código.</p>
+        <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+          <li>Productos y extras en Firestore.</li>
+          <li>Historial de cambios (auditoría).</li>
+          <li>Botón publicar/ocultar productos.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="mt-10">
+      <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-xl font-extrabold tracking-tight">Ideas de Diseño Web (para que se sienta más premium)</h2>
+          <p class="mt-1 max-w-3xl text-sm text-gray-600">
+            Son cambios de UI/UX visuales que mejoran la experiencia sin meter complejidad técnica innecesaria.
+          </p>
+        </div>
+        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UI / UX</span>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">11) Jerarquía visual clara en cards (menos “ruido”)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UI</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Que el ojo entienda rápido: nombre → precio → acción (botón).</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Reducir texto secundario (descripción) y usar “ver más” solo si hace falta.</li>
+            <li>Precio más grande y consistente (mismo tamaño en todo el menú).</li>
+            <li>Botón con una sola intención clara (Personalizar vs Agregar).</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">12) Consistencia de componentes (se siente “app”)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UI</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Un mismo patrón para botones, chips, badges, modales y inputs.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Definir 3 tamaños de botón: primary / secondary / ghost.</li>
+            <li>Un solo estilo de “badge” (Popular, Oferta, Ahorro, Nuevo).</li>
+            <li>Inputs con mismo alto, borde, y estados (focus/error/disabled).</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">13) Accesibilidad rápida (más fácil para todos)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">A11y</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Mejor legibilidad y menos errores (especialmente en móvil).</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Tamaño mínimo de toque: botones de 44px y buen espaciado.</li>
+            <li>Contraste correcto en dark/light (texto y botones).</li>
+            <li>Mensajes de error cortos y específicos (“Falta tu colonia”).</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">14) Estados de carga / vacío (evita confusión)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UX</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Cuando algo tarda, el usuario debe ver “qué pasa” y “qué sigue”.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Skeletons en imágenes y listas al abrir el menú.</li>
+            <li>Carrito vacío con CTA: “Explorar combos” / “Ver hamburguesas”.</li>
+            <li>Botones con estado “cargando…” al enviar pedido.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">15) Microcopy que vende (texto corto que guía)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Copy</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Textos pequeños en el lugar correcto aumentan conversiones.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>En el checkout: “Tu pedido tarda 25–35 min aprox.”</li>
+            <li>En combos: “Elige tu hamburguesa” / “Puedes personalizar después”.</li>
+            <li>En envío: “Se calcula a $8/km, máximo 12km” (simple y visible).</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">16) “Sticky cart” discreto en móvil</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Mobile</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Que el cliente siempre tenga a mano el total y el botón de pagar.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Barra inferior con Total + Ver carrito (solo cuando hay items).</li>
+            <li>Evitar tapar botones (respeto a safe-area en iPhone).</li>
+            <li>Mostrar “+1 agregado” como feedback rápido.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">17) Fotos “premium”: encuadre y consistencia</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UI</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">No es solo “tener foto”, es que todas se vean coherentes.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Misma proporción (1:1) y fondo uniforme para hamburguesas.</li>
+            <li>Evitar fotos demasiado oscuras o con mucho ruido de fondo.</li>
+            <li>Una regla por producto especial (ej. Combo Dúo sin recorte).</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-lg font-bold">18) Animaciones útiles (no por adorno)</h3>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">UX</span>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">Micro-interacciones para confirmar acciones y reducir errores.</p>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Al agregar: mini confirmación + vibración suave (mobile).</li>
+            <li>Al abrir modal: transición corta y consistente (220–300ms).</li>
+            <li>Respetar “prefers-reduced-motion” si está activo.</li>
+          </ul>
+        </article>
+      </div>
+
+      <article class="mt-4 rounded-2xl border border-gray-200 bg-white p-5">
+        <h3 class="text-lg font-bold">Checklist rápido (si quieres que se vea “pro”)</h3>
+        <div class="mt-2 grid gap-3 md:grid-cols-2">
+          <ul class="list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Spacing consistente (8/12/16/24) en todo.</li>
+            <li>Un solo estilo de iconos (misma familia y grosor).</li>
+            <li>CTA principal siempre visible (menú / carrito / pagar).</li>
+          </ul>
+          <ul class="list-disc space-y-1 pl-5 text-sm text-gray-700">
+            <li>Estados: loading / empty / error bien definidos.</li>
+            <li>Textos cortos y orientados a acción (“Continuar”).</li>
+            <li>Contraste OK en dark mode (sin texto gris oscuro).</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="mt-10 rounded-2xl border border-gray-200 bg-white p-5">
+      <h2 class="text-lg font-bold">Siguiente paso</h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Dime 2 cosas: (1) qué te urge más (ventas / operación / fidelización), y (2) si quieres que lo hagamos 100% local o ya pensando en deploy.
+        Con eso te propongo el orden exacto y lo implemento.
+      </p>
+    </section>
+  </main>
+
+  <footer class="border-t border-gray-200 bg-white">
+    <div class="mx-auto w-full max-w-6xl px-4 py-6 text-xs text-gray-500">
+      SR &amp; SRA BURGER — Ideas internas de mejora
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,40 +1,115 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es" class="scroll-smooth sr-dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
     <title>SR & SRA BURGER - ¡Hechas con Pasión!</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Maps API para autocompletado de direcciones -->
-    <!-- API configurada y activada con tu clave real -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCXMg3VpvrOZzQXc95cfxbLLoRqkedJgNg&libraries=places&callback=initializeGoogleMaps"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍔</text></svg>">
     <script>
-        // ✅ Google Maps API activada correctamente
-        console.log('�️ Google Maps API cargada con éxito');
-        console.log('� Autocompletado de direcciones: ACTIVADO');
-        console.log('🎯 Funcionalidades habilitadas: Places API + Mapas');
+        // Enable class-based dark mode for Tailwind CDN
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = Object.assign({}, window.tailwind.config, { darkMode: 'class' });
+        // Apply initial theme ASAP to avoid flash
+        (function () {
+            const key = 'sr_theme';
+            const stored = localStorage.getItem(key);
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const useDark = stored ? stored === 'dark' : systemDark;
+            document.documentElement.classList.toggle('dark', useDark);
+        })();
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="https://i.imgur.com/TSTuaNr.jpg">
+    <link rel="stylesheet" href="styles/sr-ui.css">
+    <script>
+        // Theme toggle (light/dark) - bind after DOM exists
+        window.addEventListener('DOMContentLoaded', () => {
+            const key = 'sr_theme';
+            const btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                const next = isDark ? 'light' : 'dark';
+                document.documentElement.classList.toggle('dark', next === 'dark');
+                localStorage.setItem(key, next);
+            });
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Estilos personalizados -->
     <style>
         :root {
-            --primary-gold: #FFC72C;
-            --primary-gold-dark: #E5B800;
-            --primary-red: #DA291C;
-            --text-primary: #292929;
-            --text-secondary: #666666;
+            --primary-gold: #16A34A;
+            --primary-gold-dark: #15803D;
+            --primary-red: #0B1220;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
             --bg-light: #FFFFFF;
             --bg-section: #F8F9FA;
-            --border-light: #E9ECEF;
-            --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
-            --border-radius: 16px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-light: #E2E8F0;
+            --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --shadow-hover: 0 18px 45px rgba(15, 23, 42, 0.14);
+            --border-radius: 24px;
+            --transition: all 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Dark mode (class-based) */
+        html.dark body {
+            background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%);
+            color: #E5E7EB;
+        }
+        html.dark #menu {
+            background: linear-gradient(to bottom, #0B1220, #0F172A) !important;
+        }
+        html.dark .glass-effect {
+            background: rgba(2, 6, 23, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        html.dark .btn-primary {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+        /* Make common Tailwind grays readable in dark mode (scoped to main areas) */
+        html.dark #inicio .text-gray-900,
+        html.dark #menu .text-gray-900,
+        html.dark #nosotros .text-gray-900,
+        html.dark #faq .text-gray-900 {
+            color: #F9FAFB !important;
+        }
+        html.dark #inicio .text-gray-800,
+        html.dark #menu .text-gray-800,
+        html.dark #nosotros .text-gray-800,
+        html.dark #faq .text-gray-800 {
+            color: #F3F4F6 !important;
+        }
+        html.dark #inicio .text-gray-700,
+        html.dark #menu .text-gray-700,
+        html.dark #nosotros .text-gray-700,
+        html.dark #faq .text-gray-700 {
+            color: #E5E7EB !important;
+        }
+        html.dark #inicio .text-gray-600,
+        html.dark #menu .text-gray-600,
+        html.dark #nosotros .text-gray-600,
+        html.dark #faq .text-gray-600 {
+            color: #CBD5E1 !important;
+        }
+        html.dark #inicio .bg-white,
+        html.dark #menu .bg-white,
+        html.dark #nosotros .bg-white,
+        html.dark #faq .bg-white {
+            background-color: rgba(15, 23, 42, 0.96) !important;
         }
 
         * {
             scroll-behavior: smooth;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
         body {
@@ -44,6 +119,22 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Prevenir desbordamiento horizontal en todos los contenedores */
+        .container, section, div {
+            max-width: 100%;
+        }
+
+        /* Asegurar que las imágenes no desborden */
+        img {
+            max-width: 100%;
+            height: auto;
         }
 
         .font-poppins {
@@ -51,11 +142,8 @@
         }
 
         .hero-bg {
-            background: linear-gradient(135deg, rgba(218, 41, 28, 0.4) 0%, rgba(255, 199, 44, 0.3) 100%), 
-                        url('https://i.imgur.com/TSTuaNr.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            /* Hero image is now an <img> with fetchpriority=high */
+            background: linear-gradient(135deg, rgba(218, 41, 28, 0.4) 0%, rgba(255, 199, 44, 0.3) 100%);
         }
 
         .menu-item-img {
@@ -207,6 +295,34 @@
             }
         }
         
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .animate-scale-in {
+            animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
         @keyframes slideInLeft {
             from {
                 opacity: 0;
@@ -301,87 +417,117 @@
         
         /* Enhanced Mobile-first responsive improvements */
         @media (max-width: 640px) {
+            /* Base font size adjustment */
+            html {
+                font-size: 14px; /* Reduce base font size on mobile */
+            }
+
+            /* Prevent horizontal scroll */
+            body {
+                overflow-x: hidden !important;
+                max-width: 100vw !important;
+            }
+
             /* Hero section mobile optimization */
             .hero-bg {
-                min-height: 70vh;
+                min-height: 60vh;
                 background-attachment: scroll; /* Better performance on mobile */
+                padding: 1rem;
             }
             
             .hero-bg h1 {
-                font-size: 2.25rem;
-                line-height: 1.1;
-                margin-bottom: 1rem;
+                font-size: 1.75rem !important;
+                line-height: 1.2;
+                margin-bottom: 0.75rem;
             }
             
             .hero-bg p {
-                font-size: 1rem;
-                margin-bottom: 2rem;
+                font-size: 0.875rem !important;
+                margin-bottom: 1.5rem;
             }
             
             /* Header improvements */
             .header-mobile {
-                padding: 0.75rem 1rem;
+                padding: 0.5rem 0.75rem;
             }
             
-            /* Button improvements */
+            /* Button improvements - tamaños más apropiados */
             .btn-primary {
-                padding: 14px 28px;
-                font-size: 16px;
-                min-height: 48px;
-                border-radius: 12px;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+                min-height: 44px;
+                border-radius: 10px;
+            }
+
+            /* Contenedores con padding apropiado */
+            .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            section {
+                padding: 2rem 0.75rem !important;
             }
             
             .card-modern {
-                padding: 12px;
-                margin-bottom: 1rem;
+                padding: 10px;
+                margin-bottom: 0.75rem;
             }
             
-            /* Mobile menu grid - una columna para mejor legibilidad */
+            /* Mobile menu grid - 2 columnas (3 columnas en >=480px) */
             .menu-grid-mobile {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-                padding: 0 1rem;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 0.5rem !important;
+                padding: 0 0.5rem;
+                max-width: 100%;
+            }
+            @media (min-width: 480px) and (max-width: 640px) {
+                .menu-grid-mobile {
+                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                }
             }
             
             /* Menu card mobile optimization */
             .menu-card {
-                margin-bottom: 1rem;
-                border-radius: 16px;
+                margin-bottom: 0.75rem;
+                border-radius: 12px;
                 overflow: hidden;
+                max-width: 100%;
             }
             
             .menu-card-mobile {
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 height: auto;
-                min-height: 120px;
+                min-height: unset;
             }
             
             .menu-card-image-mobile {
-                width: 100px;
-                height: 100px;
+                width: 100%;
+                aspect-ratio: 1 / 1;
+                height: auto;
                 flex-shrink: 0;
             }
             
             .menu-card-content-mobile {
-                flex: 1;
-                padding: 12px;
+                padding: 6px;
                 display: flex;
                 flex-direction: column;
-                justify-content: space-between;
+                gap: 3px;
             }
             
             .menu-card h4 {
-                font-size: 1rem;
-                line-height: 1.3;
+                font-size: 0.875rem !important;
+                line-height: 1.2;
                 margin-bottom: 0.25rem;
                 font-weight: 700;
             }
             
             .menu-card .description {
-                font-size: 0.75rem;
-                line-height: 1.3;
-                margin-bottom: 0.5rem;
+                font-size: 0.7rem !important;
+                line-height: 1.2;
+                margin-bottom: 0.25rem;
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 line-clamp: 2;
@@ -390,19 +536,35 @@
             }
             
             .menu-card .price {
-                font-size: 1.25rem;
+                font-size: 1rem !important;
                 font-weight: 800;
                 margin-bottom: 0.5rem;
             }
             
-            /* Enhanced button visibility on mobile */
+            /* Enhanced button visibility on mobile - MEJORADO */
             .add-to-cart-btn, .customize-btn, .choose-combo-btn {
-                font-size: 14px !important;
-                padding: 10px 16px !important;
+                font-size: 13px !important;
+                padding: 10px 14px !important;
                 font-weight: 700 !important;
                 border-radius: 8px !important;
-                min-height: 40px !important;
+                min-height: 44px !important;
                 width: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                transition: all 0.15s ease !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+                cursor: pointer !important;
+                touch-action: manipulation !important;
+            }
+            
+            .touch-device .add-to-cart-btn:active, 
+            .touch-device .customize-btn:active, 
+            .touch-device .choose-combo-btn:active {
+                opacity: 0.8 !important;
+                transform: scale(0.97) !important;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
             }
             
             /* Badges inline para móviles - responsivos */
@@ -415,40 +577,89 @@
                 box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             }
             
-            /* Cart button mobile */
+            /* Cart button mobile - MEJORADO */
             .cart-btn-mobile {
                 position: fixed;
-                bottom: 20px;
-                right: 20px;
+                bottom: 24px;
+                right: 24px;
                 z-index: 1000;
-                width: 60px;
-                height: 60px;
+                width: 64px;
+                height: 64px;
                 border-radius: 50%;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+                touch-action: manipulation;
+                transition: all 0.15s ease;
+                cursor: pointer;
+            }
+            
+            .touch-device .cart-btn-mobile:active {
+                opacity: 0.85;
+                transform: scale(0.95);
+                box-shadow: 0 3px 12px rgba(0,0,0,0.4);
             }
             
             /* Category headers mobile */
             .category-header-mobile h3 {
-                font-size: 1.5rem;
+                font-size: 1.25rem !important;
                 margin-bottom: 0.5rem;
             }
             
             .category-header-mobile p {
-                font-size: 0.875rem;
-                margin-bottom: 1rem;
+                font-size: 0.8rem !important;
+                margin-bottom: 0.75rem;
+            }
+
+            /* Ajuste general de títulos en móvil */
+            h1 {
+                font-size: 1.75rem !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            h3 {
+                font-size: 1.25rem !important;
+            }
+
+            h4 {
+                font-size: 1rem !important;
+            }
+
+            h5, h6 {
+                font-size: 0.875rem !important;
             }
             
             /* Container padding mobile */
             .container-mobile {
-                padding-left: 1rem;
-                padding-right: 1rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
             }
             
-            /* Touch-friendly interactions */
-            button, input[type="button"], input[type="submit"], .btn {
-                min-height: 44px;
+            /* Touch-friendly interactions - MEJORADO */
+            button, input[type="button"], input[type="submit"], .btn, a[role="button"] {
+                min-height: 44px !important;
                 min-width: 44px;
-                -webkit-tap-highlight-color: transparent;
+                -webkit-tap-highlight-color: rgba(255, 199, 44, 0.2);
+                touch-action: manipulation;
+                cursor: pointer;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+            
+            /* Feedback visual al tocar - SOLO CON CSS */
+            .touch-device button:active, 
+            .touch-device .btn:active, 
+            .touch-device [onclick]:active,
+            .touch-device a[role="button"]:active {
+                opacity: 0.7 !important;
+                transform: scale(0.98) !important;
+                transition: all 0.1s ease !important;
+            }
+            
+            /* Espaciado entre botones táctiles */
+            .mobile-button-group button {
+                margin: 8px 0;
             }
             
             /* Sticky header on mobile */
@@ -588,6 +799,77 @@
                 opacity: 1;
             }
         }
+
+        /* === Carrusel horizontal de productos === */
+        .menu-grid-horizontal {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .menu-grid-horizontal::-webkit-scrollbar {
+            display: none;
+        }
+
+        .menu-grid-horizontal {
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .menu-grid-horizontal .menu-card,
+        .menu-grid-horizontal .menu-card-mobile {
+            scroll-snap-align: start;
+            flex: 0 0 min(320px, 85vw);
+        }
+
+        @media (min-width: 1024px) {
+            .menu-grid-horizontal .menu-card,
+            .menu-grid-horizontal .menu-card-mobile {
+                flex: 0 0 30%;
+            }
+        }
+
+        .category-carousel-shell {
+            position: relative;
+        }
+
+        .category-arrow-desktop {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111827;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            opacity: 0;
+            pointer-events: auto;
+        }
+
+        .category-arrow-left {
+            margin-left: 0.5rem;
+        }
+
+        .category-arrow-right {
+            margin-right: 0.5rem;
+        }
+
+        .category-carousel-shell:hover .category-arrow-desktop {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .category-arrow-desktop {
+                display: none;
+            }
+        }
         
         /* Enhanced focus states for accessibility */
         button:focus,
@@ -596,6 +878,159 @@
         textarea:focus {
             outline: 2px solid var(--primary-gold);
             outline-offset: 2px;
+        }
+        
+        /* MEJORAS ADICIONALES PARA MÓVIL */
+        @media (max-width: 640px) {
+            /* Todos los botones principales con tamaño apropiado */
+            .btn-primary {
+                min-height: 48px !important;
+                padding: 12px 20px !important;
+                font-size: 15px !important;
+                position: relative !important;
+                z-index: 10 !important;
+            }
+            
+            /* Asegurar que los botones sean clickeables */
+            button, .btn, [onclick] {
+                pointer-events: auto !important;
+                position: relative !important;
+            }
+            
+            /* Inputs apropiados para móvil */
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            textarea,
+            select {
+                min-height: 44px !important;
+                font-size: 16px !important;
+                padding: 10px 14px !important;
+                border-radius: 8px !important;
+            }
+            
+            /* Mejorar spacing en tarjetas del menú */
+            .menu-card {
+                margin-bottom: 1rem !important;
+                position: relative !important;
+            }
+            
+            /* Asegurar que los botones en las cards sean clickeables */
+            .menu-card button {
+                position: relative !important;
+                z-index: 5 !important;
+            }
+            
+            /* Botones de cantidad apropiados */
+            button[onclick*="changeQuantity"] {
+                min-width: 40px !important;
+                min-height: 40px !important;
+                font-size: 18px !important;
+                font-weight: bold !important;
+                z-index: 10 !important;
+            }
+            
+            /* Modal de checkout más accesible */
+            .modal-content {
+                max-height: 85vh !important;
+                overflow-y: auto !important;
+            }
+            
+            /* Padding del body para evitar elementos pegados */
+            body {
+                padding-bottom: 80px;
+            }
+            
+            /* Mejorar área táctil de links */
+            a {
+                padding: 4px 8px;
+                margin: -4px -8px;
+            }
+            
+            /* Iconos apropiados en móvil */
+            .fa, .fas, .far {
+                font-size: 1em;
+            }
+            
+            /* Prevenir que overlays bloqueen clicks */
+            .menu-card::before,
+            .card-modern::before {
+                pointer-events: none !important;
+            }
+            
+            /* Botón de confirmar ubicación - TÁCTIL */
+            #hero-confirm-location {
+                min-height: 50px !important;
+                font-size: 15px !important;
+                font-weight: 700 !important;
+                touch-action: manipulation !important;
+                -webkit-tap-highlight-color: rgba(34, 197, 94, 0.3) !important;
+                position: relative !important;
+                z-index: 100 !important;
+            }
+            
+            .touch-device #hero-confirm-location:active {
+                opacity: 0.85 !important;
+                transform: scale(0.97) !important;
+            }
+        }
+
+        /* Media query para pantallas muy pequeñas (320px - 374px) */
+        @media (max-width: 374px) {
+            html {
+                font-size: 13px !important;
+            }
+
+            .hero-bg h1 {
+                font-size: 1.5rem !important;
+            }
+
+            .menu-card h4 {
+                font-size: 0.8rem !important;
+            }
+
+            .menu-card .description {
+                font-size: 0.65rem !important;
+            }
+
+            .menu-card .price {
+                font-size: 0.9rem !important;
+            }
+
+            .add-to-cart-btn, .customize-btn, .choose-combo-btn {
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+                min-height: 40px !important;
+            }
+        }
+        
+        /* Prevenir zoom en inputs en iOS */
+        @supports (-webkit-touch-callout: none) {
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            textarea,
+            select {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Smooth scroll mejorado */
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Optimizar rendimiento en móvil - SOLO ELEMENTOS ANIMADOS */
+        .animate-fade-in,
+        .animate-scale-in,
+        .menu-card-image-mobile,
+        .modal-content {
+        
+        /* ===== Premium Menu (CSS-only upgrade) ===== */
+        /* 1) Bento grid on desktop while keeping existing markup */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
         
         /* Dark mode support (optional) */
@@ -629,6 +1064,10 @@
         
         .shadow-glow-hover:hover {
             box-shadow: 0 0 30px rgba(255, 199, 44, 0.5);
+        }
+        /* Hero delivery selector helpers */
+        .hero-delivery-option {
+            user-select: none;
         }
         
         .cart-item-enter {
@@ -686,22 +1125,34 @@
         /* Google Maps Address Autocomplete Styles */
         .pac-container {
             background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #fbbf24;
             font-family: 'Inter', sans-serif;
-            z-index: 1000;
+            z-index: 10000 !important;
+            margin-top: 4px;
         }
         
         .pac-item {
             padding: 12px 16px;
             border-bottom: 1px solid #f3f4f6;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+            font-size: 14px;
         }
         
         .pac-item:hover {
-            background-color: #f9fafb;
+            background-color: #fef3c7;
+            transform: translateX(4px);
+        }
+        
+        .pac-item:last-child {
+            border-bottom: none;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .pac-item:first-child {
+            border-radius: 12px 12px 0 0;
         }
         
         .pac-item-selected {
@@ -711,6 +1162,7 @@
         .pac-item-query {
             font-weight: 600;
             color: #111827;
+            font-size: 14px;
         }
         
         .pac-matched {
@@ -719,7 +1171,20 @@
         }
         
         .pac-icon {
-            margin-right: 8px;
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .pac-icon-marker {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E") !important;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        /* Modal search input autocomplete específico */
+        #modal-search-input {
+            position: relative;
         }
         
         /* Address input focus state */
@@ -727,14 +1192,51 @@
             box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
         }
         
-        /* Mini map container */
-        #mini-map {
-            border: 2px solid #e5e7eb;
-            transition: border-color 0.3s ease;
+
+        /* Modal de Mapa Grande - Estilos */
+        #map-modal {
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease-out;
         }
-        
-        #mini-map:hover {
-            border-color: #f59e0b;
+
+        #map-modal.show {
+            display: flex !important;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Animación del marcador central */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Estilos responsive para el modal del mapa */
+        @media (max-width: 640px) {
+            #map-modal .bg-white.rounded-2xl {
+                border-radius: 1rem;
+            }
+
+            #modal-search-input {
+                font-size: 14px;
+                padding: 12px 12px 12px 40px;
+            }
+
+            #modal-address-preview {
+                min-height: 50px;
+                font-size: 13px;
+            }
         }
         
         /* Map container animations */
@@ -813,9 +1315,7 @@
                 margin: 0 16px;
             }
             
-            #mini-map {
-                height: 120px;
-            }
+            /* (carrito) sin minimapa */
         }
 
         /* Animaciones premium para promociones - Nivel McDonald's */
@@ -861,6 +1361,76 @@
 
         .pulse-glow-premium {
             animation: pulse-glow-premium 2s infinite;
+        }
+        
+        /* Animaciones para el modal de mapa - Estilo McDonald's/Uber Eats */
+        @keyframes fade-in-map {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scale-in-map {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in-map 0.3s ease-out;
+        }
+        
+        .animate-scale-in {
+            animation: scale-in-map 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* OPTIMIZACIONES PARA MÓVIL - Touch y Performance */
+        .touch-manipulation {
+            touch-action: manipulation; /* Elimina delay de 300ms en móvil */
+            -webkit-tap-highlight-color: transparent; /* Quita highlight azul en iOS */
+        }
+        
+        /* Mejora el rendimiento del mapa en móvil */
+        #hero-map {
+            -webkit-transform: translateZ(0); /* Hardware acceleration */
+            transform: translateZ(0);
+        }
+        
+        /* Botones táctiles mejorados */
+        button:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+        
+        /* Inputs más grandes en móvil para evitar zoom */
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            textarea,
+            select {
+                font-size: 16px !important; /* iOS no hace zoom si es >= 16px */
+            }
+            
+            /* Mapa ocupa más espacio en móvil */
+            #map-modal .flex-1 {
+                min-height: 50vh;
+            }
+            
+            /* Pin más visible en pantallas pequeñas */
+            .absolute.top-1\/2 svg {
+                filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+            }
         }
 
         @keyframes wiggle-premium {
@@ -1043,9 +1613,474 @@
                 padding: 0.75rem !important;
             }
         }
+        /* 2) Glassmorphism for category pills */
+        .category-header-mobile [data-category-header] {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.55) !important;
+        }
+        html.dark .category-header-mobile [data-category-header] {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+        
+        /* 3) Micro-interactions */
+        .menu-card {
+            transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 320ms cubic-bezier(0.4, 0, 0.2, 1), border-color 320ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .menu-card:hover {
+            transform: translateY(-10px);
+        }
+
+        /* Premium bento layout (desktop) using existing generated markup */
+        @media (min-width: 1024px) {
+            .menu-grid {
+                display: grid !important;
+                grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+                grid-auto-flow: dense;
+                grid-auto-rows: auto;
+            }
+            .menu-grid > .menu-card {
+                grid-column: span 3;
+                border-radius: 24px !important;
+            }
+            .menu-grid > .menu-card:nth-child(1) {
+                grid-column: span 6;
+            }
+            .menu-grid > .menu-card:nth-child(2),
+            .menu-grid > .menu-card:nth-child(3) {
+                grid-column: span 3;
+            }
+            .menu-grid > .menu-card:nth-child(4),
+            .menu-grid > .menu-card:nth-child(5) {
+                grid-column: span 4;
+            }
+
+            /* Prevent large empty gaps inside featured/tall cards */
+            .menu-grid > .menu-card > div:last-child {
+                flex-grow: 0 !important;
+            }
+            .menu-grid > .menu-card > div:last-child > div.flex-grow {
+                flex-grow: 0 !important;
+            }
+
+            /* Carrusel: 3 columnas iguales (sin featured/bento spans) */
+            .menu-grid.menu-grid-carousel {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                grid-auto-flow: row !important;
+            }
+            .menu-grid.menu-grid-carousel > .menu-card {
+                grid-column: auto !important;
+            }
+            .menu-grid.menu-grid-carousel > .menu-card:nth-child(1),
+            .menu-grid.menu-grid-carousel > .menu-card:nth-child(2),
+            .menu-grid.menu-grid-carousel > .menu-card:nth-child(3),
+            .menu-grid.menu-grid-carousel > .menu-card:nth-child(4),
+            .menu-grid.menu-grid-carousel > .menu-card:nth-child(5) {
+                grid-column: auto !important;
+            }
+        }
+
+        /* 24px rounding + dark card surface */
+        .menu-card,
+        .menu-card-mobile {
+            border-radius: 24px !important;
+        }
+        html.dark .menu-card,
+        html.dark .menu-card-mobile {
+            border-color: rgba(255, 255, 255, 0.10) !important;
+        }
+        
+        /* 4) Ensure clicks hit the button even when tapping icons */
+        .choose-combo-btn i,
+        .customize-btn i {
+            pointer-events: none;
+        }
+        
+        /* 5) Floating WhatsApp pulse */
+        @keyframes waPulse {
+            0% { transform: scale(1); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.35); }
+            50% { transform: scale(1.04); box-shadow: 0 18px 44px rgba(16, 185, 129, 0.45); }
+            100% { transform: scale(1); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.35); }
+        }
+        .wa-float {
+            animation: waPulse 1.8s ease-in-out infinite;
+        }
+
+        /* ===== Customization modal (premium) ===== */
+        #customization-modal .custom-modal-card {
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        #customization-modal .custom-modal-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.14) 0%, rgba(255, 255, 255, 0.92) 55%, rgba(255, 255, 255, 0.92) 100%);
+        }
+        #customization-modal .custom-modal-footer {
+            background: rgba(248, 249, 250, 0.9);
+        }
+        #customization-modal .custom-divider {
+            height: 1px;
+            width: 100%;
+            margin: 18px 0;
+            background: rgba(233, 236, 239, 1);
+        }
+        #customization-modal .custom-section-title {
+            letter-spacing: 0.2px;
+        }
+        #customization-modal .custom-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: rgba(255, 199, 44, 0.22);
+            color: #7A4F00;
+            border: 1px solid rgba(255, 199, 44, 0.35);
+            white-space: nowrap;
+            flex: none;
+        }
+
+        #customization-modal .custom-option,
+        #customization-modal #toppings-container label,
+        #customization-modal #menu-extras-container label,
+        #customization-modal #base-extra-size-container label {
+            background: rgba(255, 255, 255, 0.86);
+            border-color: rgba(233, 236, 239, 1);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+            will-change: transform;
+        }
+        #customization-modal .custom-option:hover,
+        #customization-modal #toppings-container label:hover,
+        #customization-modal #menu-extras-container label:hover,
+        #customization-modal #base-extra-size-container label:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.10);
+        }
+
+        #customization-modal .custom-suboptions {
+            border-left: 2px solid rgba(255, 199, 44, 0.35);
+        }
+        #customization-modal .custom-suboption {
+            background: rgba(248, 249, 250, 0.82);
+            border: 1px solid rgba(233, 236, 239, 1);
+        }
+        #customization-modal .custom-suboption:hover {
+            background: rgba(248, 249, 250, 0.95);
+        }
+
+        /* Dark mode adjustments (modal sits outside #menu scope) */
+        html.dark #customization-modal .custom-modal-card {
+            background: rgba(2, 6, 23, 0.86);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #customization-modal .custom-modal-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.10) 0%, rgba(2, 6, 23, 0.86) 55%, rgba(2, 6, 23, 0.86) 100%);
+        }
+        html.dark #customization-modal .custom-modal-footer {
+            background: rgba(15, 23, 42, 0.82);
+            border-top-color: rgba(255, 255, 255, 0.08);
+        }
+        html.dark #customization-modal .text-gray-800 { color: #F3F4F6 !important; }
+        html.dark #customization-modal .text-gray-600 { color: #CBD5E1 !important; }
+        html.dark #customization-modal .custom-divider { background: rgba(255, 255, 255, 0.10); }
+        html.dark #customization-modal .custom-option,
+        html.dark #customization-modal #toppings-container label,
+        html.dark #customization-modal #menu-extras-container label,
+        html.dark #customization-modal #base-extra-size-container label {
+            background: rgba(15, 23, 42, 0.78);
+            border-color: rgba(255, 255, 255, 0.10);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+        html.dark #customization-modal .custom-suboption {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #customization-modal .custom-pill {
+            background: rgba(255, 199, 44, 0.18);
+            color: #FDE68A;
+            border-color: rgba(255, 199, 44, 0.22);
+        }
+
+        /* ===== Cart sidebar (premium) ===== */
+        #cart-sidebar.cart-sidebar {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-left: 1px solid rgba(233, 236, 239, 1);
+        }
+        #cart-sidebar .cart-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.18) 0%, rgba(255, 255, 255, 0.94) 60%);
+        }
+        #cart-sidebar .cart-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(233, 236, 239, 1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        #cart-sidebar .cart-close:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.14);
+        }
+        #cart-sidebar .cart-footer {
+            background: rgba(248, 249, 250, 0.92);
+        }
+
+        /* Dark mode for cart sidebar */
+        html.dark #cart-sidebar.cart-sidebar {
+            background: rgba(2, 6, 23, 0.88);
+            border-left-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #cart-sidebar .cart-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.10) 0%, rgba(2, 6, 23, 0.88) 62%);
+            border-bottom-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #cart-sidebar .cart-footer {
+            background: rgba(15, 23, 42, 0.82);
+            border-top-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #cart-sidebar .text-gray-500 { color: #94A3B8 !important; }
+        html.dark #cart-sidebar .text-gray-600 { color: #CBD5E1 !important; }
+        html.dark #cart-sidebar h3 { color: #F8FAFC !important; }
+        html.dark #cart-sidebar .cart-close {
+            background: rgba(15, 23, 42, 0.70);
+            border-color: rgba(255, 255, 255, 0.10);
+            color: #E5E7EB;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+        }
+
+        /* Dark mode: cart item cards should not be white */
+        html.dark #cart-sidebar #cart-items .cart-item-card {
+            background: rgba(15, 23, 42, 0.78) !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.32);
+        }
+        html.dark #cart-sidebar #cart-items .cart-item-thumb,
+        html.dark #cart-sidebar #cart-items .cart-qty-pill {
+            background: rgba(2, 6, 23, 0.55) !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+        }
+        html.dark #cart-sidebar #cart-items .cart-qty-btn {
+            color: #F8FAFC !important;
+        }
+        html.dark #cart-sidebar #cart-items .cart-qty-btn:hover {
+            background: rgba(255, 255, 255, 0.10) !important;
+        }
+
+        /* ===== Checkout modal (premium) ===== */
+        #checkout-modal .checkout-card {
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        #checkout-modal .checkout-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.16) 0%, rgba(255, 255, 255, 0.94) 60%);
+        }
+        #checkout-modal .checkout-body {
+            background: linear-gradient(180deg, rgba(248, 249, 250, 0.92) 0%, rgba(255, 255, 255, 0.92) 100%);
+        }
+        #checkout-modal .checkout-close {
+            background: rgba(255, 255, 255, 0.80);
+            border: 1px solid rgba(233, 236, 239, 1);
+            color: #374151;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        #checkout-modal .checkout-close:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 34px rgba(0,0,0,0.16);
+        }
+        #checkout-modal .checkout-panel {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border-color: rgba(233, 236, 239, 1);
+        }
+        #checkout-modal .checkout-option {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+            border-color: rgba(233, 236, 239, 1);
+        }
+
+        /* Dark mode for checkout modal */
+        html.dark #checkout-modal .checkout-card {
+            background: rgba(2, 6, 23, 0.88);
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #checkout-modal .checkout-header {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.10) 0%, rgba(2, 6, 23, 0.88) 62%);
+            border-bottom-color: rgba(255, 255, 255, 0.10);
+        }
+        html.dark #checkout-modal .checkout-body {
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.88) 0%, rgba(15, 23, 42, 0.82) 100%);
+        }
+        html.dark #checkout-modal .checkout-close {
+            background: rgba(15, 23, 42, 0.72);
+            border-color: rgba(255, 255, 255, 0.10);
+            color: #E5E7EB;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+        }
+        html.dark #checkout-modal .checkout-panel {
+            background: rgba(15, 23, 42, 0.70) !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.32);
+        }
+        html.dark #checkout-modal .text-gray-800 { color: #F3F4F6 !important; }
+        html.dark #checkout-modal .text-gray-600 { color: #CBD5E1 !important; }
+        html.dark #checkout-modal .text-gray-700 { color: #CBD5E1 !important; }
+        html.dark #checkout-modal .bg-gray-50 { background: rgba(15, 23, 42, 0.55) !important; }
+        html.dark #checkout-modal input,
+        html.dark #checkout-modal textarea,
+        html.dark #checkout-modal select {
+            background: rgba(2, 6, 23, 0.55) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+        }
+
+        /* Input frames: clear borders in light/dark */
+        #checkout-modal input,
+        #checkout-modal textarea,
+        #checkout-modal select {
+            border-width: 2px !important;
+            border-style: solid !important;
+            border-color: rgba(17, 24, 39, 0.85) !important; /* black-ish */
+        }
+        #checkout-modal input:focus,
+        #checkout-modal textarea:focus,
+        #checkout-modal select:focus {
+            border-color: rgba(17, 24, 39, 1) !important;
+            outline: none !important;
+        }
+        html.dark #checkout-modal input,
+        html.dark #checkout-modal textarea,
+        html.dark #checkout-modal select {
+            border-color: rgba(255, 255, 255, 0.85) !important; /* white */
+        }
+        html.dark #checkout-modal input:focus,
+        html.dark #checkout-modal textarea:focus,
+        html.dark #checkout-modal select:focus {
+            border-color: rgba(255, 255, 255, 1) !important;
+            outline: none !important;
+        }
+
+        /* Typography: force readable text colors in checkout + cart */
+        #checkout-modal {
+            color: #0F172A;
+        }
+        #cart-sidebar {
+            color: #0F172A;
+        }
+        /* Normalize common Tailwind grays inside these containers */
+        #checkout-modal .text-gray-400,
+        #checkout-modal .text-gray-500,
+        #checkout-modal .text-gray-600,
+        #checkout-modal .text-gray-700,
+        #checkout-modal .text-gray-800,
+        #cart-sidebar .text-gray-400,
+        #cart-sidebar .text-gray-500,
+        #cart-sidebar .text-gray-600,
+        #cart-sidebar .text-gray-700,
+        #cart-sidebar .text-gray-800 {
+            color: #0F172A !important;
+        }
+        /* Placeholders */
+        #checkout-modal input::placeholder,
+        #checkout-modal textarea::placeholder {
+            color: rgba(15, 23, 42, 0.55) !important;
+        }
+
+        html.dark #checkout-modal {
+            color: #F8FAFC;
+        }
+        html.dark #cart-sidebar {
+            color: #F8FAFC;
+        }
+        html.dark #checkout-modal .text-gray-400,
+        html.dark #checkout-modal .text-gray-500,
+        html.dark #checkout-modal .text-gray-600,
+        html.dark #checkout-modal .text-gray-700,
+        html.dark #checkout-modal .text-gray-800,
+        html.dark #cart-sidebar .text-gray-400,
+        html.dark #cart-sidebar .text-gray-500,
+        html.dark #cart-sidebar .text-gray-600,
+        html.dark #cart-sidebar .text-gray-700,
+        html.dark #cart-sidebar .text-gray-800 {
+            color: #F8FAFC !important;
+        }
+        html.dark #checkout-modal input::placeholder,
+        html.dark #checkout-modal textarea::placeholder {
+            color: rgba(248, 250, 252, 0.60) !important;
+        }
+
+        /* Fix: JS-rendered order summary uses solid bg-white/bg-gray-50 */
+        #checkout-modal #order-summary .order-summary-item {
+            background: rgba(255, 255, 255, 0.92) !important;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-color: rgba(233, 236, 239, 0.9) !important;
+            color: #111827;
+        }
+        #checkout-modal #order-summary .order-summary-title {
+            color: #111827 !important;
+        }
+        #checkout-modal #order-summary .order-summary-meta {
+            color: #374151 !important;
+        }
+        #checkout-modal #order-summary .order-summary-item .text-gray-500 {
+            color: #374151 !important;
+        }
+        #checkout-modal #order-summary .order-summary-item .text-gray-400 {
+            color: #4B5563 !important;
+        }
+        #checkout-modal #order-summary .order-summary-totals {
+            background: rgba(255, 255, 255, 0.86) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-color: rgba(233, 236, 239, 0.9) !important;
+            color: #111827;
+        }
+        #checkout-modal #order-summary .order-summary-totals .text-gray-600 {
+            color: #374151 !important;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-item {
+            background: rgba(15, 23, 42, 0.78) !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            color: #F8FAFC;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-title {
+            color: #F8FAFC !important;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-meta {
+            color: #CBD5E1 !important;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-item .text-gray-500,
+        html.dark #checkout-modal #order-summary .order-summary-item .text-gray-400 {
+            color: #CBD5E1 !important;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-totals {
+            background: rgba(15, 23, 42, 0.70) !important;
+            border-color: rgba(255, 255, 255, 0.10) !important;
+            color: #F8FAFC;
+        }
+        html.dark #checkout-modal #order-summary .order-summary-totals .text-gray-600 {
+            color: #CBD5E1 !important;
+        }
+
+        /* Fix: validation banner looks like a solid white/opaque slab */
+        #checkout-modal #checkout-validation-msg {
+            background: rgba(255, 255, 255, 0.72) !important;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(239, 68, 68, 0.25) !important;
+        }
+        html.dark #checkout-modal #checkout-validation-msg {
+            background: rgba(15, 23, 42, 0.72) !important;
+            border-color: rgba(239, 68, 68, 0.28) !important;
+            color: #FCA5A5 !important;
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100">
 
     <header id="inicio" class="glass-effect shadow-lg sticky top-0 z-50 border-b border-white/20">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -1058,7 +2093,7 @@
                         <a href="#inicio" class="text-lg sm:text-3xl font-bold font-poppins text-gray-900">
                             SR & SRA <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">BURGER</span>
                         </a>
-                        <span class="text-xs sm:text-sm text-gray-500 font-medium hidden sm:block">Minatitlán, Veracruz • Abierto ahora</span>
+                        <span class="text-xs sm:text-sm text-gray-500 font-medium hidden sm:block">Sucursal Minatitlán, Veracruz</span>
                     </div>
                 </div>
                 <nav class="hidden lg:flex items-center space-x-8">
@@ -1074,6 +2109,13 @@
                         Contacto
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
                     </a>
+                    <a href="cliente.html" class="text-gray-700 hover:text-yellow-600 transition-all duration-300 font-medium relative group flex items-center gap-2">
+                        <span id="nav-account-text">Mi cuenta</span>
+                        <span id="nav-session-indicator" class="hidden text-xs font-semibold text-green-500 bg-green-50/90 border border-green-200 px-2 py-0.5 rounded-full">
+                            Sesión iniciada
+                        </span>
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
+                    </a>
                     <button id="promotions-btn" class="relative overflow-hidden bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white px-6 py-3 rounded-2xl hover:from-red-600 hover:via-orange-600 hover:to-yellow-600 transition-all duration-300 font-black shadow-xl hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 pulse-glow">
                         <span class="relative z-10 flex items-center space-x-2">
                             <i class="fas fa-fire animate-bounce"></i>
@@ -1084,9 +2126,12 @@
                     </button>
                 </nav>
                 <div class="flex items-center space-x-2 sm:space-x-4">
-                    <a href="controldeenvios.html" target="_blank" class="hidden lg:flex items-center space-x-2 text-gray-500 hover:text-gray-700 transition-all duration-300 text-sm px-3 py-2 rounded-lg hover:bg-gray-100" title="Control de Envíos - Solo Admin">
-                        <i class="fas fa-clipboard-list text-sm"></i>
-                        <span class="text-xs">Control</span>
+                    <button id="theme-toggle" type="button" class="p-2 sm:p-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15 transition-colors" aria-label="Cambiar tema">
+                        <i class="fas fa-moon text-gray-700 dark:hidden"></i>
+                        <i class="fas fa-sun text-yellow-300 hidden dark:inline"></i>
+                    </button>
+                    <a href="cliente.html" id="mobile-account-btn" class="lg:hidden p-2 sm:p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Mi cuenta / Iniciar sesión">
+                        <i class="fas fa-user text-gray-700 text-sm sm:text-base"></i>
                     </a>
                     <button id="open-cart-btn" class="btn-primary flex items-center space-x-2 sm:space-x-3 shadow-lg text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3">
                         <i class="fas fa-shopping-cart text-sm sm:text-lg"></i>
@@ -1121,6 +2166,10 @@
 
             <!-- Navegación del menú móvil -->
             <nav class="space-y-4">
+                <a href="cliente.html" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                    <i class="fas fa-user text-gray-600 group-hover:text-yellow-600"></i>
+                    <span class="text-gray-800 font-medium group-hover:text-yellow-600">Mi cuenta / Iniciar sesión</span>
+                </a>
                 <a href="#menu" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
                     <i class="fas fa-utensils text-gray-600 group-hover:text-yellow-600"></i>
                     <span class="text-gray-800 font-medium group-hover:text-yellow-600">Menú</span>
@@ -1167,6 +2216,7 @@
     <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
     <section class="hero-bg text-white min-h-[70vh] sm:min-h-[80vh] flex items-center relative overflow-hidden">
+        <img src="https://i.imgur.com/TSTuaNr.jpg" alt="" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer">
         <div class="absolute inset-0 bg-black/10"></div>
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <div class="max-w-4xl mx-auto">
@@ -1187,6 +2237,31 @@
                         Ver Historia
                     </a>
                 </div>
+                <!-- Selector rápido: tipo de entrega en pantalla principal (más visible) -->
+                <div class="mt-5 flex justify-center">
+                    <div id="hero-delivery-selector" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4 py-3 bg-white/15 backdrop-blur-md rounded-2xl border border-white/30 shadow-2xl">
+                        <label data-value="pickup" class="hero-delivery-option inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm sm:text-base text-white/95 cursor-pointer transition-all ring-1 ring-white/30 hover:bg-white/20">
+                            <input type="radio" name="hero-delivery-type" value="pickup" class="sr-only">
+                            <span class="text-lg sm:text-xl">🏪</span>
+                            <span>Recoger en local</span>
+                        </label>
+                        <label data-value="delivery" class="hero-delivery-option inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm sm:text-base text-white/95 cursor-pointer transition-all ring-1 ring-white/30 hover:bg-white/20">
+                            <input type="radio" name="hero-delivery-type" value="delivery" class="sr-only" checked>
+                            <span class="text-lg sm:text-xl">🚗</span>
+                            <span>Envío a domicilio</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Mensajes informativos para tipo de entrega (sin mapas) -->
+                <div class="mt-4 px-4">
+                    <div class="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm border border-yellow-200 rounded-2xl p-4 shadow-sm text-sm text-gray-800" id="hero-delivery-info">
+                        <p class="font-semibold mb-1">🚗 Envío a domicilio</p>
+                        <p>
+                            El envío se calcula automáticamente a <strong>$8 por KM</strong> (máximo <strong>12 km</strong>, redondeo al entero más cercano).
+                            Si ya tienes tu ubicación guardada en <strong>Mi cuenta</strong>, se usará al ordenar.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Elementos decorativos flotantes -->
@@ -1196,41 +2271,7 @@
         <div class="absolute top-1/3 right-1/4 w-6 h-6 bg-yellow-300/60 rounded-full animate-bounce hidden sm:block" style="animation-delay: 0.5s;"></div>
     </section>
 
-    <!-- Mensaje de envío gratis -->
-    <section class="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 py-8 shadow-xl relative overflow-hidden">
-        <div class="absolute inset-0 bg-pattern opacity-20"></div>
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="flex items-center justify-center">
-                <div class="card-modern bg-white/95 backdrop-blur-sm rounded-2xl px-8 py-6 border-2 border-white/50 shadow-2xl">
-                    <div class="flex items-center justify-center space-x-6">
-                        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl p-4 shadow-lg animate-bounce">
-                            <i class="fas fa-truck text-white text-3xl"></i>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="text-gray-800 font-extrabold text-2xl md:text-3xl mb-2">
-                                🚚 ENVÍO GRATIS
-                            </h3>
-                            <div class="flex items-center justify-center space-x-3">
-                                <span class="text-gray-600 font-semibold text-lg">en compras superiores a</span>
-                                <span class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-xl font-bold shadow-lg animate-pulse">
-                                    $500
-                                </span>
-                            </div>
-                            <p class="text-gray-500 text-sm font-medium mt-2">¡Aprovecha esta increíble oferta!</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-4 shadow-lg animate-bounce" style="animation-delay: 0.3s;">
-                            <i class="fas fa-gift text-white text-3xl"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Elementos decorativos mejorados -->
-        <div class="absolute top-4 left-8 text-white/30 text-5xl animate-pulse">�</div>
-        <div class="absolute bottom-4 right-8 text-white/30 text-5xl animate-pulse" style="animation-delay: 1s;">�</div>
-        <div class="absolute top-1/2 left-8 text-white/20 text-3xl animate-bounce">✨</div>
-        <div class="absolute top-1/2 right-8 text-white/20 text-3xl animate-bounce" style="animation-delay: 0.5s;">💫</div>
-    </section>
+    
 
     <main id="menu" class="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -1245,6 +2286,16 @@
                     Cada hamburguesa es una obra maestra culinaria, preparada con ingredientes frescos y premium para ofrecerte una experiencia gastronómica única.
                 </p>
             </div>
+            <div id="menu-gate" class="max-w-3xl mx-auto">
+                <div class="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md text-center">
+                    <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Menú</h2>
+                    <p class="mt-2 text-white/80">Toca para ver las categorías y empezar tu pedido.</p>
+                    <button id="show-menu-btn" type="button" class="mt-5 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-amber-400 text-slate-900 font-bold hover:brightness-110 active:scale-[0.99] transition">
+                        Mostrar menú
+                    </button>
+                </div>
+            </div>
+
             <div id="menu-categories" class="space-y-16"></div>
         </div>
     </main>
@@ -1256,8 +2307,11 @@
                 <div class="lg:w-1/2">
                     <div class="relative">
                         <div class="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl blur opacity-20"></div>
-                        <img src="https://i.imgur.com/mCzOds3.jpg" alt="Logo de Sr. y Sra. Burger" 
-                             class="relative w-full h-auto max-w-md mx-auto rounded-2xl shadow-2xl">
+                    <img src="https://i.imgur.com/mCzOds3.jpg" alt="Logo de Sr. y Sra. Burger" 
+                        class="relative w-full h-auto max-w-md mx-auto rounded-2xl shadow-2xl sr-img-init"
+                        data-sr-img="1" loading="lazy" decoding="async" fetchpriority="low"
+                        referrerpolicy="no-referrer"
+                        onerror="this.onerror=null;this.style.display='none';">
                     </div>
                 </div>
                 <div class="lg:w-1/2 text-center lg:text-left">
@@ -1348,6 +2402,84 @@
         </div>
     </section>
 
+    <!-- FAQ / Preguntas frecuentes -->
+    <section id="faq" class="py-16 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-center text-gray-900 mb-10 sm:mb-14 font-poppins">
+                ¿Necesitas alguna razón más?
+            </h2>
+
+            <!-- Estilos mínimos para el acordeón -->
+            <style>
+                summary::-webkit-details-marker{display:none}
+                .faq-chevron{transition:transform .2s ease}
+                details[open] .faq-chevron{transform:rotate(180deg)}
+            </style>
+
+            <div class="divide-y divide-gray-200 bg-white rounded-2xl border border-gray-200">
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">¿Qué medios de pago aceptan?</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Aceptamos: Efectivo, Tarjeta (en terminal), y Transferencia. Puedes indicarlo al confirmar tu pedido.
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">¿Cómo puedo cancelar mi pedido?</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Escríbenos por WhatsApp lo antes posible con tu número de orden. Si aún no iniciamos la preparación, podremos cancelarlo o reprogramarlo.
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Seguimiento del estado de mi pedido</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Conserva tu número de orden. Podrás consultar el estado por WhatsApp o desde este enlace <a href="tuenvio.html" class="text-blue-600 underline">aquí</a>. Tiempo estimado: 25–35 min zona 1, 35–45 min zona 2.
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Mi pedido no llegó como esperaba</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Queremos que ames tu comida. Repórtalo en menos de 15 minutos tras recibirlo y compártenos fotos o detalles; encontraremos la mejor solución.
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Mi tarjeta ha sido rechazada</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Verifica fondos, conexión y que tu tarjeta permita compras presenciales. Si persiste, elige Transferencia o Efectivo al recibir.
+                    </div>
+                </details>
+
+                <details class="group">
+                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Confirmación de compra</span>
+                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
+                    </summary>
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Te mostraremos en pantalla tu número de orden y lo enviaremos por WhatsApp si lo solicitas. Úsalo para cualquier consulta o seguimiento.
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
+
     <footer class="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
@@ -1372,12 +2504,51 @@
         </div>
     </footer>
 
-    <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col">
-        <div class="flex items-center justify-between p-4 border-b"><h3 class="text-xl font-bold font-poppins">Tu Pedido</h3><button id="close-cart-btn" class="text-gray-500 hover:text-gray-800"><i class="fas fa-times text-2xl"></i></button></div>
-        <div id="cart-items" class="flex-grow p-4 overflow-y-auto modal-scrollbar"><p id="cart-empty-msg" class="text-gray-500 text-center mt-8">Tu carrito está vacío.</p></div>
-        <div class="p-4 border-t bg-gray-50">
-            <div class="flex justify-between items-center mb-4"><span class="text-lg font-semibold">Total:</span><span id="cart-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span></div>
-            <button id="checkout-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-lg hover:bg-[#FFA000] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">Finalizar Pedido</button>
+    <!-- Sticky cart (móvil) -->
+    <div id="sticky-cart-bar" class="fixed bottom-0 left-0 right-0 md:hidden z-40 hidden">
+        <div class="mx-auto max-w-3xl px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+            <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg flex items-center justify-between gap-3 p-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Tu carrito</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 truncate">
+                        <span id="sticky-cart-items">0</span> artículos · <span id="sticky-cart-total">$0</span>
+                    </div>
+                </div>
+                <button id="sticky-cart-open" type="button" class="btn-primary px-4 py-2 text-sm font-bold" aria-label="Abrir carrito">
+                    Ver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col">
+        <div class="cart-header flex items-center justify-between p-4 border-b">
+            <div class="min-w-0">
+                <h3 class="text-xl font-bold font-poppins truncate">Tu Pedido</h3>
+                <p class="text-xs text-gray-600">Revisa y confirma</p>
+            </div>
+            <button id="close-cart-btn" class="cart-close text-gray-500 hover:text-gray-800">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div id="cart-items" class="cart-items flex-grow p-4 overflow-y-auto modal-scrollbar">
+            <div id="cart-empty-msg" class="text-center mt-10 text-gray-700">
+                <p class="text-lg font-bold">Tu carrito está vacío</p>
+                <p class="text-sm text-gray-600 mt-1">Agrega algo del menú para empezar tu pedido.</p>
+                <button id="cart-empty-cta" type="button" class="btn-primary mt-5 px-6 py-3 font-bold" aria-label="Explorar combos">
+                    Explorar combos
+                </button>
+                <p class="text-xs text-gray-500 mt-3">Tip: puedes personalizar toppings en cada producto.</p>
+            </div>
+        </div>
+        <div class="cart-footer p-4 border-t bg-gray-50">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-lg font-semibold">Total:</span>
+                <span id="cart-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-xl hover:bg-[#FFA000] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                <i class="fas fa-receipt mr-2"></i>Finalizar Pedido
+            </button>
         </div>
     </div>
     <div id="cart-overlay" class="fixed top-0 left-0 w-full h-full bg-black/50 z-40 hidden"></div>
@@ -1394,158 +2565,184 @@
         </div>
     </div>
 
-    <div id="customization-modal" class="fixed inset-0 bg-black/60 z-[60] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto flex flex-col" style="max-height: 90vh;">
-            <div class="p-4 border-b"><h3 id="custom-modal-title" class="text-2xl font-bold font-poppins text-center">Personaliza tu Artículo</h3></div>
-            <div id="custom-modal-body" class="p-6 overflow-y-auto modal-scrollbar">
-                <p class="font-semibold mb-4">🔥 ¿Quieres hacer tu hamburguesa aún más irresistible?</p>
-                <div id="toppings-container" class="space-y-3"></div>
-                
-                <hr class="my-6">
-                <p class="font-semibold mb-4">🍟 ¿La quieres con el acompañamiento perfecto?</p>
-                <div id="fries-container" class="space-y-3">
-                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200">
-                        <input type="checkbox" id="add-fries-checkbox" class="form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]">
-                        <div class="ml-3 mr-3">
-                            <img src="https://i.imgur.com/mnmz0uG_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" alt="Papas" class="w-16 h-12 object-cover rounded-md shadow-sm">
-                        </div>
-                        <div class="flex-grow">
-                            <span class="font-semibold text-gray-800">¿La quieres con papas?</span>
-                            <div class="text-sm text-gray-600">Solo 20 más</div>
-                        </div>
-                    </label>
-                    <div id="fries-choice-container" class="pl-8 space-y-3 hidden">
-                        <label class="flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                            <input type="radio" name="fries-type" value="Gajo" class="form-radio text-[#FFB300]" checked>
-                            <div class="ml-3 mr-3">
-                                <img src="https://imgur.com/0n0jSEh.jpg" alt="Papas Gajo" class="w-12 h-8 object-cover rounded shadow-sm">
+    <div id="customization-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden items-center justify-center p-3 sm:p-4">
+        <div class="custom-modal-card glass-effect rounded-2xl shadow-xl w-full max-w-md mx-auto flex flex-col" style="max-height: 90vh;">
+            <div class="custom-modal-header p-4 border-b">
+                <h3 id="custom-modal-title" class="text-2xl font-bold font-poppins text-center">Personaliza tu Artículo</h3>
+                <p class="text-xs text-gray-600 text-center mt-1">Elige tus extras y confirma</p>
+            </div>
+            <div id="custom-modal-body" class="p-4 overflow-y-auto modal-scrollbar">
+                <div class="custom-section">
+                    <p class="custom-section-title font-semibold mb-3">🔥 Toppings</p>
+                    <div id="toppings-container" class="space-y-3"></div>
+                </div>
+
+                <div id="custom-notes-divider" class="custom-divider"></div>
+
+                <div id="custom-notes-section" class="custom-section hidden">
+                    <p class="custom-section-title font-semibold mb-2">📝 Especificaciones</p>
+                    <p class="text-xs text-gray-500 mb-2">Ejemplo: sin cebolla, poco picante, bien cocida, etc.</p>
+                    <textarea
+                        id="custom-notes-input"
+                        rows="2"
+                        maxlength="140"
+                        class="w-full border rounded-xl px-3 py-2 text-sm focus:ring-[#FFB300] focus:border-[#FFB300] resize-none bg-white text-black dark:bg-black dark:text-white dark:border-gray-700"
+                        placeholder="Escribe aquí indicaciones especiales solo para este producto"></textarea>
+                </div>
+
+                <div class="custom-divider"></div>
+
+                <div class="custom-section">
+                    <p class="custom-section-title font-semibold mb-3">🍟 Acompañamiento</p>
+                    <div id="fries-container" class="space-y-3">
+                        <label class="custom-option flex items-center p-3 border rounded-xl cursor-pointer transition-all duration-200">
+                            <input type="checkbox" id="add-fries-checkbox" class="form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]">
+                            <div class="ml-3 flex-grow min-w-0">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="font-semibold text-gray-800 truncate">🍟 Agrega papas a tu orden</span>
+                                    <span class="custom-pill text-xs font-bold">+25</span>
+                                </div>
+                                <div class="text-sm text-gray-600">Elige gajo o a la francesa</div>
                             </div>
-                            <span class="font-medium">Papas Gajo</span>
                         </label>
-                        <label class="flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                            <input type="radio" name="fries-type" value="Francesas" class="form-radio text-[#FFB300]">
-                            <div class="ml-3 mr-3">
-                                <img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&h=200&fit=crop&crop=center" alt="Papas Francesas" class="w-12 h-8 object-cover rounded shadow-sm">
+                        <div id="fries-choice-container" class="custom-suboptions mt-2 ml-4 pl-4 space-y-2 hidden">
+                            <label class="custom-suboption flex items-center cursor-pointer p-3 rounded-xl transition-all duration-200">
+                                <input type="radio" name="fries-type" value="Gajo" class="form-radio text-[#FFB300]" checked>
+                                <span class="ml-3 font-medium">Papas Gajo</span>
+                            </label>
+                            <label class="custom-suboption flex items-center cursor-pointer p-3 rounded-xl transition-all duration-200">
+                                <input type="radio" name="fries-type" value="Francesas" class="form-radio text-[#FFB300]">
+                                <span class="ml-3 font-medium">Papas a la Francesa</span>
+                            </label>
+                        </div>
+
+                        <label class="custom-option flex items-center p-3 border rounded-xl cursor-pointer transition-all duration-200">
+                            <input type="checkbox" id="add-onion-rings-checkbox" class="form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]">
+                            <div class="flex-grow min-w-0">
+                                <div class="flex items-start justify-between gap-3">
+                                    <span class="ml-3 font-semibold text-gray-800">¿Te gustan los aros de cebolla crujientes?</span>
+                                    <span class="custom-pill text-xs font-bold">+25</span>
+                                </div>
+                                <div class="ml-3 text-sm text-gray-600">Solo 25 más por 5 piezas doradas</div>
                             </div>
-                            <span class="font-medium">Papas a la Francesa</span>
-                        </label>
-                        <label class="flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-all duration-200">
-                            <input type="radio" name="fries-type" value="Crispy" class="form-radio text-[#FFB300]">
-                            <div class="ml-3 mr-3">
-                                <img src="https://imgur.com/4bflLWp.jpg" alt="Papas Crispy" class="w-12 h-8 object-cover rounded shadow-sm">
-                            </div>
-                            <span class="font-medium">Papas Crispy</span>
                         </label>
                     </div>
-                    
-                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200">
-                        <input type="checkbox" id="add-onion-rings-checkbox" class="form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]">
-                        <div class="ml-3 mr-3">
-                            <img src="https://i.imgur.com/rK8wjox_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" alt="Aros de Cebolla" class="w-16 h-12 object-cover rounded-md shadow-sm">
-                        </div>
-                        <div class="flex-grow">
-                            <span class="font-semibold text-gray-800">¿Te gustan los aros de cebolla crujientes?</span>
-                            <div class="text-sm text-gray-600">Solo 25 más por 5 piezas doradas</div>
-                        </div>
-                    </label>
                 </div>
-                
-                <hr class="my-6">
-                <p class="font-semibold mb-4">🥤 ¿Algo más para completar tu experiencia?</p>
-                <div id="menu-extras-container" class="space-y-3"></div>
+
+                <div class="custom-divider"></div>
+
+                <div class="custom-section">
+                    <p class="custom-section-title font-semibold mb-3">🥤 Extras</p>
+                    <div id="menu-extras-container" class="space-y-3"></div>
+                </div>
             </div>
-            <div class="p-4 border-t bg-gray-50 mt-auto">
-                <div class="flex justify-between items-center mb-4"><span class="text-lg font-semibold">Total del item:</span><span id="custom-modal-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span></div>
-                <button id="add-custom-to-cart-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-lg hover:bg-[#FFA000] transition duration-300">Confirmar Personalización</button>
+            <div class="custom-modal-footer p-4 border-t mt-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold">Total del item:</span>
+                    <span id="custom-modal-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span>
+                </div>
+                <button id="add-custom-to-cart-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-xl hover:bg-[#FFA000] transition duration-300">Confirmar Personalización</button>
                 <button id="close-custom-modal-btn" class="w-full text-center text-gray-600 mt-2 hover:text-black">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-2">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto relative flex flex-col" style="max-height: 95vh;">
-            <button id="close-modal-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 z-10 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow-md"><i class="fas fa-times"></i></button>
+    <div id="checkout-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-2">
+        <div class="checkout-card glass-effect rounded-2xl shadow-xl w-full max-w-4xl mx-auto relative flex flex-col overflow-hidden" style="max-height: 95vh;">
+            <button id="close-modal-btn" class="checkout-close absolute top-3 right-3 z-10 rounded-full w-9 h-9 flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
             
             <!-- Header compacto -->
-            <div class="p-4 pb-3 border-b bg-white rounded-t-lg">
+            <div class="checkout-header p-4 pb-3 border-b">
                 <h3 class="text-xl font-bold font-poppins text-center">Confirmar Pedido</h3>
+                <p class="text-xs text-gray-600 text-center mt-1">⏱️ Llega en 25-35 min</p>
             </div>
             
             <!-- Contenido scrolleable -->
-            <div class="overflow-y-auto modal-scrollbar flex-1 p-4">
+            <div class="checkout-body overflow-y-auto modal-scrollbar flex-1 p-4">
                 <!-- Resumen del pedido compacto en la parte superior -->
-                <div id="order-summary" class="mb-4 p-3 bg-gray-50 rounded-lg border"></div>
+                <div id="order-summary" class="checkout-summary mb-4 p-3 bg-white/60 backdrop-blur-md rounded-xl border"></div>
                 
                 <!-- Layout en dos columnas para mejor uso del espacio -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <!-- Columna izquierda: Información del cliente y entrega -->
                     <div class="space-y-4">
                         <!-- Información del cliente -->
-                        <div class="space-y-3">
-                            <h4 class="font-semibold text-base flex items-center">
+                        <div class="checkout-panel p-3 rounded-xl border bg-white/70">
+                            <h4 class="font-semibold text-base flex items-center mb-3">
                                 <i class="fas fa-user text-blue-600 mr-2"></i>Información del Cliente
                             </h4>
                             <div class="space-y-3">
                                 <div>
                                     <label for="customer-name" class="block text-sm font-medium mb-1">Nombre:</label>
                                     <input type="text" id="customer-name" placeholder="Tu nombre completo" class="w-full p-2 border rounded-md text-sm focus:ring-1 focus:ring-yellow-300 focus:border-yellow-400">
+                                    <div id="customer-name-error" class="mt-1 text-xs text-red-600 hidden"></div>
                                 </div>
                                 <div>
                                     <label for="customer-phone" class="block text-sm font-medium mb-1">Teléfono:</label>
                                     <input type="tel" id="customer-phone" placeholder="922 123 4567" class="w-full p-2 border rounded-md text-sm focus:ring-1 focus:ring-yellow-300 focus:border-yellow-400">
+                                    <div id="customer-phone-error" class="mt-1 text-xs text-red-600 hidden"></div>
                                 </div>
                             </div>
                         </div>
                         <!-- Tipo de entrega -->
-                        <div>
+                        <div class="checkout-panel p-3 rounded-xl border bg-white/70">
                             <h4 class="font-semibold text-base flex items-center mb-3">
                                 <i class="fas fa-truck text-orange-600 mr-2"></i>Tipo de entrega
                             </h4>
                             <div class="space-y-2">
-                                <label class="flex items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200 border-green-300 bg-green-50">
+                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 border-green-300 bg-green-50/40 backdrop-blur-md">
                                     <input type="radio" name="delivery-type" value="pickup" class="form-radio text-[#FFB300]" checked>
                                     <div class="ml-2 flex-1">
                                         <div class="font-medium text-gray-800 text-sm">🏪 Recoger en local</div>
                                         <div class="text-xs text-green-600 font-semibold">Gratis</div>
                                     </div>
                                 </label>
-                                <label class="flex items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200">
+                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 bg-white/40 backdrop-blur-md">
                                     <input type="radio" name="delivery-type" value="delivery" class="form-radio text-[#FFB300]">
                                     <div class="ml-2 flex-1">
                                         <div class="font-medium text-gray-800 text-sm">🚗 Envío a domicilio</div>
-                                        <div class="text-xs text-[#FFB300] font-semibold">$40 base</div>
+                                        <div id="delivery-option-fee" class="text-xs text-[#FFB300] font-semibold">Calculando…</div>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         <!-- Dirección (cuando se selecciona delivery) -->
-                        <div id="location-section" class="hidden">
-                            <label for="address-input" class="block font-medium mb-2 text-sm">
-                                <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Tu Dirección:
-                            </label>
+                        <div id="location-section" class="checkout-panel hidden p-3 rounded-xl border bg-white/70">
                             <div class="space-y-2">
-                                <div class="relative">
-                                    <input type="text" id="address-input" 
-                                           placeholder="Escribe tu dirección completa..." 
-                                           class="w-full p-2 border rounded-lg focus:ring-1 focus:ring-yellow-300 focus:border-yellow-400 pl-8 text-sm">
-                                    <i class="fas fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <div id="saved-addresses-section">
+                                    <label for="saved-address-select" class="block font-medium mb-2 text-sm">
+                                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Selecciona tu dirección guardada:
+                                    </label>
+                                    <select id="saved-address-select" class="w-full p-2 border rounded-lg text-sm bg-white/70">
+                                        <option value="__select__" selected>Selecciona una dirección…</option>
+                                    </select>
+                                    <div id="delivery-address-error" class="mt-1 text-xs text-red-600 hidden"></div>
+                                    <div id="saved-addresses-hint" class="text-[11px] text-gray-500 mt-1"></div>
+                                    <a id="manage-addresses-btn" href="cliente.html" class="mt-2 inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+                                        <i class="fas fa-user mr-2"></i>
+                                        Agregar / editar direcciones (Mi cuenta)
+                                    </a>
+
+                                    <div class="mt-3 text-xs text-gray-600">
+                                        <strong>Dirección seleccionada:</strong>
+                                    </div>
+                                    <div id="selected-address" class="text-sm text-gray-800">—</div>
                                 </div>
-                                <!-- Mapa compacto -->
-                                <div id="map-container" class="hidden"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                <strong>Zonas de entrega:</strong><br>
-                                • Zona 1 (0-4 km): $40<br>
-                                • Zona 2 (4-7 km): $40 + $10/km adicional<br>
-                                <small>Desde Coahuila 36, Emiliano Zapata, Minatitlán.</small>
+                            <p id="maps-help-text" class="text-xs text-gray-700 mt-3 p-3 bg-yellow-50/30 backdrop-blur-sm border border-yellow-200 rounded">
+                                <i class="fas fa-info-circle mr-1 text-yellow-500"></i>
+                                El envío se calcula a 8 pesos por KM (máximo 12 km, redondeo al entero más cercano). El costo se guarda en tu cuenta.
                             </p>
+
+                            <div id="delivery-live-info" class="text-xs text-gray-700 mt-2 p-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded hidden"></div>
                         </div>
                     </div>
                     <!-- Columna derecha: Resumen y pago -->
                     <div class="space-y-4">
                         <!-- Resumen del pedido -->
-                        <div class="p-3 bg-white rounded-lg border shadow-sm">
+                        <div class="checkout-panel p-3 bg-white/70 rounded-xl border shadow-sm">
                             <h4 class="font-semibold text-base mb-2 text-gray-800 flex items-center">
                                 <i class="fas fa-receipt mr-2 text-yellow-600"></i>
                                 Resumen
@@ -1568,13 +2765,13 @@
                             </div>
                         </div>
                         <!-- Método de pago -->
-                        <div>
+                        <div class="checkout-panel p-3 bg-white/70 rounded-xl border">
                             <h4 class="font-semibold text-base mb-2 flex items-center">
                                 <i class="fas fa-credit-card mr-2 text-blue-600"></i>
                                 Método de pago
                             </h4>
                             <div class="space-y-2">
-                                <label class="flex items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200 border-yellow-300 bg-yellow-50">
+                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 border-yellow-300 bg-yellow-50/40 backdrop-blur-md">
                                     <input type="radio" name="payment" value="Efectivo" class="form-radio text-[#FFB300]" checked>
                                     <div class="ml-2 flex-grow">
                                         <div class="font-medium text-gray-800 text-sm">💵 Efectivo</div>
@@ -1583,14 +2780,15 @@
                                 </label>
                                 
                                 <!-- Calculadora de cambio compacta -->
-                                <div id="cash-amount-container" class="ml-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div id="cash-amount-container" class="ml-3 p-2 bg-blue-50/35 backdrop-blur-sm border border-blue-200 rounded-lg">
                                     <label for="cash-amount" class="block text-xs font-medium mb-1 text-blue-800">
                                         <i class="fas fa-calculator mr-1"></i>¿Con cuánto pagarás?
                                     </label>
                                     <input type="number" id="cash-amount" placeholder="Cantidad..." min="0" step="10" class="w-full p-1 border rounded text-xs focus:ring-1 focus:ring-blue-300">
+                                    <div id="cash-amount-error" class="mt-1 text-xs text-red-700 hidden"></div>
                                     
                                     <!-- Display del cambio -->
-                                    <div id="change-display" class="mt-1 p-1 bg-green-50 border border-green-200 rounded text-xs hidden">
+                                    <div id="change-display" class="mt-1 p-1 bg-green-50/35 backdrop-blur-sm border border-green-200 rounded text-xs hidden">
                                         <div class="flex items-center justify-between">
                                             <span class="text-green-700">
                                                 <i class="fas fa-hand-holding-usd mr-1"></i>Cambio:
@@ -1600,7 +2798,7 @@
                                     </div>
                                     
                                     <!-- Advertencia compacta -->
-                                    <div id="insufficient-cash" class="mt-1 p-1 bg-red-50 border border-red-200 rounded text-xs hidden">
+                                    <div id="insufficient-cash" class="mt-1 p-1 bg-red-50/35 backdrop-blur-sm border border-red-200 rounded text-xs hidden">
                                         <div class="flex items-center text-red-700">
                                             <i class="fas fa-exclamation-triangle mr-1"></i>
                                             <span>Cantidad insuficiente</span>
@@ -1608,7 +2806,7 @@
                                     </div>
                                 </div>
                                 
-                                <label class="flex items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200">
+                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 bg-white/40 backdrop-blur-md">
                                     <input type="radio" name="payment" value="Tarjeta" class="form-radio text-[#FFB300]">
                                     <div class="ml-2 flex-grow">
                                         <div class="font-medium text-gray-800 text-sm">💳 Tarjeta</div>
@@ -1616,7 +2814,7 @@
                                     </div>
                                 </label>
                                 
-                                <label class="flex items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200">
+                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 bg-white/40 backdrop-blur-md">
                                     <input type="radio" name="payment" value="Transferencia" class="form-radio text-[#FFB300]">
                                     <div class="ml-2 flex-grow">
                                         <div class="font-medium text-gray-800 text-sm">🏦 Transferencia</div>
@@ -1630,23 +2828,195 @@
             </div>
             
             <!-- Footer fijo con botón -->
-            <div class="border-t bg-gray-50 p-3 rounded-b-lg">
+            <div class="border-t bg-white/60 backdrop-blur-md p-3 rounded-b-lg">
+                <div id="checkout-sticky-totals" class="mb-2 flex items-center justify-between text-sm">
+                    <div class="text-gray-700">Envío: <span id="checkout-sticky-delivery" class="font-semibold">—</span></div>
+                    <div class="text-gray-800">Total: <span id="checkout-sticky-total" class="font-bold text-[#FFB300]">$0</span></div>
+                </div>
                 <button id="send-whatsapp-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg">
-                    <i class="fab fa-whatsapp text-xl"></i><span>Enviar Pedido por WhatsApp</span>
+                    <i class="fas fa-check-circle text-xl"></i><span>Confirmar Pedido</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Audio Player optimizado para móvil -->
-    <audio id="background-music" loop controls preload="auto" style="position: fixed; bottom: 80px; left: 10px; z-index: 1000; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 200px; height: 40px;" class="hidden sm:block">
-        <source src="./SR & SRA BURGER FLOW.mp3" type="audio/mpeg">
-        <source src="SR & SRA BURGER FLOW.mp3" type="audio/mpeg">
-        Tu navegador no soporta la reproducción de audio.
-    </audio>
-    
+    <!-- Modal: registro / bienvenida (solo usuarios SIN sesión) -->
+    <div id="register-cta-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] hidden items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-yellow-200 bg-white/95">
+            <div class="p-4 border-b flex items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">🎁 10% en tu primera compra</h3>
+                    <p class="text-base sm:text-lg text-gray-700 mt-1">Solo necesitas crear tu cuenta.</p>
+                </div>
+                <button id="register-cta-close" class="w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center" aria-label="Cerrar">
+                    <i class="fas fa-times text-gray-700"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="p-4 rounded-2xl border bg-yellow-50/40">
+                    <p class="text-lg font-extrabold text-gray-900">Activa tu descuento en 10 segundos</p>
+                    <div class="mt-2 space-y-1 text-sm sm:text-base text-gray-800">
+                        <p><span class="font-bold">1)</span> Toca <span class="font-bold">“Ir a Mi cuenta”</span></p>
+                        <p><span class="font-bold">2)</span> Regístrate o inicia sesión</p>
+                        <p><span class="font-bold">3)</span> Vuelve y se aplicará en tu primera compra</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <a id="register-cta-go" href="cliente.html" class="w-full bg-[#FFB300] text-[#212121] font-extrabold py-3 rounded-xl text-center hover:bg-[#FFA000] transition">
+                        Ir a Mi cuenta
+                    </a>
+                    <button id="register-cta-later" type="button" class="w-full bg-black/5 text-gray-800 font-bold py-3 rounded-xl hover:bg-black/10 transition">
+                        Ahora no
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Mapa Grande - RESPONSIVE MEJORADO v8 -->
+    <div id="map-modal" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-0">
+        <!-- Modal más pequeño para ver todos los botones -->
+        <div class="bg-white w-full max-h-[80vh] sm:max-h-[85vh] sm:max-w-5xl sm:mx-4 sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <!-- Header del modal - MÁS COMPACTO -->
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-500 p-2.5 sm:p-3 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-map-marked-alt text-yellow-600 text-sm sm:text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm sm:text-base">¿Dónde te encuentras?</h3>
+                    </div>
+                </div>
+                <button id="close-map-modal" class="w-8 h-8 sm:w-9 sm:h-9 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors touch-manipulation">
+                    <i class="fas fa-times text-white text-base sm:text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Buscador - COMPACTO -->
+            <div class="p-2.5 sm:p-3 bg-white border-b border-gray-200 flex-shrink-0">
+                <div class="relative max-w-2xl mx-auto">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-black rounded-full"></div>
+                    <input id="modal-search-input" 
+                        type="text" 
+                        placeholder="¿A dónde quieres que lleguemos?"
+                        class="w-full pl-8 pr-3 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-all touch-manipulation" 
+                        autocomplete="off"
+                        style="font-size: 16px;" />
+                </div>
+                
+                <!-- Suggestions dropdown -->
+                <div id="modal-suggestions" class="hidden max-w-2xl mx-auto mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <!-- Mapa grande - ESTILO UBER/DIDI MEJORADO -->
+            <div class="flex-1 relative min-h-0 bg-gray-100">
+                <div id="hero-map" class="w-full h-full"></div>
+                
+                <!-- INDICADOR CENTRAL - SOLO CRUZ ROJA SIMPLE (sin pin) -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-[5]">
+                    <div class="relative flex items-center justify-center">
+                        <!-- Cruz simple -->
+                        <div class="relative">
+                            <!-- Círculo rojo central -->
+                            <div class="w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg"></div>
+                            
+                            <!-- Líneas de la cruz -->
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                <div class="absolute w-8 h-0.5 bg-red-600" style="left: -16px; top: -1px;"></div>
+                                <div class="absolute h-8 w-0.5 bg-red-600" style="top: -16px; left: -1px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botón MI UBICACIÓN flotante - MÁS ARRIBA -->
+                <div class="absolute bottom-6 right-3 z-10">
+                    <button id="modal-use-geolocation" 
+                        class="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full shadow-xl flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all border border-gray-200 touch-manipulation">
+                        <i class="fas fa-location-crosshairs text-gray-700 text-lg sm:text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Botones ZOOM - MÁS ARRIBA -->
+                <div class="absolute bottom-20 right-3 z-10 flex flex-col gap-2">
+                    <button id="zoom-in" 
+                        class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all border border-gray-200 touch-manipulation">
+                        <i class="fas fa-plus text-gray-700 text-base sm:text-lg"></i>
+                    </button>
+                    <button id="zoom-out" 
+                        class="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all border border-gray-200 touch-manipulation">
+                        <i class="fas fa-minus text-gray-700 text-base sm:text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer - COMPACTO -->
+            <div class="p-2.5 sm:p-3 bg-white border-t border-gray-200 flex-shrink-0">
+                <div class="max-w-2xl mx-auto">
+                    
+                    <!-- Preview de dirección -->
+                    <div id="modal-address-preview" class="mb-2">
+                        <div class="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                            <div class="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-location-dot text-white text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p id="modal-address-text" class="text-xs sm:text-sm text-gray-900 font-medium leading-snug">
+                                    Mueve el mapa para seleccionar
+                                </p>
+                                <span id="modal-loading-spinner" class="hidden text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Buscando...
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Indicador de disponibilidad -->
+                    <div id="modal-availability" class="mb-2 hidden" role="status" aria-live="polite">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <!-- Botón de confirmar - COMPACTO -->
+                    <button id="modal-confirm-location" 
+                        class="w-full px-4 py-2.5 sm:py-3 rounded-lg bg-black text-white font-bold text-sm sm:text-base hover:bg-gray-800 active:scale-98 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 touch-manipulation flex items-center justify-center gap-2" 
+                        disabled>
+                        <span id="modal-confirm-text">Confirmar ubicación</span>
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de pedido con número de orden -->
+    <div id="order-success-modal" class="fixed inset-0 bg-black/60 z-[75] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                    <i class="fas fa-check text-green-600 text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">¡Orden recibida!</h3>
+                <p class="text-gray-600">Guarda tu número de orden para rastrear tu pedido:</p>
+                <div class="mt-3 flex items-center justify-center space-x-2">
+                    <span class="text-xl font-black text-gray-900">#<span id="order-number-display">—</span></span>
+                    <button id="copy-order-number" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"><i class="fas fa-copy"></i></button>
+                </div>
+                <a id="track-order-link" href="tuenvio.html" class="mt-4 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold">
+                    <i class="fas fa-location-dot mr-2"></i> RASTREA TU PEDIDO
+                </a>
+            </div>
+            <div class="p-4 bg-gray-50">
+                <button id="close-order-success" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Botón flotante de WhatsApp optimizado para móvil -->
-    <a href="https://wa.me/5219221593688" target="_blank" class="fixed bottom-24 sm:bottom-40 right-4 sm:right-6 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-2xl w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-40 group">
+    <a href="https://wa.me/5219221593688" target="_blank" class="wa-float fixed bottom-24 sm:bottom-40 right-4 sm:right-6 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-2xl w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-40 group">
         <i class="fab fa-whatsapp text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300"></i>
         <div class="absolute -left-20 sm:-left-24 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap hidden sm:block">
             ¡Chatea con nosotros!
@@ -1660,6 +3030,8 @@
             ¿Ayuda?
         </div>
     </button>
+
+    <!-- Duplicado eliminado; ver modal anterior -->
 
     <!-- Modal de promociones - Diseño Premium Competitivo Mundial -->
     <div id="promotions-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden items-center justify-center p-2 sm:p-4">
@@ -1750,7 +3122,7 @@
                                             <i class="fas fa-hamburger text-green-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-bold text-gray-900">Martes BBQ Beacon</h4>
+                                            <h4 class="font-bold text-gray-900">Martes BBQ BEACON CRUNCH</h4>
                                             <p class="text-sm text-gray-600">Precio único $100</p>
                                         </div>
                                         <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">MARTES</span>
@@ -1939,7 +3311,7 @@
                                         <i class="fas fa-hamburger text-2xl"></i>
                                     </div>
                                     <h4 class="text-sm font-bold text-green-200 mb-1">MARTES</h4>
-                                    <h3 class="text-xl font-black mb-2">BBQ BEACON</h3>
+                                    <h3 class="text-xl font-black mb-2">BBQ BEACON CRUNCH</h3>
                                 </div>
                                 <div class="space-y-2 mb-4">
                                     <div class="text-3xl font-black text-yellow-300">$100</div>
@@ -2048,16 +3420,17 @@
 
                             <!-- Combo Amigos -->
                             <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
+                                <img src="https://i.imgur.com/TvpmXsW.jpg" alt="Combo Amigos" class="absolute inset-0 w-full h-full object-cover opacity-10 sr-img-init" data-sr-img="1" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.style.display='none'">
                                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                                 <div class="relative z-10">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-xl font-black">👥 COMBO AMIGOS</h3>
                                         <span class="bg-yellow-400 text-green-900 px-3 py-1 rounded-full text-sm font-black">AHORRA $60</span>
                                     </div>
-                                    <p class="text-green-100 mb-4">3 Hamburguesas + Papas + Coca-Cola 1.75L</p>
+                                    <p class="text-green-100 mb-4">3 Hamburguesas + Papas</p>
                                     <div class="flex items-end space-x-3 mb-4">
                                         <span class="text-2xl text-green-200 line-through">$400</span>
-                                        <span class="text-4xl font-black text-yellow-300">$340</span>
+                                        <span class="text-4xl font-black text-yellow-300">$360</span>
                                     </div>
                                     <button data-combo-id="7" class="promo-combo-btn bg-white text-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-50 transition-colors">
                                         Configurar Combo
@@ -2186,7 +3559,7 @@
                         <li>Tu nombre completo</li>
                         <li>Tu número de teléfono</li>
                         <li>Tipo de entrega: recoger en local o envío a domicilio</li>
-                        <li>Si eliges envío a domicilio, ingresa tu dirección completa</li>
+                        <li>Si eliges envío a domicilio, selecciona una dirección guardada (si no tienes, entra a “Mi cuenta” y guárdala)</li>
                         <li>Método de pago preferido</li>
                     </ul>
                 </div>
@@ -2201,8 +3574,8 @@
                         <i class="fas fa-info-circle mr-2"></i> Información adicional
                     </h4>
                     <ul class="list-disc ml-6 text-blue-700">
-                        <li class="mb-1">El área de entrega a domicilio está limitada a un radio de 4 km desde nuestra ubicación en Coahuila 36, 10 de Mayo, Minatitlán, Veracruz.</li>
-                        <li class="mb-1">El costo de envío a domicilio es de $40 adicionales.</li>
+                        <li class="mb-1">El área de entrega a domicilio está limitada a un máximo de 12 km desde nuestra ubicación en Coahuila 36, 10 de Mayo, Minatitlán, Veracruz.</li>
+                        <li class="mb-1">El costo de envío se calcula a $8 por KM (redondeo al entero más cercano).</li>
                         <li class="mb-1">Horario de atención: Lunes a Domingo de 3:00 PM a 12:00 AM.</li>
                         <li>Para cualquier duda adicional, contáctanos por WhatsApp o llama al 922 159 3688.</li>
                     </ul>
@@ -2211,9 +3584,70 @@
         </div>
     </div>
 
-    <!-- Firebase Configuration -->
-    <script type="module" src="js/firebase-config.js"></script>
-    <script src="js/script.js"></script>
+        <!-- Firebase Configuration -->
+        <script type="module" src="js/firebase-config.js"></script>
+        <script>
+            // Para entorno local con server.js no forzamos API_BASE; se usará same-origin
+            // window.__API_BASE = 'https://pagina-v3-actual-copia1.vercel.app';
+
+            // Indicador de sesión en el header ("Mi cuenta")
+            (function() {
+                function waitForClientManager(cb) {
+                    var tries = 0;
+                    var maxTries = 50;
+                    (function check() {
+                        if (window.firebaseClientManager && window.firebaseAuth) {
+                            cb(window.firebaseClientManager, window.firebaseAuth);
+                        } else if (tries++ < maxTries) {
+                            setTimeout(check, 100);
+                        }
+                    })();
+                }
+
+                function setupSessionIndicator(manager, auth) {
+                    var indicator = document.getElementById('nav-session-indicator');
+                    var accountText = document.getElementById('nav-account-text');
+                    if (!indicator || !accountText || !manager || !auth) return;
+
+                    manager.onAuthChange(function(user) {
+                        if (user) {
+                            var name = user.displayName || '';
+                            // Intentar leer el nombre guardado en la colección clientes
+                            if (window.firebaseDb && user.uid) {
+                                import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js')
+                                    .then(function(mod) {
+                                        var doc = mod.doc, getDoc = mod.getDoc;
+                                        return getDoc(doc(window.firebaseDb, 'clientes', user.uid));
+                                    })
+                                    .then(function(snap) {
+                                        if (snap && snap.exists()) {
+                                            var data = snap.data() || {};
+                                            if (data.nombre) name = data.nombre;
+                                        }
+                                        indicator.classList.remove('hidden');
+                                        indicator.textContent = name ? ('Sesión iniciada: ' + name) : 'Sesión iniciada';
+                                    })
+                                    .catch(function() {
+                                        indicator.classList.remove('hidden');
+                                        indicator.textContent = 'Sesión iniciada';
+                                    });
+                            } else {
+                                indicator.classList.remove('hidden');
+                                indicator.textContent = 'Sesión iniciada';
+                            }
+                        } else {
+                            indicator.classList.add('hidden');
+                            indicator.textContent = 'Sesión iniciada';
+                        }
+                    });
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    waitForClientManager(setupSessionIndicator);
+                });
+            })();
+        </script>
+        <script src="js/script.js.backup?v=9.0-final-2026-01-10a"></script>
 
 </body>
 </html>

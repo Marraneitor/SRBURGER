@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rastrea tu pedido - SR & SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+</head>
+<body class="bg-gradient-to-b from-white to-gray-50 min-h-screen">
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-hamburger text-white"></i>
+        </div>
+        <h1 class="text-xl font-bold">SR & SRA <span class="text-yellow-600">BURGER</span></h1>
+      </div>
+      <a href="paginaburger.html" class="text-sm text-blue-600 hover:underline"><i class="fas fa-arrow-left mr-1"></i> Volver al menú</a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-10">
+    <!-- Hero -->
+    <div class="max-w-3xl mx-auto text-center mb-8">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 mb-2">Rastrea tu pedido</h2>
+      <p class="text-gray-600">Ingresa tu número de orden para ver el estado en tiempo real. Mantén esta página abierta: se actualiza automáticamente.</p>
+    </div>
+
+    <!-- Search Card -->
+    <div class="max-w-3xl mx-auto bg-white/90 backdrop-blur rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+        <div class="relative flex-1">
+          <i class="fas fa-hashtag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input id="order-input" type="text" placeholder="Ej. 20250821-321" class="w-full pl-9 p-3 border rounded-xl focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400 text-lg" />
+        </div>
+        <button id="track-btn" class="px-6 py-3 bg-blue-600 text-white font-extrabold rounded-xl hover:bg-blue-700 shadow-md flex items-center justify-center gap-2">
+          <i class="fas fa-magnifying-glass"></i>
+          <span>Buscar</span>
+          <span id="spinner" class="hidden animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span>
+        </button>
+      </div>
+      <p id="hint" class="text-xs text-gray-500 mt-2">Tu número aparece en el recibo al confirmar el pedido.</p>
+
+      <!-- Result Card -->
+      <div id="result" class="mt-8 hidden">
+        <!-- Live alert -->
+        <div id="res-alert" class="hidden mb-4 rounded-2xl border p-4"></div>
+        <!-- Header info -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div>
+            <div class="text-xs text-gray-500">Número de orden</div>
+            <div class="text-2xl font-black flex items-center gap-2">
+              <span id="res-order-number">—</span>
+              <button id="copy-btn" class="text-gray-500 hover:text-gray-900" title="Copiar número"><i class="fas fa-copy"></i></button>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-gray-500">Estado</div>
+            <div id="res-status" class="text-lg font-bold">—</div>
+            <div id="res-eta" class="text-xs text-gray-500"></div>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden mb-4">
+          <div id="res-progress" class="h-2 bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-500" style="width: 10%"></div>
+        </div>
+
+        <!-- Timeline -->
+        <div id="res-timeline" class="mb-6"></div>
+
+        <!-- Customer -->
+        <div class="mb-4 bg-gray-50 border rounded-xl p-3">
+          <div class="text-sm text-gray-500">Cliente</div>
+          <div id="res-customer" class="font-semibold">—</div>
+        </div>
+
+        <!-- Items -->
+        <div class="mb-4">
+          <div class="text-sm text-gray-500 mb-2">Productos</div>
+          <ul id="res-items" class="space-y-2"></ul>
+        </div>
+
+        <!-- Total + actions -->
+        <div class="border-t pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="text-sm text-gray-500">Total</div>
+          <div class="flex items-center gap-3 sm:order-2">
+            <a id="wa-btn" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold">
+              <i class="fab fa-whatsapp"></i>
+              Contactar
+            </a>
+            <div id="res-total" class="text-2xl font-black text-yellow-600">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Not found -->
+      <div id="not-found" class="mt-8 hidden bg-red-50 border border-red-200 text-red-800 rounded-2xl p-4">
+        <div class="font-bold mb-1">No encontramos ese pedido</div>
+        <ul class="list-disc ml-5 text-sm">
+          <li>Revisa el formato: 2025MMDD-###</li>
+          <li>Confirma que copiaste bien el número del recibo</li>
+          <li>Si recién hiciste el pedido, espera unos segundos y vuelve a intentar</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- How-to guide -->
+    <section class="max-w-3xl mx-auto mt-10">
+      <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 sm:p-8">
+        <h3 class="text-xl font-black mb-4 flex items-center gap-2"><i class="fas fa-circle-info text-blue-600"></i> ¿Cómo usar esta página?</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-yellow-50 to-white border">
+            <div class="font-bold mb-1">1) Ten tu número de orden</div>
+            <p class="text-sm text-gray-600">Lo mostramos al confirmar tu compra y también lo enviamos por WhatsApp si lo solicitaste.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-white border">
+            <div class="font-bold mb-1">2) Escríbelo y presiona Buscar</div>
+            <p class="text-sm text-gray-600">Puedes pegarlo y presionar Enter. Te mostraremos el estado y el avance.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-green-50 to-white border">
+            <div class="font-bold mb-1">3) Sigue el progreso</div>
+            <p class="text-sm text-gray-600">La línea de tiempo se actualiza sola: Pendiente → Preparando → Listo → En camino → Entregado.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script>
+  let unsubscribe = null;
+    let lastSnapshot = null;
+    const statusText = (s) => ({
+      pending: 'Pendiente',
+      preparing: 'Preparando',
+      ready: 'Listo',
+      delivering: 'En camino',
+      delivered: 'Entregado'
+    })[s] || 'Pendiente';
+
+    const statusProgress = (s) => ({
+      pending: 10,
+      preparing: 35,
+      ready: 60,
+      delivering: 85,
+      delivered: 100
+    })[s] || 10;
+
+    const steps = [
+      { key: 'pending', label: 'Pendiente', icon: 'clock' },
+      { key: 'preparing', label: 'Preparando', icon: 'utensils' },
+      { key: 'ready', label: 'Listo', icon: 'check' },
+      { key: 'delivering', label: 'En camino', icon: 'truck' },
+      { key: 'delivered', label: 'Entregado', icon: 'check-circle' }
+    ];
+
+    function renderTimeline(status) {
+      const idx = ['pending','preparing','ready','delivering','delivered'].indexOf(status);
+      const cols = steps.map((st, i) => {
+        const active = i <= idx;
+        const circle = active ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow' : 'bg-gray-200 text-gray-400';
+        const bar = i < steps.length - 1 ? `<div class="absolute top-1/2 left-full w-full h-1 ${i < idx ? 'bg-yellow-400' : 'bg-gray-200'}"></div>` : '';
+        return `
+          <div class="relative flex flex-col items-center text-center">
+            <div class="relative z-10 w-9 h-9 rounded-full flex items-center justify-center ${circle}">
+              <i class="fas fa-${st.icon}"></i>
+            </div>
+            ${bar}
+            <div class="mt-2 text-xs ${active ? 'text-gray-900 font-semibold' : 'text-gray-400'}">${st.label}</div>
+          </div>`;
+      }).join('');
+      return `<div class="grid grid-cols-5 items-center">${cols}</div>`;
+    }
+
+    function chipsFromCustomizations(text) {
+      if (!text) return '';
+      const parts = String(text).split(/\s*,\s*/).filter(Boolean);
+      if (!parts.length) return '';
+      return `<div class="mt-1 flex flex-wrap gap-1">${parts.map(p => `<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border">${p}</span>`).join('')}</div>`;
+    }
+
+    function setLoading(on) {
+      const sp = document.getElementById('spinner');
+      if (!sp) return;
+      sp.classList.toggle('hidden', !on);
+    }
+
+    function showAlert(message, type = 'info') {
+      const el = document.getElementById('res-alert');
+      if (!el) return;
+      const styles = {
+        success: 'bg-green-50 border-green-200 text-green-800',
+        info: 'bg-blue-50 border-blue-200 text-blue-800',
+        error: 'bg-red-50 border-red-200 text-red-800'
+      };
+      el.className = `mb-4 rounded-2xl border p-4 ${styles[type] || styles.info}`;
+      el.innerHTML = message;
+      el.classList.remove('hidden');
+      // Auto-hide after a bit (but keep visible if user wants to read)
+      setTimeout(() => {
+        try { el.classList.add('hidden'); } catch (_) {}
+      }, 9000);
+    }
+
+    function render(order) {
+      document.getElementById('not-found').classList.add('hidden');
+      document.getElementById('result').classList.remove('hidden');
+
+      // Avisos por cambios importantes
+      try {
+        if (lastSnapshot && !lastSnapshot.confirmed && order.confirmed) {
+          showAlert('✅ <span class="font-bold">¡Pedido confirmado!</span> Ya lo estamos empezando a preparar.', 'success');
+        }
+      } catch (_) {}
+
+      document.getElementById('res-order-number').textContent = order.orderNumber || '—';
+      document.getElementById('res-status').textContent = statusText(order.status);
+        const prog = document.getElementById('res-progress');
+        if (prog) prog.style.width = statusProgress(order.status) + '%';
+      document.getElementById('res-timeline').innerHTML = renderTimeline(order.status);
+      document.getElementById('res-customer').textContent = `${order.customer?.name || ''} • ${order.deliveryType === 'delivery' ? 'Entrega a domicilio' : 'Recoger en local'}`;
+      document.getElementById('res-eta').textContent = order.estimatedTime ? `Tiempo estimado: ${order.estimatedTime} min` : '';
+      const items = Array.isArray(order.items) ? order.items : [];
+      document.getElementById('res-items').innerHTML = items.map(it => {
+        const details = it.customizations ? chipsFromCustomizations(it.customizations) : '';
+        return `<li class='p-3 bg-gray-50 border rounded-xl'><div class='flex justify-between items-start gap-3'><span class='font-semibold text-gray-900'>${it.quantity}x ${it.name}</span><span class='font-bold'>$${Number(it.price || 0).toFixed(2)}</span></div>${details}</li>`;
+      }).join('');
+      document.getElementById('res-total').textContent = `$${Number(order.total || 0).toFixed(2)}`;
+
+      // Acciones
+      const msg = encodeURIComponent(`Hola, mi número de orden es ${order.orderNumber}. ¿Podrían confirmarme el estado?`);
+      const phone = (order.customer?.phone || '').replace(/\D/g, '') || '5219221593688';
+      const wa = `https://wa.me/${phone}?text=${msg}`;
+      const waBtn = document.getElementById('wa-btn');
+      if (waBtn) waBtn.href = wa;
+      const copyBtn = document.getElementById('copy-btn');
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          try { await navigator.clipboard.writeText(order.orderNumber || ''); } catch(_) {}
+          copyBtn.classList.add('text-green-600');
+          setTimeout(() => copyBtn.classList.remove('text-green-600'), 1200);
+        };
+      }
+
+      // Scroll al resultado
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setLoading(false);
+
+      // Guardar snapshot para detectar cambios en tiempo real
+      lastSnapshot = {
+        confirmed: !!order.confirmed,
+        status: order.status || null
+      };
+    }
+
+  async function find(orderNumber) {
+      try {
+    setLoading(true);
+        if (!window.firebaseOrderManager) {
+          throw new Error('Firebase no disponible');
+        }
+        // Cancel previous subscription if any
+        if (typeof unsubscribe === 'function') {
+          try { unsubscribe(); } catch (_) {}
+          unsubscribe = null;
+        }
+
+        const order = await window.firebaseOrderManager.findOrderByNumber(orderNumber);
+        if (!order) {
+          // Intentar fallback local
+          const local = findLocal(orderNumber);
+          if (local) {
+            render(local);
+            return;
+          } else {
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('not-found').classList.remove('hidden');
+            return;
+          }
+        }
+        render(order);
+
+        // Subscribe for real-time updates
+        unsubscribe = window.firebaseOrderManager.subscribeOrderByNumber(orderNumber, (updated) => {
+          render(updated);
+        });
+      } catch (e) {
+        const local = findLocal(orderNumber);
+        if (local) {
+          render(local);
+        } else {
+          document.getElementById('result').classList.add('hidden');
+          document.getElementById('not-found').classList.remove('hidden');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function findLocal(orderNumber) {
+      try {
+        const raw = localStorage.getItem('orders');
+        if (!raw) return null;
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return null;
+        return arr.find(o => o.orderNumber === orderNumber) || null;
+      } catch (_) { return null; }
+    }
+
+    document.getElementById('track-btn').addEventListener('click', () => {
+      const val = document.getElementById('order-input').value.trim();
+      if (!val) return;
+      find(val);
+    });
+
+    document.getElementById('order-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.currentTarget.value.trim();
+        if (!val) return;
+        find(val);
+      }
+    });
+
+    const params = new URLSearchParams(location.search);
+    const prefill = params.get('order');
+    if (prefill) {
+      const input = document.getElementById('order-input');
+      input.value = prefill;
+      find(prefill);
+    }
+
+    // Cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      if (typeof unsubscribe === 'function') {
+        try { unsubscribe(); } catch (_) {}
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repartidor - SR & SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+</head>
+<body class="bg-gradient-to-b from-white to-gray-50 min-h-screen">
+  <header class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-motorcycle text-white"></i>
+        </div>
+        <h1 class="text-xl font-bold">Repartidor <span class="text-yellow-600">SR & SRA BURGER</span></h1>
+      </div>
+      <a href="controldeenvios.html" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold">
+        <i class="fas fa-arrow-left"></i>
+        Control de Envíos
+      </a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-6 text-center">
+        <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-gray-900">Pedidos para entregar</h2>
+        <p class="text-gray-600">Se actualiza en tiempo real. Abre rutas y contacta al cliente desde aquí.</p>
+      </div>
+
+      <div id="status" class="hidden mb-4 rounded-2xl border p-4"></div>
+
+      <div id="list" class="space-y-4"></div>
+
+      <div id="empty" class="hidden bg-white rounded-3xl shadow-lg border border-gray-100 p-6 text-center text-gray-600">
+        No hay pedidos listos/en camino por ahora.
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script>
+    let unsubscribe = null;
+
+    function isOrderCanceled(order) {
+      if (!order) return false;
+      if (order.canceled || order.cancelled) return true;
+      const s = String(order.status || '').toLowerCase();
+      return s.includes('cancel');
+    }
+
+    function setStatus(message, type = 'info') {
+      const el = document.getElementById('status');
+      if (!el) return;
+      const styles = {
+        success: 'bg-green-50 border-green-200 text-green-800',
+        info: 'bg-blue-50 border-blue-200 text-blue-800',
+        error: 'bg-red-50 border-red-200 text-red-800'
+      };
+      if (!message) {
+        el.classList.add('hidden');
+        return;
+      }
+      el.className = `mb-4 rounded-2xl border p-4 ${styles[type] || styles.info}`;
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+
+    function money(n) {
+      const v = Number(n || 0);
+      return `$${v.toFixed(2)}`;
+    }
+
+    function getDestination(order) {
+      const coords = order && order.customer && order.customer.coordinates;
+      if (coords && isFinite(coords.lat) && isFinite(coords.lng)) {
+        return `${coords.lat},${coords.lng}`;
+      }
+      const address = order && order.customer && order.customer.address ? String(order.customer.address) : '';
+      return address;
+    }
+
+    function getMapsRouteUrl(order) {
+      const dest = getDestination(order);
+      if (!dest) return '';
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+    }
+
+    function getWhatsappUrl(order) {
+      const phone = (order && order.customer && order.customer.phone ? String(order.customer.phone) : '').replace(/\D/g, '');
+      if (!phone) return '';
+      const orderNumber = order.orderNumber ? String(order.orderNumber) : '';
+      const name = order.customer && order.customer.name ? String(order.customer.name) : '';
+      const msg = `Hola${name ? ' ' + name : ''}, soy el repartidor. Ya estoy en la ubicación.\n${orderNumber ? 'Pedido: ' + orderNumber : ''}`;
+      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function renderOrders(allOrders) {
+      const list = document.getElementById('list');
+      const empty = document.getElementById('empty');
+      if (!list || !empty) return;
+
+      const orders = (Array.isArray(allOrders) ? allOrders : [])
+        .filter(o => !isOrderCanceled(o))
+        .filter(o => ['ready', 'delivering'].includes(String(o.status || '').toLowerCase()));
+
+      if (!orders.length) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      list.innerHTML = orders.map(order => {
+        const orderNumber = order.orderNumber ? String(order.orderNumber) : (order.id ? String(order.id).slice(-6) : '—');
+        const name = order.customer && order.customer.name ? String(order.customer.name) : 'Cliente';
+        const phoneRaw = order.customer && order.customer.phone ? String(order.customer.phone) : '';
+        const address = order.customer && order.customer.address ? String(order.customer.address) : '—';
+
+        const paid = !!order.paid;
+        const paidBadge = paid
+          ? `<span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-sm font-bold"><i class="fas fa-check"></i> Pagado</span>`
+          : `<span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-sm font-bold"><i class="fas fa-dollar-sign"></i> Por cobrar</span>`;
+
+        const paymentMethod = order.paymentMethod ? String(order.paymentMethod) : '';
+        const cashAmount = order.cashAmount ? Number(order.cashAmount) : null;
+        const total = Number(order.total || 0);
+        const changeAmount = (order.changeAmount != null && String(order.changeAmount).trim() !== '')
+          ? Number(order.changeAmount)
+          : (cashAmount != null ? (cashAmount - total) : null);
+
+        const cashInfo = (!paid && paymentMethod === 'Efectivo' && cashAmount != null)
+          ? `<div class="text-sm text-gray-700"><span class="font-bold">Paga con:</span> ${money(cashAmount)} • <span class="font-bold">Cambio:</span> ${money(changeAmount)}</div>`
+          : '';
+
+        const mapsUrl = getMapsRouteUrl(order);
+        const waUrl = getWhatsappUrl(order);
+
+        return `
+          <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div>
+                <div class="text-xs text-gray-500">Pedido</div>
+                <div class="text-2xl font-black text-gray-900">${orderNumber}</div>
+                <div class="mt-2 text-gray-900 font-bold">${name}</div>
+                <div class="text-sm text-gray-600">${phoneRaw}</div>
+              </div>
+              <div class="sm:text-right">
+                <div class="mb-2">${paidBadge}</div>
+                <div class="text-xs text-gray-500">Total</div>
+                <div class="text-2xl font-black text-yellow-600">${money(total)}</div>
+              </div>
+            </div>
+
+            <div class="mt-4 bg-gray-50 border rounded-2xl p-3">
+              <div class="text-xs text-gray-500">Dirección</div>
+              <div class="font-semibold text-gray-900">${address}</div>
+            </div>
+
+            <div class="mt-3">${cashInfo}</div>
+
+            <div class="mt-4 flex flex-col sm:flex-row gap-3">
+              <a ${mapsUrl ? `href="${mapsUrl}" target="_blank"` : ''} class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold ${mapsUrl ? '' : 'opacity-60 pointer-events-none'}">
+                <i class="fas fa-route"></i>
+                Ver ruta en Maps
+              </a>
+              <a ${waUrl ? `href="${waUrl}" target="_blank"` : ''} class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-extrabold ${waUrl ? '' : 'opacity-60 pointer-events-none'}">
+                <i class="fab fa-whatsapp"></i>
+                Hola, soy el repartidor
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function init() {
+      if (!window.firebaseOrderManager) {
+        setStatus('Firebase no está disponible en esta página.', 'error');
+        return;
+      }
+
+      setStatus('Conectando con Firebase…', 'info');
+      unsubscribe = window.firebaseOrderManager.onOrdersChange((firebaseOrders) => {
+        setStatus('Conectado • actualizando pedidos en tiempo real', 'success');
+        renderOrders(firebaseOrders);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(init, 1000);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (typeof unsubscribe === 'function') {
+        try { unsubscribe(); } catch (_) {}
+      }
+    });
+  </script>
+</body>
+</html>

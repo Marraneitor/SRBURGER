@@ -1,156 +1,310 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for Firebase to be available, then check service status
-    const waitForFirebase = () => {
-        if (window.firebaseManager) {
-            initializeFirebaseFeatures();
-        } else {
-            setTimeout(waitForFirebase, 100);
-        }
-    };
-    waitForFirebase();
-    
-    // Initialize Firebase-dependent features
-    async function initializeFirebaseFeatures() {
-        try {
-            // Load hidden products from Firebase
-            await loadHiddenProductsFromFirebase();
-            
-            // Setup real-time listeners
-            setupHiddenProductsListener();
-            
-            // Check service status
-            await checkServiceStatusFromFirebase();
-            
-            console.log('Firebase features initialized successfully');
-        } catch (error) {
-            console.error('Error initializing Firebase features:', error);
-            // Fallback to localStorage-based functionality
-            checkServiceStatusFromLocalStorage();
-        }
+// SR & SRA BURGER - Script Loader (hotfix)
+// Importante: `fetch()` falla en muchos casos con `file://`.
+// Usamos `document.write` para inyectar el script core de forma síncrona
+// mientras el HTML todavía se está parseando (así no se pierde DOMContentLoaded).
+(function() {
+    try {
+        // Evitar doble inyección
+        if (window.__SR_SRA_CORE_LOADED__) return;
+        window.__SR_SRA_CORE_LOADED__ = true;
+
+        // Script core estable
+        document.write('<script src="js/script.js.backup?v=core"><\/script>');
+    } catch (e) {
+        console.error('❌ Error cargando script core:', e);
     }
-    
-    // --- SERVICE AND ADMIN CONTROLS ---
-    
-    // Check if service is active from Firebase
-    async function checkServiceStatusFromFirebase() {
-        try {
-            const isActive = await window.firebaseManager.isServiceActive();
-            if (!isActive) {
-                showServiceClosedModal();
-                return false;
+})();
+
+if (false) {
+// SR & SRA BURGER - Script Principal v4.2.1
+    // Enhanced renderMenu with mobile-first responsive design (Bento-like cards)
+    function renderMenu() {
+        // Record open categories and scroll position to restore after re-render
+        const openCategories = Array.from(document.querySelectorAll('.category-section'))
+            .map(sec => ({
+                category: sec.getAttribute('data-category'),
+                isOpen: !sec.querySelector('.menu-grid, .menu-grid-mobile')?.classList.contains('hidden')
+            }))
+            .filter(x => x.isOpen)
+            .map(x => x.category);
+        const prevScrollY = window.scrollY;
+
+        const menuCategoriesEl = document.getElementById('menu-categories');
+        if (!menuCategoriesEl) return;
+
+        menuCategoriesEl.innerHTML = '';
+
+        // Detect if user is on mobile
+        const isMobile = window.innerWidth <= 640;
+
+        for (const category in menuData) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category-section';
+            categoryDiv.dataset.category = category;
+
+            const categoryIcons = {
+                'Hamburguesas': '🍔',
+                'Hot Dogs': '🌭',
+                'Combos': '🍽️',
+                'Extras': '🍟',
+                'Bebidas': '🥤'
+            };
+
+            const categoryDescriptions = {
+                'Hamburguesas': 'Nuestras hamburguesas artesanales hechas con amor',
+                'Hot Dogs': 'Hotdogs gourmet con ingredientes premium',
+                'Combos': 'Combos diseñados para compartir y ahorrar',
+                'Extras': 'Acompañamientos perfectos para tu pedido',
+                'Bebidas': 'Refrescos helados para completar tu experiencia'
+            };
+
+            // Count visible items safely
+            const safeCount = (() => {
+                try {
+                    const arr = Array.isArray(menuData[category]) ? menuData[category] : [];
+                    return arr.filter(i => i && !i.hidden && !isProductHidden(i.id)).length;
+                } catch (_) {
+                    const arr = Array.isArray(menuData[category]) ? menuData[category] : [];
+                    return arr.filter(i => i && !i.hidden).length;
+                }
+            })();
+
+            categoryDiv.innerHTML = `
+                <div class="text-center mb-5 sm:mb-8 category-header-mobile">
+                    <div data-category-header="${category}" class="glass-effect inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-3xl mb-2 sm:mb-3 cursor-pointer select-none shadow-lg hover:shadow-xl transition-all duration-300 group">
+                        <span class="text-2xl sm:text-3xl">${categoryIcons[category] || '🍔'}</span>
+                        <h3 class="text-xl sm:text-3xl font-bold font-poppins text-gray-900 tracking-tight">${category}</h3>
+                        <span class="ml-1 inline-flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700 bg-black/5 px-2.5 py-1 rounded-full">${safeCount}</span>
+                        <i class="fas fa-chevron-down text-gray-600 ml-1 transition-transform duration-300"></i>
+                    </div>
+                    <p class="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">${categoryDescriptions[category] || ''}</p>
+                </div>
+            `;
+
+            const grid = document.createElement('div');
+            if (isMobile) {
+                grid.className = 'grid grid-cols-2 gap-3 sm:gap-4 menu-grid-mobile container-mobile';
+            } else {
+                grid.className = 'grid grid-cols-12 gap-4 sm:gap-6 lg:gap-8 auto-rows-fr menu-grid';
             }
-            return true;
-        } catch (error) {
-            console.error('Error checking service status:', error);
-            // Fallback to localStorage
-            checkServiceStatusFromLocalStorage();
+            grid.classList.add('hidden');
+
+            (Array.isArray(menuData[category]) ? menuData[category] : []).forEach((originalItem, index) => {
+                if (!originalItem || originalItem.hidden) return;
+                if (isProductHidden(originalItem.id)) return;
+
+                const item = applyDailyPromotion(originalItem, category);
+                const looksLikeCombo = /\bcombo\b/i.test(item.name || '');
+
+                const isFeatured = !isMobile && index === 0;
+                const bentoSpanClass = isMobile
+                    ? ''
+                    : (isFeatured
+                        ? 'col-span-12 sm:col-span-6 lg:col-span-8 xl:col-span-6 lg:row-span-2'
+                        : 'col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3');
+
+                let buttonHtml;
+                if (item.isCombo || looksLikeCombo) {
+                    buttonHtml = `
+                        <button data-id="${item.id}" class="choose-combo-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-2xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-cogs mr-1 sm:mr-2"></i>Personalizar
+                        </button>
+                    `;
+                } else if (item.customizable) {
+                    buttonHtml = `
+                        <button data-id="${item.id}" class="customize-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-2xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-magic mr-1 sm:mr-2"></i>Personalizar
+                        </button>
+                    `;
+                } else {
+                    buttonHtml = `
+                        <button data-id="${item.id}" class="add-to-cart-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-2xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95">
+                            Personalizar
+                        </button>
+                    `;
+                }
+
+                let priceHtml;
+                if (item.isCombo) {
+                    const realPrice = calculateComboRealPrice(item);
+                    const savings = realPrice - item.price;
+                    priceHtml = `
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-2xl border border-green-200">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-500 line-through mb-1">Original: $${realPrice.toFixed(0)}</div>
+                                <div class="text-2xl font-bold text-green-600 mb-1">Combo: $${item.price.toFixed(0)}</div>
+                                <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">¡Ahorras $${savings.toFixed(0)}!</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.originalPrice && item.originalPrice > item.price) {
+                    const savings = item.originalPrice - item.price;
+                    priceHtml = `
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-2xl border border-green-200">
+                            <div class="text-center">
+                                <div class="text-lg text-gray-500 line-through mb-1">$${item.originalPrice.toFixed(0)}</div>
+                                <div class="text-3xl font-bold text-green-700 mb-1">$${item.price.toFixed(0)}</div>
+                                <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">¡Ahorras $${savings.toFixed(0)}!</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    priceHtml = `
+                        <div class="text-center p-3">
+                            <div class="text-3xl font-bold text-gray-800">$${item.price.toFixed(0)}</div>
+                            <div class="text-sm text-gray-500">Precio regular</div>
+                        </div>
+                    `;
+                }
+
+                let processedDescription = item.description;
+                if (item.description && item.description.includes('ENVÍO GRATIS')) {
+                    processedDescription = item.description.replace(
+                        'ENVÍO GRATIS',
+                        '<span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse inline-block mt-2">🚚 ENVÍO GRATIS</span>'
+                    );
+                }
+
+                let badges = '';
+                let mobileInlineBadges = '';
+                if (item.hasPromotion) {
+                    badges += `<div class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse z-10 shadow-lg">🎉 OFERTA</div>`;
+                    mobileInlineBadges += `<span class="inline-block bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse mr-1 mb-1">🎉 OFERTA</span>`;
+                }
+                if ([1, 2, 6, 15].includes(item.id)) {
+                    mobileInlineBadges += `<span class="inline-block bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-1 mb-1 animate-pulse">🔥 POPULAR</span>`;
+                }
+                if (item.isCombo || (item.originalPrice && item.originalPrice > item.price)) {
+                    badges += `<div class="absolute top-8 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg">💰 AHORRO</div>`;
+                    mobileInlineBadges += `<span class="inline-block bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-1 mb-1">💰 AHORRO</span>`;
+                }
+
+                let cardHtml;
+                if (isMobile) {
+                    const mobileBtn = (item.isCombo || looksLikeCombo)
+                        ? `<button data-id="${item.id}" class="choose-combo-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-2xl font-bold text-xs active:scale-95 transition">Personalizar</button>`
+                        : item.customizable
+                            ? `<button data-id="${item.id}" class="customize-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-2xl font-bold text-xs active:scale-95 transition">Personalizar</button>`
+                            : `<button data-id="${item.id}" class="add-to-cart-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-2xl font-bold text-xs active:scale-95 transition">Personalizar</button>`;
+
+                    cardHtml = `
+                        <article class="group bg-white rounded-3xl shadow-md overflow-hidden relative border border-gray-100 hover:shadow-xl hover:border-yellow-300 menu-card menu-card-mobile transition-all duration-300 hover:-translate-y-0.5" style="animation-delay: ${index * 50}ms;">
+                            <div class="relative overflow-hidden bg-gray-100 ${item.image ? 'sr-skeleton' : ''}">
+                                ${item.image ? `<img src="${item.image}" alt="[Imagen de ${item.name}]" class="w-full h-36 object-cover transition-transform duration-500 group-hover:scale-105 sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"></div>
+                                <div class="absolute bottom-2 left-2 right-2">
+                                    ${mobileInlineBadges ? `<div class=\"mb-1\">${mobileInlineBadges}</div>` : ''}
+                                    <div class="flex items-end justify-between gap-2">
+                                        <h4 class="font-bold font-poppins text-white text-sm leading-snug line-clamp-2 drop-shadow">${item.name}</h4>
+                                        <div class="shrink-0 bg-white/90 text-gray-900 font-black text-sm px-2.5 py-1 rounded-full">$${item.price.toFixed(0)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 space-y-2">
+                                ${item.hasPromotion ? `<div class=\"text-[11px] text-red-600 font-bold\">${item.promotionText}</div>` : ''}
+                                <p class="text-xs text-gray-600 leading-snug line-clamp-2">${processedDescription}</p>
+                                ${mobileBtn}
+                            </div>
+                        </article>
+                    `;
+                } else {
+                    cardHtml = `
+                        <article class="${bentoSpanClass} group bg-white rounded-3xl shadow-lg overflow-hidden flex flex-col border border-gray-100 hover:border-yellow-300 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2" style="animation-delay: ${index * 90}ms;">
+                            <div class="relative overflow-hidden bg-gray-100 ${isFeatured ? 'h-64 sm:h-72 md:h-80 lg:h-full' : 'h-52 sm:h-56 md:h-60'} ${item.image ? 'sr-skeleton' : ''}">
+                                ${badges}
+                                ${item.image ? `<img src="${item.image}" alt="[Imagen de ${item.name}]" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+                                <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                                    <div class="flex items-end justify-between gap-3">
+                                        <h4 class="font-poppins font-extrabold text-white ${isFeatured ? 'text-2xl sm:text-3xl' : 'text-xl'} leading-tight drop-shadow">${item.name}</h4>
+                                        <div class="shrink-0 bg-white/90 text-gray-900 font-black ${isFeatured ? 'text-xl' : 'text-lg'} px-3 py-1.5 rounded-full">$${item.price.toFixed(0)}</div>
+                                    </div>
+                                    <div class="mt-2 flex items-center gap-2 text-white/90 text-xs">
+                                        <span class="bg-white/15 border border-white/20 backdrop-blur-md px-2.5 py-1 rounded-full">Ver imagen</span>
+                                        ${(item.isCombo || looksLikeCombo) ? '<span class="bg-green-500/80 px-2.5 py-1 rounded-full font-bold">Combo</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 sm:p-5 flex flex-col gap-3">
+                                <p class="text-gray-600 text-sm leading-relaxed ${isFeatured ? 'line-clamp-4' : 'line-clamp-3'}">${processedDescription}</p>
+                                ${item.hasPromotion ? `
+                                    <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-2 rounded-2xl text-center shadow-lg">
+                                        <div class="font-bold text-sm animate-pulse">${item.promotionText}</div>
+                                    </div>
+                                ` : ''}
+                                ${isFeatured ? priceHtml : ''}
+                                <div class="pt-1">${buttonHtml}</div>
+                            </div>
+                        </article>
+                    `;
+                }
+
+                grid.innerHTML += cardHtml;
+            });
+
+            categoryDiv.appendChild(grid);
+            menuCategoriesEl.appendChild(categoryDiv);
         }
-    }
-    
-    // Fallback: Check service status from localStorage
-    function checkServiceStatusFromLocalStorage() {
-        const serviceActive = localStorage.getItem('restaurantServiceActive');
-        if (serviceActive === 'false') {
-            showServiceClosedModal();
-            return false;
-        }
-        return true;
-    }
-    
-    // Show service closed modal
-    function showServiceClosedModal() {
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4';
-        modal.innerHTML = `
-            <div class="bg-white rounded-2xl shadow-2xl max-w-md mx-auto text-center p-8">
-                <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-store-slash text-red-500 text-4xl"></i>
-                </div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">¡Temporalmente Cerrado!</h2>
-                <p class="text-gray-600 mb-6 leading-relaxed">
-                    Lo sentimos, nuestro servicio de pedidos está temporalmente cerrado. 
-                    <br><br>
-                    Pronto estaremos de vuelta con deliciosas hamburguesas para ti.
-                </p>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <p class="text-blue-800 text-sm font-semibold">
-                        <i class="fas fa-clock mr-2"></i>
-                        SERVICIO TODOS LOS DÍAS DE 3 PM A 12 AM
-                    </p>
-                </div>
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                    <p class="text-yellow-800 text-sm">
-                        <i class="fas fa-clock mr-2"></i>
-                        Estaremos disponibles nuevamente muy pronto
-                    </p>
-                </div>
-                <button onclick="window.location.reload()" 
-                        class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-3 rounded-full font-bold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 shadow-lg">
-                    <i class="fas fa-refresh mr-2"></i>Intentar de nuevo
-                </button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Disable all interactions
-        document.body.style.overflow = 'hidden';
-    }
-    
-    // Global variable to store hidden products from Firebase
-    let hiddenProductsFromFirebase = [];
-    
-    // Load hidden products from Firebase on page load
-    async function loadHiddenProductsFromFirebase() {
-        try {
-            hiddenProductsFromFirebase = await window.firebaseManager.getHiddenProducts();
-            console.log('Productos ocultos cargados desde Firebase:', hiddenProductsFromFirebase);
-        } catch (error) {
-            console.error('Error loading hidden products from Firebase:', error);
-            // Fallback to localStorage
-            const hiddenProducts = localStorage.getItem('hiddenProducts');
-            if (hiddenProducts) {
-                hiddenProductsFromFirebase = JSON.parse(hiddenProducts);
+
+        // Initialize enhancements after rendering
+        setTimeout(() => {
+            addUrgencyIndicators();
+            addSocialProof();
+            initializeEnhancements();
+            attachImagePreviewListeners();
+            if (openCategories.length) {
+                openCategories.forEach(cat => {
+                    const section = document.querySelector(`.category-section[data-category="${cat}"]`);
+                    const grid = section?.querySelector('.menu-grid, .menu-grid-mobile');
+                    const chevron = section?.querySelector('.fa-chevron-down');
+                    if (grid) grid.classList.remove('hidden');
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+                });
+                window.scrollTo({ top: prevScrollY, behavior: 'instant' });
             }
-        }
+        }, 500);
     }
-    
-    // Check if product is hidden by admin
-    function isProductHidden(productId) {
-        // First check Firebase data
-        if (hiddenProductsFromFirebase.length > 0) {
-            return hiddenProductsFromFirebase.includes(productId);
-        }
-        
-        // Fallback to localStorage
-        const hiddenProducts = localStorage.getItem('hiddenProducts');
-        if (hiddenProducts) {
-            const hiddenList = JSON.parse(hiddenProducts);
-            return hiddenList.includes(productId);
-        }
-        return false;
-    }
-    
-    // Setup real-time listener for hidden products changes
-    function setupHiddenProductsListener() {
-        if (window.firebaseManager && window.firebaseManager.listenToSettings) {
-            let isUpdating = false; // Flag to prevent loops
-            
-            window.firebaseManager.listenToSettings((newSettings) => {
-                if (newSettings && !isUpdating) {
-                    // Handle hidden products changes
-                    if (newSettings.hiddenProducts) {
-                        const oldHiddenProducts = [...hiddenProductsFromFirebase];
-                        hiddenProductsFromFirebase = newSettings.hiddenProducts;
-                        
-                        // Re-render menu if hidden products changed
-                        if (JSON.stringify(oldHiddenProducts) !== JSON.stringify(hiddenProductsFromFirebase)) {
-                            console.log('Productos ocultos actualizados, re-renderizando menú...');
-                            isUpdating = true;
-                            renderMenu();
-                            setTimeout(() => { isUpdating = false; }, 500); // Reset flag after delay
+
+    // Add window resize listener for responsive updates (stable on mobile)
+    (function() {
+        let lastIsMobile = window.innerWidth <= 640;
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(() => {
+                const isMobileNow = window.innerWidth <= 640;
+                if (isMobileNow !== lastIsMobile) {
+                    lastIsMobile = isMobileNow;
+                    renderMenu();
+                }
+            }, 250);
+        });
+    })();
+
+    // Configurar event listeners
                         }
                     }
-                    
+
+                    // Handle custom products changes
+                    if (newSettings.customProducts) {
+                        const oldCustom = JSON.stringify(customProductsFromFirebase || {});
+                        const newCustom = JSON.stringify(newSettings.customProducts || {});
+                        if (oldCustom !== newCustom) {
+                            customProductsFromFirebase = newSettings.customProducts || {};
+                            applyCustomProducts(customProductsFromFirebase);
+                            // Reaplicar overrides para que afecten a los nuevos productos
+                            if (priceOverridesFromFirebase && Object.keys(priceOverridesFromFirebase).length > 0) {
+                                applyPriceOverrides(priceOverridesFromFirebase);
+                            }
+                            if (imageOverridesFromFirebase && Object.keys(imageOverridesFromFirebase).length > 0) {
+                                applyImageOverrides(imageOverridesFromFirebase);
+                            }
+                            console.log('Productos personalizados actualizados, re-renderizando menú...');
+                            isUpdating = true;
+                            renderMenu();
+                            setTimeout(() => { isUpdating = false; }, 500);
+                        }
+                    }
+
                     // Handle service status changes (without reload loop)
                     if (newSettings.serviceActive !== undefined) {
                         const serviceClosedModal = document.querySelector('[class*="bg-black/80"], [class*="inset-0"]');
@@ -402,8 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const recommendations = {
             1: [8, 21], // Clásica -> Papas Gajo + Coca Cola
             2: [16, 22], // BBQ -> Papas Gajo Grandes + Coca Cola 1.75L
-            11: [25, 21], // Hawaiana -> Papas Crispy + Coca Cola
-            12: [26, 23], // Chistorra -> Papas Crispy Grandes + Coca Cola 3L
+            11: [8, 21], // Alohawai -> Papas Gajo + Coca Cola
+            12: [16, 23], // CheesseTorra -> Papas Gajo Grandes + Coca Cola 3L
         };
         
         const recommended = recommendations[addedItemId];
@@ -425,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return `
                             <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
                                 <div class="flex items-center space-x-2">
-                                    <img src="${item.image}" alt="${item.name}" class="w-8 h-8 rounded object-cover">
+                                    ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-8 h-8 rounded object-cover sr-img-init" data-sr-img="1" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                                     <div>
                                         <div class="text-sm font-semibold">${item.name}</div>
                                         <div class="text-xs text-gray-500">$${item.price}</div>
@@ -485,56 +639,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- DATA ---
-    const FRIES_PRICE = 20;
-    const ONION_RINGS_PRICE = 25;
-    const DELIVERY_PRICE = 40; // Precio base hasta 4 km
-    const EXTRA_KM_PRICE = 10; // Precio adicional por km después de 4 km
-    const MAX_DELIVERY_DISTANCE = 7; // Distancia máxima de entrega en km
-    const RESTAURANT_LOCATION = { lat: 17.9950, lng: -94.5370 }; // Coahuila 36, Emiliano Zapata, Minatitlán
     const toppingsData = [
-        { id: 't6', name: 'Doble Carne', price: 30, description: '¿La quieres con doble carne jugosa?', image: 'https://images.unsplash.com/photo-1558030006-450675393462?w=300&h=200&fit=crop&crop=center' },
-        { id: 't1', name: 'Tocino Extra', price: 15, description: '¿Te gusta el tocino crujiente?', image: 'https://images.unsplash.com/photo-1528607929212-2636ec44b982?w=300&h=200&fit=crop&crop=center' },
-        { id: 't2', name: 'Queso Americano Extra', price: 15, description: '¿Más queso derretido?', image: 'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=300&h=200&fit=crop&crop=center' },
-        { id: 't7', name: 'Chezzy', price: 10, description: '¿Un toque cremoso extra?', image: 'https://images.unsplash.com/photo-1626957341926-98752fc2ba90?w=300&h=200&fit=crop&crop=center' },
-        { id: 't5', name: 'Jalapeños', price: 0, description: '¿Le damos un toque picosito? ¡Gratis!', image: 'https://images.unsplash.com/photo-1544961503-7ad532ddf0ab?w=300&h=200&fit=crop&crop=center' }
+        { id: 't6', name: 'Doble Carne', price: 30, description: '¿La quieres con doble carne jugosa?', image: '' },
+        { id: 't1', name: 'Tocino Extra', price: 15, description: '¿Te gusta el tocino crujiente?', image: '' },
+        { id: 't7', name: 'Chezzy (Queso Cheddar liquido)', price: 10, description: '¿Un toque cremoso extra?', image: '' },
+        { id: 't5', name: 'Chiles en rodajas', price: 0, description: 'Chiles en rodajas (gratis)', image: '' }
     ];
     const menuData = {
         "Hamburguesas": [
-            { id: 1, name: "Clásica", price: 100, description: "🍔 Jugosa carne de res a la plancha, queso americano derretido, lechuga fresca, tomate maduro y nuestro aderezo especial casero en pan artesanal. ¡El sabor que conquistó corazones!", image: "https://i.imgur.com/ZaM5wGN.jpg", customizable: true },
-            { id: 2, name: "BBQ Beacon", price: 110, description: "🔥 Increíble carne de res con nuestra salsa BBQ casera, queso cheddar fundido, aros de cebolla dorados y tocino crujiente. ¡Una explosión de sabores ahumados que te hará volver por más!", image: "https://i.imgur.com/CcLScs2.jpg", customizable: true },
-            { id: 11, name: "Hawaiana Burger", price: 120, description: "🌺 Deliciosa carne de res con piña asada caramelizada, jamón premium y queso derretido. ¡Un viaje tropical en cada mordida que despertará tus sentidos!", image: "https://i.imgur.com/qAgzO42.jpg", customizable: true },
-            { id: 12, name: "ChistorraBurger", price: 120, description: "🌶️ Exquisita carne de res con chistorra artesanal, cebolla caramelizada al punto perfecto y nuestro aderezo secreto. ¡Una fusión de sabores que te conquistará desde el primer bocado!", image: "https://i.imgur.com/nkF3aGD.jpg", customizable: true }
+            { id: 1, name: "Clásica PREMIUM", price: 100, description: "Carne premium jugosa con la mezcla perfecta de queso manchego y americano, vegetales frescos y pan esponjoso. Un clásico que nunca falla.", image: "", customizable: true },
+            { id: 2, name: "BBQ BEACON CRUNCH", price: 110, description: "Carne premium con queso americano, tocino crujiente, aros de cebolla empanizados, salsa BBQ de miel ahumada y vegetales frescos. Una mezcla dulce, ahumada y crocante.", image: "", customizable: true },
+            { id: 11, name: "Alohawai Burger", price: 120, description: "Carne premium con quesos manchego y americano, piña asada que aporta un dulzor irresistible, vegetales frescos y pan suave. Un viaje tropical en cada mordida.", image: "", customizable: true },
+            { id: 12, name: "CheesseTorraBurger", price: 120, description: "Carne premium con trocitos de chistorra bien fritos, queso manchego fundido y pan esponjoso. Una hamburguesa intensa y llena de carácter, sin vegetales.", image: "", customizable: true },
+            { id: 13, name: "Choriargentina Burger", price: 120, description: "Carne premium con chorizo argentino sellado en la plancha, queso manchego derretido y pan suave. Potente, jugosa y sin vegetales: puro sabor argentino.", image: "", customizable: true }
         ],
         "Hot Dogs": [
-            { id: 5, name: "Hotdog Jumbo", price: 60, description: "🌭 Salchicha jumbo jugosa en pan artesanal tostado, tocino crujiente, tomate fresco, cebolla y nuestros aderezos especiales. ¡Preparado al momento para ti!", image: "https://i.imgur.com/AqVeJwo_d.png?maxwidth=520&shape=thumb&fidelity=high", customizable: true },
-            { id: 27, name: "Jalapeño Dog", price: 60, description: "🌶️ Salchicha roja premium con queso manchego derretido, tocino crujiente, cebolla caramelizada y jalapeños frescos. ¡El toque picosito que te encantará!", image: "https://i.postimg.cc/hvdyGmrm/hotdog.png", customizable: true }
+            { id: 5, name: "Hotdog Jumbo", price: 60, description: "🌭 Salchicha jumbo jugosa en pan artesanal tostado, tocino crujiente, tomate fresco, cebolla y nuestros aderezos especiales. ¡Preparado al momento para ti!", image: "", customizable: true },
+            { id: 27, name: "Jalapeño Dog", price: 60, description: "🌶️ Salchicha roja premium con queso manchego derretido, tocino crujiente, cebolla caramelizada y jalapeños frescos.", image: "", customizable: true }
         ],
         "Combos": [
-            { id: 6, name: "Combo Pareja", price: 250, originalPrice: 305, description: "💕 Perfecto para compartir: 2 hamburguesas deliciosas a tu elección, papas medianas doradas y 7 aros de cebolla crujientes. ¡Ideal para una cita perfecta!", image: "https://i.imgur.com/jIKRMRR_d.jpeg?maxwidth=520&shape=thumb&fidelity=high", isCombo: true, burgerChoices: 2, availableBurgers: [1, 2, 11, 12] },
-            { id: 15, name: "Combo Dúo", price: 180, originalPrice: 220, description: "🤝 Lo mejor de dos mundos: 1 hamburguesa jugosa, 1 hotdog delicioso y papas medianas. ¡Para los que no pueden decidirse y quieren probarlo todo!", image: "https://i.imgur.com/6VdIGiA.png", isCombo: true, burgerChoices: 1, availableBurgers: [1, 2, 11, 12], hotdogChoices: 1, availableHotdogs: [5, 27] },
-            { id: 7, name: "Combo Amigos", price: 340, originalPrice: 400, description: "👥 Para compartir con tus mejores amigos: 3 hamburguesas espectaculares, papas medianas y Coca-Cola 1.75L bien fría. ¡Momento perfecto para crear recuerdos!", image: "https://i.imgur.com/YWFhPNN_d.png?maxwidth=520&shape=thumb&fidelity=high", isCombo: true, burgerChoices: 3, availableBurgers: [1, 2, 11, 12] },
-            { id: 14, name: "Combo Familiar", price: 650, originalPrice: 730, description: "👨‍👩‍👧‍👦 La experiencia familiar completa: 5 hamburguesas increíbles, papas gajo grandes, aros de cebolla grandes, Coca-Cola 3L + ENVÍO GRATIS. ¡Todos felices en casa!", image: "https://i.imgur.com/311tSY9_d.png?maxwidth=520&shape=thumb&fidelity=high", isCombo: true, burgerChoices: 5, availableBurgers: [1, 2, 11, 12] }
+            { id: 26, name: "DOBLES DOBLES", price: 220, originalPrice: 300, description: "🔥 2 hamburguesas a tu elección a precio especial. La Doble Doble cuesta $300, aquí en combo te la llevas por $220. ¡Ahorras $80!", image: "", isCombo: true, burgerChoices: 2, availableBurgers: [1, 2, 11, 12, 13] },
+            { id: 6, name: "Combo Pareja", price: 250, originalPrice: 305, description: "💕 Perfecto para compartir: 2 hamburguesas deliciosas a tu elección, papas medianas doradas y 7 aros de cebolla crujientes. ¡Ideal para una cita perfecta!", image: "", isCombo: true, burgerChoices: 2, availableBurgers: [1, 2, 11, 12, 13] },
+            { id: 15, name: "Combo Dúo", price: 180, originalPrice: 220, description: "🤝 Lo mejor de dos mundos: 1 hamburguesa jugosa, 1 hotdog delicioso y papas medianas. ¡Para los que no pueden decidirse y quieren probarlo todo!", image: "", isCombo: true, burgerChoices: 1, availableBurgers: [1, 2, 11, 12, 13], hotdogChoices: 1, availableHotdogs: [5, 27] },
+            { id: 7, name: "Combo Amigos", price: 360, originalPrice: 400, description: "👥 Para compartir con tus mejores amigos: 3 hamburguesas espectaculares y papas medianas. ¡Momento perfecto para crear recuerdos!", image: "", isCombo: true, burgerChoices: 3, availableBurgers: [1, 2, 11, 12, 13] },
+            { id: 14, name: "Combo Familiar", price: 650, originalPrice: 730, description: "👨‍👩‍👧‍👦 La experiencia familiar completa: 5 hamburguesas increíbles, papas XL (a elegir: gajo o francesas), aros de cebolla medianos y Coca-Cola 3L + ENVÍO GRATIS. ¡Todos felices en casa!", image: "", isCombo: true, burgerChoices: 5, availableBurgers: [1, 2, 11, 12, 13] }
         ],
         "Extras": [
-            { id: 8, name: "Papas Gajo Medianas", price: 60, description: "🍟 Papas gajo doradas y crujientes por fuera, suaves por dentro, sazonadas con nuestra mezcla especial de especias.", image: "https://i.imgur.com/mnmz0uG_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" },
-            { id: 16, name: "Papas Gajo Grandes", price: 110, description: "🍟 Porción generosa de nuestras famosas papas gajo, perfectas para compartir. ¡Irresistiblemente adictivas!", image: "https://i.imgur.com/mnmz0uG_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" },
-            { id: 28, name: "Papas Francesas Medianas", price: 60, description: "🍟 Papas francesas clásicas, doradas y crujientes, cortadas en bastones perfectos. ¡El acompañamiento tradicional que nunca pasa de moda!", image: "https://puertofresco.com/cdn/shop/products/fri2008_1_jpg.jpg?v=1593107920" },
-            { id: 29, name: "Papas Francesas Grandes", price: 100, description: "🍟 Porción grande de nuestras deliciosas papas francesas, cortadas al estilo tradicional y fritas hasta el punto perfecto.", image: "https://puertofresco.com/cdn/shop/products/fri2008_1_jpg.jpg?v=1593107920" },
-            { id: 25, name: "Papas Crispy Medianas", price: 60, description: "✨ Papas extra crujientes con nuestro rebozado especial, fritas al punto perfecto. ¡El crunch que tanto te gusta!", image: "https://imgur.com/4bflLWp.jpg" },
-            { id: 26, name: "Papas Crispy Grandes", price: 110, description: "✨ Porción abundante de papas crispy súper crujientes. ¡Ideales para satisfacer antojos grandes!", image: "https://imgur.com/4bflLWp.jpg" },
-            { id: 17, name: "Salchipapas Medianas", price: 80, description: "🌭🍟 La combinación perfecta: papas doradas con trozos jugosos de salchicha premium. ¡Un clásico que nunca falla!", image: "https://i.imgur.com/YgEDfx3_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" },
-            { id: 18, name: "Salchipapas Grandes", price: 120, description: "🌭🍟 Porción familiar de salchipapas con salchicha premium y papas doradas. ¡Para los que aman los sabores intensos!", image: "https://i.imgur.com/YgEDfx3_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" },
-            { id: 19, name: "Aros de Cebolla (7 pz)", price: 45, description: "🧅 Aros de cebolla empanizados y fritos hasta la perfección, crujientes por fuera y tiernos por dentro.", image: "https://i.imgur.com/rK8wjox_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" },
-            { id: 20, name: "Aros de Cebolla Grande (15 pz)", price: 80, description: "🧅 Porción generosa de aros de cebolla dorados. ¡El acompañamiento perfecto que complementa cualquier orden!", image: "https://i.imgur.com/rK8wjox_d.jpeg?maxwidth=520&shape=thumb&fidelity=high" }
+            { id: 8, name: "Papas Gajo Medianas", price: 60, description: "🍟 Papas gajo doradas y crujientes por fuera, suaves por dentro, sazonadas con nuestra mezcla especial de especias.", image: "" },
+            { id: 16, name: "Papas Gajo Grandes", price: 120, description: "🍟 Porción generosa de nuestras famosas papas gajo, perfectas para compartir. ¡Irresistiblemente adictivas!", image: "" },
+            { id: 28, name: "Papas Francesas Medianas", price: 60, description: "🍟 Papas francesas clásicas, doradas y crujientes, cortadas en bastones perfectos. ¡El acompañamiento tradicional que nunca pasa de moda!", image: "" },
+            { id: 29, name: "Papas Francesas Grandes", price: 120, description: "🍟 Porción grande de nuestras deliciosas papas francesas, cortadas al estilo tradicional y fritas hasta el punto perfecto.", image: "" },
+            { id: 17, name: "Salchipapas Medianas", price: 80, description: "🌭🍟 La combinación perfecta: papas doradas con trozos jugosos de salchicha premium. ¡Un clásico que nunca falla!", image: "https://i.imgur.com/YgEDfx3.jpeg" },
+            { id: 18, name: "Salchipapas Grandes", price: 120, description: "🌭🍟 Porción familiar de salchipapas con salchicha premium y papas doradas. ¡Para los que aman los sabores intensos!", image: "https://i.imgur.com/YgEDfx3.jpeg" },
+            { id: 19, name: "Aros de Cebolla (8 pz)", price: 45, description: "🧅 Aros de cebolla empanizados y fritos hasta la perfección, crujientes por fuera y tiernos por dentro.", image: "https://i.imgur.com/rK8wjox.jpeg" },
+            { id: 20, name: "Aros de Cebolla Grande (15 pz)", price: 80, description: "🧅 Porción generosa de aros de cebolla dorados. ¡El acompañamiento perfecto que complementa cualquier orden!", image: "https://i.imgur.com/rK8wjox.jpeg" }
         ],
-        "Bebidas": [
-             { id: 21, name: "Coca-Cola 600ml", price: 30, description: "🥤 Coca-Cola helada y refrescante, el acompañante perfecto para tu comida. ¡Nada como la chispa de la vida!", image: "https://www.cityclub.com.mx/dw/image/v2/BGBD_PRD/on/demandware.static/-/Sites-soriana-grocery-master-catalog/default/dw689a18fa/images/product/0000075007614_A.jpg?sw=1000&sh=1000&sm=fit" },
-             { id: 22, name: "Coca-Cola 1.75L", price: 40, description: "🥤 Coca-Cola familiar perfecta para compartir, siempre fría y burbujeante. ¡Momentos especiales merecen la Coca-Cola!", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGy2eN7S4XcTdBnt6j96814qfmaZ2oXMoCrg&s" },
-             { id: 23, name: "Coca-Cola 3L", price: 60, description: "🥤 La Coca-Cola grande para toda la familia, helada y con esa burbuja inconfundible que todos amamos. ¡Alegría para todos!", image: "https://i5.walmartimages.com.mx/gr/images/product-images/img_large/00750105530474L.jpg?odnHeight=612&odnWidth=612&odnBg=FFFFFF" },
-             { id: 24, name: "Agua Natural 600ml", price: 20, description: "💧 Agua natural pura y refrescante para hidratarte mientras disfrutas de tu comida favorita.", image: "https://placehold.co/400x400/3B82F6/FFF?text=Agua" }
-        ]
+       "Bebidas": [
+           { id: 21, name: "Coca-Cola 600ml", price: 30, description: "🥤 Coca-Cola helada y refrescante, el acompañante perfecto para tu comida. ¡Nada como la chispa de la vida!", image: "" },
+           { id: 22, name: "Coca-Cola 1.75L", price: 40, description: "🥤 Coca-Cola familiar perfecta para compartir, siempre fría y burbujeante. ¡Momentos especiales merecen la Coca-Cola!", image: "" },
+           { id: 23, name: "Coca-Cola 3L", price: 60, description: "🥤 La Coca-Cola grande para toda la familia, helada y con esa burbuja inconfundible que todos amamos. ¡Alegría para todos!", image: "" },
+           { id: 24, name: "Agua Natural 600ml", price: 20, description: "💧 Agua natural pura y refrescante para hidratarte mientras disfrutas de tu comida favorita.", image: "" }
+       ]
     };
     const WHATSAPP_NUMBER = '5219221593688';
+    // API base: override via window.__API_BASE.
+    // Default:
+    // - http/https (Vercel): same-origin (relative)
+    // - file:// (double click): fallback to local server
+    const DEFAULT_API_BASE = (typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:'))
+        ? ''
+        : 'http://localhost:3000';
+    const API_BASE_RAW = (typeof window !== 'undefined' && window.__API_BASE != null)
+        ? String(window.__API_BASE)
+        : DEFAULT_API_BASE;
+    const API_BASE = String(API_BASE_RAW || '').replace(/\/$/, '');
+    // Multiple base options for local dev
+    const API_BASES = (() => {
+        if (typeof window !== 'undefined' && window.__API_BASE) return [String(window.__API_BASE).replace(/\/$/, '')];
+        return [API_BASE];
+    })();
+
+    // Helper: POST order with fallback endpoints and timeout
+    async function postOrderToApi(orderData) {
+        const url = `${API_BASE}/api/send-order`;
+        console.log('Enviando pedido a:', url);
+        
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
+
+            if (!resp.ok) {
+                let errorText = '';
+                try {
+                    const errorData = await resp.json();
+                    errorText = errorData.error || await resp.text();
+                } catch (e) {
+                    errorText = await resp.text();
+                }
+                throw new Error(`Error ${resp.status}: ${errorText}`);
+            }
+
+            return await resp.json();
+        } catch (err) {
+            console.error('Error al enviar pedido:', err);
+            throw err;
+        }
+    }
     let cart = [];
     let tempComboConfig = {};
     let userAddress = null;
@@ -549,9 +742,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         2: { // Martes
             type: 'specific_item',
-            targetItem: 2, // BBQ Beacon
+            targetItem: 2, // BBQ BEACON CRUNCH
             specialPrice: 100,
-            description: 'BBQ BEACON A $100',
+            description: 'BBQ BEACON CRUNCH A $100',
             categories: ['Hamburguesas']
         },
         3: { // Miércoles
@@ -630,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Lunes: descuento en hotdogs - afecta Combo Dúo
                 return true;
             case 'specific_item':
-                // Martes: BBQ Beacon a precio especial - afecta todos los combos que incluyan hamburguesas
+                // Martes: BBQ BEACON CRUNCH a precio especial - afecta todos los combos que incluyan hamburguesas
                 return true;
             case 'free_fries':
                 // Miércoles: papas gratis con hamburguesas - afecta todos los combos
@@ -843,8 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cartItemsContainer.innerHTML = cart.map((item, index) => `
             <div class="cart-item-enter bg-gradient-to-r from-white to-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-all duration-300">
                 <div class="flex items-start space-x-3">
-                    <img src="${item.baseItem.image}" alt="${item.baseItem.name}" 
-                         class="w-16 h-16 object-cover rounded-lg shadow-sm">
+                ${item.baseItem && item.baseItem.image ? `<img src="${item.baseItem.image}" alt="${item.baseItem.name}" class="w-16 h-16 object-cover rounded-lg shadow-sm" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : `<div class="w-16 h-16 rounded-lg bg-gray-100"></div>`}
                     <div class="flex-grow">
                         <h4 class="font-bold text-gray-800 text-lg">${item.baseItem.name}</h4>
                         
@@ -1073,6 +1265,21 @@ document.addEventListener('DOMContentLoaded', () => {
         addDeliveryTimeEstimate();
         enhanceFormValidation();
         window.updateTotalPreview = addOrderTotalPreview();
+        // One-time attention nudge for delivery selection
+        try {
+            if (!sessionStorage.getItem('deliverySelectorHintShown')) {
+                const sel = document.getElementById('hero-delivery-selector');
+                if (sel) {
+                    const hint = document.createElement('div');
+                    hint.className = 'absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full shadow-lg';
+                    hint.textContent = 'Elige: Recoger en local o Envío a domicilio';
+                    sel.style.position = 'relative';
+                    sel.appendChild(hint);
+                    setTimeout(() => hint.remove(), 3500);
+                    sessionStorage.setItem('deliverySelectorHintShown', '1');
+                }
+            }
+        } catch {}
         
         // Monitor admin changes
         monitorAdminChanges();
@@ -1135,9 +1342,146 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
+    // --- Mobile hold-to-preview helpers ---
+    function stripHtml(html) {
+        return html ? String(html).replace(/<[^>]+>/g, '') : '';
+    }
+
+    function findItemById(id) {
+        const n = Number(id);
+        for (const cat in menuData) {
+            const arr = menuData[cat] || [];
+            const it = arr.find(i => Number(i.id) === n);
+            if (it) return it;
+        }
+        return null;
+    }
+
+    function ensureHoldPreviewOverlay() {
+        let overlay = document.getElementById('hold-preview-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'hold-preview-overlay';
+            overlay.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50';
+            overlay.style.display = 'none';
+            overlay.style.overscrollBehavior = 'contain'; // evitar scroll chaining en móvil
+            overlay.innerHTML = `
+                <div class="relative max-w-sm w-11/12 bg-white rounded-2xl shadow-2xl overflow-hidden" role="dialog" aria-modal="true">
+                    <button id="hold-preview-close" aria-label="Cerrar" class="absolute top-2 right-2 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-white">
+                        <span class="text-xl leading-none">×</span>
+                    </button>
+                    <img id="hold-preview-image" class="w-full h-64 object-cover" alt="Preview">
+                    <div class="p-4">
+                        <h3 id="hold-preview-title" class="text-lg font-bold mb-1 text-gray-900"></h3>
+                        <p id="hold-preview-desc" class="text-gray-600 text-sm"></p>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+
+            // Close on backdrop click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    api.hide();
+                }
+            });
+
+            // Evitar scroll del body cuando se interactúa con el overlay en móvil
+            overlay.addEventListener('touchmove', (e) => {
+                // Permitimos scroll interno si el contenido lo requiere más adelante
+                // pero prevenimos que burbujee al body
+                e.stopPropagation();
+            }, { passive: true });
+        }
+        const imgEl = overlay.querySelector('#hold-preview-image');
+        const titleEl = overlay.querySelector('#hold-preview-title');
+        const descEl = overlay.querySelector('#hold-preview-desc');
+        const closeBtn = overlay.querySelector('#hold-preview-close');
+
+        const api = {
+            show(item) {
+                if (!item) return;
+                const url = (item.image || '').trim();
+                if (url) {
+                    imgEl.style.display = '';
+                    imgEl.src = url;
+                } else {
+                    imgEl.style.display = 'none';
+                    imgEl.removeAttribute('src');
+                }
+                titleEl.textContent = item.name || '';
+                descEl.textContent = stripHtml(item.description || '');
+                overlay.classList.remove('hidden');
+                overlay.style.display = 'flex';
+                // Bloquear scroll de fondo
+                try {
+                    overlay.dataset.prevOverflowBody = document.body.style.overflow || '';
+                    overlay.dataset.prevOverflowHtml = document.documentElement.style.overflow || '';
+                    document.body.style.overflow = 'hidden';
+                    document.documentElement.style.overflow = 'hidden';
+                    document.body.style.touchAction = 'none';
+                } catch (_) {}
+                // Trap simple focus to the close button
+                try { closeBtn.focus(); } catch(_) {}
+            },
+            hide() {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+                // Restaurar scroll de fondo
+                try {
+                    document.body.style.overflow = overlay.dataset.prevOverflowBody || '';
+                    document.documentElement.style.overflow = overlay.dataset.prevOverflowHtml || '';
+                    document.body.style.touchAction = '';
+                } catch (_) {}
+            }
+        };
+
+        if (closeBtn && !closeBtn._bound) {
+            closeBtn.addEventListener('click', () => api.hide());
+            closeBtn._bound = true;
+            // ESC to close
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') api.hide();
+            });
+        }
+
+        return api;
+    }
+
+    function attachImagePreviewListeners() {
+        // Use event delegation to handle dynamic content
+        if (window.__imagePreviewBound) return;
+        window.__imagePreviewBound = true;
+        const overlay = ensureHoldPreviewOverlay();
+        document.addEventListener('click', (e) => {
+            const img = e.target.closest('img[data-item-id]');
+            if (!img) return;
+            // Ignore if clicking on buttons inside the card
+            if (e.target.closest('button')) return;
+            const id = img.getAttribute('data-item-id');
+            const item = findItemById(id);
+            if (item) {
+                overlay.show(item);
+            }
+        });
+    }
+
     // Enhanced renderMenu with mobile-first responsive design
     function renderMenu() {
-        menuContainer.innerHTML = '';
+        // Record open categories and scroll position to restore after re-render
+        const openCategories = Array.from(document.querySelectorAll('.category-section'))
+            .map(sec => ({
+                category: sec.getAttribute('data-category'),
+                isOpen: !sec.querySelector('.menu-grid, .menu-grid-mobile')?.classList.contains('hidden')
+            }))
+            .filter(x => x.isOpen)
+            .map(x => x.category);
+        const prevScrollY = window.scrollY;
+        // Usar el nodo real para evitar depender del orden de inicialización de variables (TDZ)
+        const menuCategoriesEl = document.getElementById('menu-categories');
+        if (!menuCategoriesEl) return;
+        // Si el contenedor está oculto por el gate, no renderizamos para evitar trabajo innecesario
+        if (menuCategoriesEl.classList.contains('hidden')) return;
+        menuCategoriesEl.innerHTML = '';
         
         // Detect if user is on mobile
         const isMobile = window.innerWidth <= 640;
@@ -1145,6 +1489,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const category in menuData) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'category-section';
+            categoryDiv.dataset.category = category;
             
             // Enhanced category header with icons and descriptions
             const categoryIcons = {
@@ -1164,22 +1509,30 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             
             categoryDiv.innerHTML = `
-                <div class="text-center mb-8 sm:mb-12 category-header-mobile">
-                    <div class="inline-flex items-center space-x-2 sm:space-x-3 bg-gradient-to-r from-yellow-100 to-orange-100 px-4 sm:px-6 py-2 sm:py-3 rounded-full mb-3 sm:mb-4">
-                        <span class="text-2xl sm:text-3xl">${categoryIcons[category]}</span>
-                        <h3 class="text-xl sm:text-3xl font-bold font-poppins text-gray-900">${category}</h3>
+                <div class="text-center mb-5 sm:mb-8 category-header-mobile">
+                    <div data-category-header="${category}" class="glass-effect inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-3xl mb-2 sm:mb-3 cursor-pointer select-none shadow-lg hover:shadow-xl transition-all duration-300 group">
+                        <span class="text-2xl sm:text-3xl">${categoryIcons[category] || '🍔'}</span>
+                        <h3 class="text-xl sm:text-3xl font-bold font-poppins text-gray-900 tracking-tight">${category}</h3>
+                        <span class="ml-1 inline-flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700 bg-black/5 px-2.5 py-1 rounded-full">
+                            ${(Array.isArray(menuData[category]) ? menuData[category].filter(i => i && !i.hidden && !isProductHidden(i.id)).length : 0)}
+                        </span>
+                        <i class="fas fa-chevron-down text-gray-600 ml-1 transition-transform duration-300"></i>
                     </div>
-                    <p class="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">${categoryDescriptions[category]}</p>
+                    <p class="text-sm sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">${categoryDescriptions[category] || ''}</p>
                 </div>
             `;
             
             const grid = document.createElement('div');
             // Different layout for mobile vs desktop
             if (isMobile) {
-                grid.className = 'space-y-4 menu-grid-mobile container-mobile';
+                // Bento-like compact grid on mobile (2 columns)
+                grid.className = 'grid grid-cols-2 gap-3 sm:gap-4 menu-grid-mobile container-mobile';
             } else {
-                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 menu-grid';
+                // Bento grid (12 columns) on desktop for a premium app-like layout
+                grid.className = 'grid grid-cols-12 gap-4 sm:gap-6 lg:gap-8 auto-rows-fr menu-grid';
             }
+            // Inicialmente oculto: se mostrará al hacer clic en el encabezado de la categoría
+            grid.classList.add('hidden');
             
             menuData[category].forEach((originalItem, index) => {
                 if(originalItem.hidden) return;
@@ -1189,25 +1542,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Apply daily promotion
                 const item = applyDailyPromotion(originalItem, category);
+
+                // One featured card per category on desktop to create a bento feel
+                const isFeatured = !isMobile && index === 0;
+                const bentoSpanClass = isMobile
+                    ? ''
+                    : (isFeatured
+                        ? 'col-span-12 sm:col-span-6 lg:col-span-8 xl:col-span-6 lg:row-span-2'
+                        : 'col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3');
                 
                 // Enhanced button logic with better responsive design
                 let buttonHtml;
-                if (item.isCombo) {
+                // Consider items named like combos as combos too
+                const looksLikeCombo = /\bcombo\b/i.test(item.name || '');
+                if (item.isCombo || looksLikeCombo) {
                     buttonHtml = `
-                        <button data-id="${item.id}" class="choose-combo-btn w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base hover:from-blue-600 hover:to-blue-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-cogs mr-1 sm:mr-2"></i>Personaliza tu combo
+                        <button data-id="${item.id}" class="choose-combo-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-cogs mr-1 sm:mr-2"></i>Personalizar
                         </button>
                     `;
                 } else if (item.customizable) {
                     buttonHtml = `
-                        <button data-id="${item.id}" class="customize-btn w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base hover:from-purple-600 hover:to-purple-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        <button data-id="${item.id}" class="customize-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
                             <i class="fas fa-magic mr-1 sm:mr-2"></i>Personalizar
                         </button>
                     `;
                 } else {
                     buttonHtml = `
                         <button data-id="${item.id}" class="add-to-cart-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-6 py-2 sm:py-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base hover:from-green-600 hover:to-green-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95">
-                            <i class="fas fa-plus mr-1 sm:mr-2"></i>Agregar
+                            Personalizar
                         </button>
                     `;
                 }
@@ -1221,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     priceHtml = `
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
                             <div class="text-center">
-                                <div class="text-sm text-gray-500 line-through mb-1">Individual: $${realPrice.toFixed(0)}</div>
+                                <div class="text-sm text-gray-500 line-through mb-1">Original: $${realPrice.toFixed(0)}</div>
                                 <div class="text-2xl font-bold text-green-600 mb-1">Combo: $${item.price.toFixed(0)}</div>
                                 <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
                                     ¡Ahorras $${savings.toFixed(0)}!
@@ -1229,15 +1592,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     `;
-                } else if (item.hasPromotion && item.originalPrice) {
+                } else if (item.originalPrice && item.originalPrice > item.price) {
                     const savings = item.originalPrice - item.price;
                     priceHtml = `
-                        <div class="bg-gradient-to-r from-red-50 to-pink-50 p-3 rounded-lg border border-red-200">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
                             <div class="text-center">
                                 <div class="text-lg text-gray-500 line-through mb-1">$${item.originalPrice.toFixed(0)}</div>
-                                <div class="text-3xl font-bold text-red-600 mb-1">$${item.price.toFixed(0)}</div>
-                                <div class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
-                                    ¡OFERTA HOY!
+                                <div class="text-3xl font-bold text-green-700 mb-1">$${item.price.toFixed(0)}</div>
+                                <div class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                    ¡Ahorras $${savings.toFixed(0)}!
                                 </div>
                             </div>
                         </div>
@@ -1272,7 +1635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Solo mantenemos el badge inline que SÍ parpadea (el que encerraste)
                     mobileInlineBadges += `<span class="inline-block bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-1 mb-1 animate-pulse">🔥 POPULAR</span>`;
                 }
-                if (item.isCombo) {
+                if (item.isCombo || (item.originalPrice && item.originalPrice > item.price)) {
                     badges += `<div class="absolute top-8 left-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg">💰 AHORRO</div>`;
                     mobileInlineBadges += `<span class="inline-block bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold mr-1 mb-1">💰 AHORRO</span>`;
                 }
@@ -1281,32 +1644,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 let cardHtml;
                 
                 if (isMobile) {
-                    // Mobile layout - horizontal card
+                    // Mobile layout - vertical tile (grid 2-3 cols)
+                    const mobileBtn = (item.isCombo || looksLikeCombo)
+                        ? `<button data-id="${item.id}" class="choose-combo-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Personalizar</button>`
+                        : item.customizable
+                            ? `<button data-id="${item.id}" class="customize-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Personalizar</button>`
+                            : `<button data-id="${item.id}" class="add-to-cart-btn w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Personalizar</button>`;
+
                     cardHtml = `
-                        <div class="group bg-white rounded-2xl shadow-lg overflow-hidden flex flex-row relative border border-gray-100 hover:shadow-xl hover:border-yellow-300 menu-card menu-card-mobile transition-all duration-300" 
+                        <div class="group bg-white rounded-xl shadow-md overflow-hidden relative border border-gray-100 hover:shadow-lg hover:border-yellow-300 menu-card menu-card-mobile transition-all duration-300" 
                              style="animation-delay: ${index * 50}ms;">
                             
-                            <!-- Mobile Image -->
-                            <div class="menu-card-image-mobile relative overflow-hidden bg-gray-100">
-                                <img src="${item.image}" 
-                                     alt="[Imagen de ${item.name}]" 
-                                     class="w-full h-full object-cover"
-                                     loading="lazy"
-                                     onerror="this.src='https://placehold.co/400x400/FFB300/FFFFFF?text=${encodeURIComponent(item.name)}'">
+                            <!-- Image -->
+                                                        <div class="menu-card-image-mobile relative overflow-hidden bg-gray-100 ${item.image ? 'sr-skeleton' : ''}">
+                                                                                                                                    ${item.image ? `<img src="${item.image}" alt="[Imagen de ${item.name}]" class="w-full h-full object-cover sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                             </div>
                             
-                            <!-- Mobile Content -->
+                            <!-- Content -->
                             <div class="menu-card-content-mobile">
-                                <div class="flex-grow">
-                                    <!-- Mobile badges - inline -->
-                                    ${mobileInlineBadges ? `<div class="mb-2">${mobileInlineBadges}</div>` : ''}
-                                    <h4 class="font-bold text-gray-900 mb-1">${item.name}</h4>
-                                    <p class="text-gray-600 description mb-2">${processedDescription.replace(/<[^>]*>/g, '')}</p>
-                                    <div class="price text-yellow-600 font-bold mb-2">$${item.price.toFixed(0)}</div>
-                                </div>
-                                <div class="mt-auto">
-                                    ${buttonHtml}
-                                </div>
+                                ${mobileInlineBadges ? `<div class=\"mb-1\">${mobileInlineBadges}</div>` : ''}
+                                <h4 class="font-bold text-gray-900 text-sm leading-snug line-clamp-2">${item.name}</h4>
+                                <div class="text-yellow-600 font-extrabold text-base">$${item.price.toFixed(0)}</div>
+                                ${item.hasPromotion ? `<div class=\"text-[10px] text-red-600 font-bold\">${item.promotionText}</div>` : ''}
+                                ${mobileBtn}
                             </div>
                         </div>
                     `;
@@ -1318,12 +1678,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${badges}
                             
                             <!-- Image container with hover effects -->
-                            <div class="relative overflow-hidden bg-gray-100 h-48 sm:h-56 md:h-64">
-                                <img src="${item.image}" 
-                                     alt="[Imagen de ${item.name}]" 
-                                     class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                                     loading="lazy"
-                                     onerror="this.src='https://placehold.co/400x400/FFB300/FFFFFF?text=${encodeURIComponent(item.name)}'">
+                            <div class="relative overflow-hidden bg-gray-100 h-48 sm:h-56 md:h-64 ${item.image ? 'sr-skeleton' : ''}">
+                                                    ${item.image ? `<img src="${item.image}" alt="[Imagen de ${item.name}]" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                                 
                                 <!-- Overlay on hover -->
                                 <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -1368,28 +1724,129 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             categoryDiv.appendChild(grid);
-            menuContainer.appendChild(categoryDiv);
+            menuCategoriesEl.appendChild(categoryDiv);
         }
         
-        // Initialize enhancements after rendering
+    // Initialize enhancements after rendering
         setTimeout(() => {
             addUrgencyIndicators();
             addSocialProof();
             initializeEnhancements();
+            attachImagePreviewListeners();
+            // Restore previously open categories
+            if (openCategories.length) {
+                openCategories.forEach(cat => {
+                    const section = document.querySelector(`.category-section[data-category="${cat}"]`);
+                    const grid = section?.querySelector('.menu-grid, .menu-grid-mobile');
+                    const chevron = section?.querySelector('.fa-chevron-down');
+                    if (grid) grid.classList.remove('hidden');
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+                });
+                // Restore scroll to reduce perceived jumps
+                window.scrollTo({ top: prevScrollY, behavior: 'instant' });
+            }
         }, 500);
     }
     
-    // Add window resize listener for responsive updates
-    window.addEventListener('resize', () => {
-        // Debounce resize events
-        clearTimeout(window.resizeTimeout);
-        window.resizeTimeout = setTimeout(() => {
-            renderMenu(); // Re-render menu with appropriate layout
-        }, 250);
-    });
+    // Add window resize listener for responsive updates (stable on mobile)
+    (function() {
+        let lastIsMobile = window.innerWidth <= 640;
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimeout);
+                    // Mobile layout - compact bento tile (2 cols)
+                const isMobileNow = window.innerWidth <= 640;
+                // Solo re-render si cambiamos de modo móvil a desktop o viceversa
+                if (isMobileNow !== lastIsMobile) {
+                    lastIsMobile = isMobileNow;
+                    renderMenu();
+                }
+            }, 250);
+                        <article class="group bg-white rounded-3xl shadow-md overflow-hidden relative border border-gray-100 hover:shadow-xl hover:border-yellow-300 menu-card menu-card-mobile transition-all duration-300 hover:-translate-y-0.5"
+                             style="animation-delay: ${index * 50}ms;">
+                            <div class="relative overflow-hidden bg-gray-100">
+                                  ${item.image ? `<img src="${item.image}"
+                                      alt="[Imagen de ${item.name}]"
+                                      class="w-full h-36 object-cover transition-transform duration-500 group-hover:scale-105"
+                                      data-item-id="${item.id}"
+                                      loading="lazy" referrerpolicy="no-referrer"
+                                      onerror="this.onerror=null;this.style.display='none';">` : ''}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"></div>
+                                <div class="absolute bottom-2 left-2 right-2">
+                                    ${mobileInlineBadges ? `<div class=\"mb-1\">${mobileInlineBadges}</div>` : ''}
+                                    <div class="flex items-end justify-between gap-2">
+                                        <h4 class="font-bold font-poppins text-white text-sm leading-snug line-clamp-2 drop-shadow">${item.name}</h4>
+                                        <div class="shrink-0 bg-white/90 text-gray-900 font-black text-sm px-2.5 py-1 rounded-full">$${item.price.toFixed(0)}</div>
+                                    </div>
+                                </div>
+                            </div>
 
-    // Configurar event listeners
-    function setupEventListeners() {
+                            <div class="p-3 space-y-2">
+                                ${item.hasPromotion ? `<div class=\"text-[11px] text-red-600 font-bold\">${item.promotionText}</div>` : ''}
+                                <p class="text-xs text-gray-600 leading-snug line-clamp-2">${processedDescription}</p>
+                                ${mobileBtn}
+                            </div>
+                        </article>
+                        if (g !== grid) g.classList.add('hidden');
+                    });
+                    // Desktop layout - bento card
+                    if (chevron) chevron.style.transform = 'rotate(180deg)';
+                        <article class="${bentoSpanClass} group bg-white rounded-3xl shadow-lg overflow-hidden flex flex-col border border-gray-100 hover:border-yellow-300 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                             style="animation-delay: ${index * 90}ms;">
+                            <div class="relative overflow-hidden bg-gray-100 ${isFeatured ? 'h-64 sm:h-72 md:h-80 lg:h-full' : 'h-52 sm:h-56 md:h-60'}">
+                                ${badges}
+                                  ${item.image ? `<img src="${item.image}"
+                                      alt="[Imagen de ${item.name}]"
+                                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                      data-item-id="${item.id}"
+                                      loading="lazy" referrerpolicy="no-referrer"
+                                      onerror="this.onerror=null;this.style.display='none';">` : ''}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+
+                                <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                                    <div class="flex items-end justify-between gap-3">
+                                        <h4 class="font-poppins font-extrabold text-white ${isFeatured ? 'text-2xl sm:text-3xl' : 'text-xl'} leading-tight drop-shadow">
+                                            ${item.name}
+                                        </h4>
+                                        <div class="shrink-0 bg-white/90 text-gray-900 font-black ${isFeatured ? 'text-xl' : 'text-lg'} px-3 py-1.5 rounded-full">
+                                            $${item.price.toFixed(0)}
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 flex items-center gap-2 text-white/90 text-xs">
+                                        <span class="bg-white/15 border border-white/20 backdrop-blur-md px-2.5 py-1 rounded-full">Toca para ver imagen</span>
+                                        ${(item.isCombo || looksLikeCombo) ? '<span class="bg-green-500/80 px-2.5 py-1 rounded-full font-bold">Combo</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 sm:p-5 flex flex-col gap-3">
+                                <p class="text-gray-600 text-sm leading-relaxed ${isFeatured ? 'line-clamp-4' : 'line-clamp-3'}">
+                                    ${processedDescription}
+                                </p>
+
+                                ${item.hasPromotion ? `
+                                    <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-2 rounded-2xl text-center shadow-lg">
+                                        <div class="font-bold text-sm animate-pulse">${item.promotionText}</div>
+                                    </div>
+                                ` : ''}
+
+                                ${isFeatured ? priceHtml : ''}
+
+                                <div class="pt-1">
+                                    ${buttonHtml}
+                                </div>
+                            </div>
+                        </article>
+
+                    const checkoutPickup = document.querySelector('input[name="delivery-type"][value="pickup"]');
+                    const checkoutDelivery = document.querySelector('input[name="delivery-type"][value="delivery"]');
+                    if (val === 'pickup' && checkoutPickup) checkoutPickup.checked = true;
+                    if (val === 'delivery' && checkoutDelivery) checkoutDelivery.checked = true;
+                    const evt = new Event('change', { bubbles: true });
+                    const targetRadio = val === 'delivery' ? checkoutDelivery : checkoutPickup;
+                    if (targetRadio) targetRadio.dispatchEvent(evt);
+                }
+            });
+        }
         // Event listener para los botones de añadir al carrito
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('add-to-cart-btn')) {
@@ -1413,6 +1870,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 openComboModal(comboId);
             }
         });
+
+        // Skeleton/fade-in para imágenes (capturing porque load/error no bubbean)
+        const __srMarkImgLoaded = (img) => {
+            if (!img) return;
+            img.classList.remove('sr-img-init');
+            img.classList.add('sr-img-loaded');
+            const shell = img.closest('.sr-skeleton');
+            if (shell) shell.classList.remove('sr-skeleton');
+        };
+        document.addEventListener('load', (e) => {
+            const img = e.target;
+            if (!img || img.tagName !== 'IMG') return;
+            if (img.dataset && img.dataset.srImg === '1') {
+                __srMarkImgLoaded(img);
+            }
+        }, true);
+        document.addEventListener('error', (e) => {
+            const img = e.target;
+            if (!img || img.tagName !== 'IMG') return;
+            if (img.dataset && img.dataset.srImg === '1') {
+                const shell = img.closest('.sr-skeleton');
+                if (shell) shell.classList.remove('sr-skeleton');
+            }
+        }, true);
+
+        // Si alguna imagen ya estaba en caché y cargó antes del listener
+        try {
+            document.querySelectorAll('img[data-sr-img="1"]').forEach((img) => {
+                if (img && img.complete && img.naturalWidth > 0) __srMarkImgLoaded(img);
+            });
+        } catch (_) {}
 
         // Event listener para los botones de combo en el modal de promociones
         document.addEventListener('click', (e) => {
@@ -1458,20 +1946,26 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Event listener para navegar entre hamburguesas del combo
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('prev-burger-btn') || e.target.classList.contains('next-burger-btn')) {
-                const choiceIndex = parseInt(e.target.dataset.choiceIndex);
-                const direction = e.target.classList.contains('next-burger-btn') ? 'next' : 'prev';
-                navigateBurger(choiceIndex, direction);
-            }
+            const btn = e.target.closest('.prev-burger-btn, .next-burger-btn');
+            if (!btn) return;
+
+            const choiceIndex = parseInt(btn.dataset.choiceIndex, 10);
+            if (!Number.isFinite(choiceIndex)) return;
+
+            const direction = btn.classList.contains('next-burger-btn') ? 'next' : 'prev';
+            navigateBurger(choiceIndex, direction);
         });
         
         // Event listener para navegar entre hotdogs del combo
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('prev-hotdog-btn') || e.target.classList.contains('next-hotdog-btn')) {
-                const hotdogIndex = parseInt(e.target.dataset.hotdogIndex);
-                const direction = e.target.classList.contains('next-hotdog-btn') ? 'next' : 'prev';
-                navigateHotdog(hotdogIndex, direction);
-            }
+            const btn = e.target.closest('.prev-hotdog-btn, .next-hotdog-btn');
+            if (!btn) return;
+
+            const hotdogIndex = parseInt(btn.dataset.hotdogIndex, 10);
+            if (!Number.isFinite(hotdogIndex)) return;
+
+            const direction = btn.classList.contains('next-hotdog-btn') ? 'next' : 'prev';
+            navigateHotdog(hotdogIndex, direction);
         });
         
         // Event listener para personalizar hamburguesa dentro de combo
@@ -1842,23 +2336,176 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Envío de pedido por WhatsApp
-        sendWhatsappBtn.addEventListener('click', () => {
-            const message = generateWhatsAppMessage();
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
-            
-            // Agregar pedido al sistema de control de envíos
-            addToOrderControl();
-            
-            // Guardar datos del cliente
-            saveCustomerData();
-            
-            // Cerrar modal y limpiar carrito
-            checkoutModal.classList.add('hidden');
-            checkoutModal.classList.remove('flex');
-            cart = [];
-            updateCart();
+        // Confirmación de pedido: enviar a backend (Twilio) y mostrar confirmación
+        sendWhatsappBtn.addEventListener('click', async () => {
+            // Bloquear botón y mostrar loading
+            const originalHtml = sendWhatsappBtn.innerHTML;
+            sendWhatsappBtn.disabled = true;
+            sendWhatsappBtn.classList.add('loading');
+            sendWhatsappBtn.innerHTML = '<span class="loading-spinner mr-2"></span> Enviando...';
+
+            try {
+                // Construir payload igual que addToOrderControl
+                const deliveryTypeElement = document.querySelector('input[name="delivery-type"]:checked');
+                const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
+                const customerName = customerNameInput ? customerNameInput.value.trim() : '';
+                const customerPhone = customerPhoneInput ? customerPhoneInput.value.trim() : '';
+                if (!customerName || !customerPhone || !deliveryTypeElement || !paymentMethodElement) {
+                    throw new Error('Faltan datos requeridos');
+                }
+
+                const deliveryTypeValue = deliveryTypeElement.value;
+                const paymentMethod = paymentMethodElement.value;
+
+                let address = '';
+                if (deliveryTypeValue === 'delivery') {
+                    const addrInput = document.getElementById('address-input');
+                    if (addrInput) address = addrInput.value.trim();
+                    if (window.selectedPlace && window.selectedPlace.formatted_address) {
+                        address = window.selectedPlace.formatted_address;
+                    }
+                } else {
+                    address = 'Recoger en local - SR & SRA BURGER';
+                }
+
+                let cashAmount = '';
+                if (paymentMethod === 'Efectivo') {
+                    const cashAmountInput = document.getElementById('cash-amount');
+                    if (cashAmountInput && cashAmountInput.value.trim()) {
+                        cashAmount = parseFloat(cashAmountInput.value.trim()).toFixed(2);
+                    }
+                }
+
+                const orderItems = cart.map(item => {
+                    let customizations = '';
+                    if (item.isCombo) {
+                        const choiceDetails = item.choices.map(choice => {
+                            let text = choice.burger.name;
+                            if (choice.customizations && choice.customizations.length > 0) {
+                                text += ` (+ ${choice.customizations.map(c => c.name).join(', ')})`;
+                            }
+                            if (choice.fries) text += `, Papas ${choice.fries.type}`;
+                            if (choice.onionRings) text += `, Aros de Cebolla`;
+                            return text;
+                        }).join(' | ');
+                        // Anexar información de acompañamientos incluidos del combo (para Control de Envíos)
+                        const extraInfo = [];
+                        if (item.includedFries && item.includedFries.type && item.includedFries.size) {
+                            extraInfo.push(`Papas ${item.includedFries.type} ${item.includedFries.size}`);
+                        }
+                        // Detalles específicos por combo
+                        if (item.baseItem && Number(item.baseItem.id) === 14) {
+                            // Combo Familiar incluye Aros Medianos y Coca-Cola 3L
+                            extraInfo.push('Aros de Cebolla Medianos', 'Coca-Cola 3L');
+                        } else if (item.baseItem && Number(item.baseItem.id) === 6) {
+                            // Combo Pareja incluye aros (7 pz)
+                            extraInfo.push('Aros de Cebolla (7 pz)');
+                        }
+
+                        customizations = choiceDetails + (extraInfo.length ? ` | Incluye: ${extraInfo.join(', ')}` : '');
+                    } else {
+                        const details = [];
+                        if (item.customizations && item.customizations.length > 0) {
+                            details.push(`+ ${item.customizations.map(c => c.name).join(', ')}`);
+                        }
+                        if (item.fries) details.push(`Papas ${item.fries.type}`);
+                        if (item.onionRings) details.push('Aros de Cebolla');
+                        if (item.menuExtras && item.menuExtras.length > 0) {
+                            item.menuExtras.forEach(extra => details.push(`${extra.quantity}x ${extra.name}`));
+                        }
+                        customizations = details.join(', ');
+                    }
+                    return {
+                        name: item.baseItem.name,
+                        quantity: item.quantity,
+                        price: parseFloat((item.price * item.quantity).toFixed(2)),
+                        customizations: customizations || ''
+                    };
+                });
+
+                const subtotal = getCartTotal();
+                const deliveryCost = deliveryTypeValue === 'delivery' ? DELIVERY_PRICE : 0;
+                const total = subtotal + deliveryCost;
+
+                let notes = '';
+                if (paymentMethod === 'Efectivo' && cashAmount) {
+                    const change = parseFloat(cashAmount) - total;
+                    notes += `Pago: $${cashAmount} | Cambio: $${change.toFixed(2)}`;
+                }
+                if (paymentMethod !== 'Efectivo') {
+                    notes += `Pago: ${paymentMethod}`;
+                }
+
+                const orderData = {
+                    customer: { name: customerName, phone: customerPhone, address },
+                    items: orderItems,
+                    total: parseFloat(total.toFixed(2)),
+                    notes: notes || '',
+                    deliveryType: deliveryTypeValue,
+                    paymentMethod: paymentMethod
+                };
+
+                // 1) Crear la orden y obtener el número (Firebase o respaldo local)
+                let createdOrderNumber = null;
+
+                // Esperar un poco a que Firebase se inicialice (si está cargando)
+                await waitForFirebaseOrderManager(4000);
+
+                if (window.firebaseOrderManager && window.firebaseOrderManager.addOrder) {
+                    try {
+                        const res = await window.firebaseOrderManager.addOrder(orderData);
+                        createdOrderNumber = res && res.orderNumber ? res.orderNumber : null;
+                        console.log('✅ Orden creada en Firebase. No. Orden:', createdOrderNumber);
+                    } catch (e) {
+                        console.warn('⚠️ Error guardando en Firebase, usando respaldo local:', e);
+                    }
+                }
+
+                if (!createdOrderNumber) {
+                    createdOrderNumber = saveToLocalStorageBackup(orderData);
+                    console.log('💾 Orden guardada localmente. No. Orden:', createdOrderNumber);
+                }
+
+                // Mostrar el número en el modal de éxito
+                setLastOrderNumber(createdOrderNumber);
+
+                // 2) Enviar al backend (Twilio) incluyendo el número de orden
+                await postOrderToApi({ ...orderData, orderNumber: createdOrderNumber });
+
+                // 3) Guardar datos del cliente
+                saveCustomerData();
+
+                // Cerrar checkout y limpiar carrito
+                checkoutModal.classList.add('hidden');
+                checkoutModal.classList.remove('flex');
+                cart = [];
+                updateCart();
+
+                // Mostrar modal de éxito
+                const successModal = document.getElementById('order-success-modal');
+                if (successModal) {
+                    successModal.classList.add('flex');
+                    successModal.classList.remove('hidden');
+                    const closeBtn = document.getElementById('close-order-success');
+                    if (closeBtn) {
+                        closeBtn.onclick = () => {
+                            successModal.classList.add('hidden');
+                            successModal.classList.remove('flex');
+                        };
+                    }
+                } else {
+                    showNotification('¡Orden recibida! Te confirmaremos por WhatsApp en breve.', 'success');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showNotification('No se pudo enviar el pedido. Inténtalo de nuevo.', 'error');
+            } finally {
+                // Restaurar botón
+                sendWhatsappBtn.disabled = false;
+                sendWhatsappBtn.classList.remove('loading');
+                sendWhatsappBtn.innerHTML = originalHtml;
+            }
         });
 
         // Help modal
@@ -1923,10 +2570,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filtrar toppings según el tipo de producto
         let availableToppings = toppingsData;
         if (isHotdogItem) {
-            // Para hotdogs solo permitir Chezzy y Jalapeños
-            availableToppings = toppingsData.filter(topping => 
-                topping.name === 'Chezzy' || topping.name === 'Jalapeños'
-            );
+            // Para hotdogs: mismo menú que hamburguesas, pero sin Doble Carne
+            availableToppings = toppingsData.filter(topping => topping.id !== 't6');
         }
         
         availableToppings.forEach(topping => {
@@ -1939,21 +2584,31 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (todayPromotion && todayPromotion.type === 'meat_supreme' && topping.name === 'Doble Carne') {
                 toppingPrice = 10; // Precio especial de jueves
-                promotionText = '<span class="text-red-600 font-bold text-xs">¡OFERTA HOY!</span>';
+                promotionText = '<span class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold">HOY</span>';
             }
             
-            // Usar descripción persuasiva o precio
-            const displayText = topping.price === 0 ? topping.description : topping.name;
-            const priceDisplay = topping.price === 0 ? '' : `Solo ${toppingPrice.toFixed(0)} más`;
+            const displayTitle = topping.price === 0 ? topping.description : topping.name;
+            const pricePill = topping.price === 0 
+                ? '<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Gratis</span>'
+                : `<span class=\"px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold\">+${toppingPrice.toFixed(0)}</span>`;
+            const oldPrice = (toppingPrice !== topping.price)
+                ? `<span class=\"ml-2 text-xs text-gray-400 line-through\">+${topping.price.toFixed(0)}</span>`
+                : '';
             
             toppingsContainer.innerHTML += `
-                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200 ${isChecked ? 'bg-[#FFB300]/10 border-[#FFB300]' : ''}">
+                <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-all duration-200 ${isChecked ? 'bg-[#FFB300]/10 border-[#FFB300]' : 'border-gray-200'}">
                     <input type="checkbox" data-price="${toppingPrice}" data-name="${topping.name}" class="topping-checkbox form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]" ${isChecked}>
-                    <div class="flex-grow ml-3">
-                        <span class="font-semibold text-gray-800">${displayText}</span>
-                        <div class="text-sm text-gray-600">
-                            ${toppingPrice !== topping.price ? `<span class="line-through">+${topping.price.toFixed(0)}</span> ` : ''}
-                            ${priceDisplay} ${promotionText}
+                    <div class="ml-3 mr-3">
+                        <img src="${topping.image}" alt="${topping.name}" class="w-20 h-16 object-cover rounded-md shadow-sm" referrerpolicy="no-referrer" onerror="this.onerror=null;">
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center flex-wrap gap-2">
+                            <span class="font-semibold text-gray-800">${displayTitle}</span>
+                            ${promotionText}
+                        </div>
+                        <div class="mt-1 flex items-center gap-2 text-sm text-gray-600">
+                            ${pricePill}
+                            ${oldPrice}
                         </div>
                     </div>
                 </label>
@@ -1971,7 +2626,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200 ${isChecked ? 'bg-[#FFB300]/10 border-[#FFB300]' : ''}">
                     <input type="checkbox" data-price="${extra.price}" data-name="${extra.name}" data-id="${extra.id}" class="menu-extra-checkbox form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]" ${isChecked}>
                     <div class="ml-3 mr-3">
-                        <img src="${extra.image}" alt="${extra.name}" class="w-16 h-12 object-cover rounded-md shadow-sm">
+                        <img src="${extra.image}" alt="${extra.name}" class="w-20 h-16 object-cover rounded-md shadow-sm" referrerpolicy="no-referrer" onerror="this.onerror=null;">
                     </div>
                     <div class="flex-grow">
                         <span class="font-semibold text-gray-800">${extra.name}</span>
@@ -2012,6 +2667,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mostrar el modal
         customModal.classList.add('flex');
         customModal.classList.remove('hidden');
+    }
+
+    async function waitForFirebaseOrderManager(timeoutMs = 4000) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            if (window.firebaseOrderManager && typeof window.firebaseOrderManager.addOrder === 'function') {
+                return true;
+            }
+            await new Promise(r => setTimeout(r, 200));
+        }
+        return false;
     }
 
     function closeCustomizationModal() {
@@ -2105,6 +2771,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Funciones para combos
+    function getPremiumBurgerPrice() {
+        const premium = findItemById(1);
+        if (premium && typeof premium.price === 'number' && !Number.isNaN(premium.price)) return premium.price;
+
+        const burgers = (menuData && Array.isArray(menuData['Hamburguesas'])) ? menuData['Hamburguesas'] : [];
+        const first = burgers[0];
+        if (first && typeof first.price === 'number' && !Number.isNaN(first.price)) return first.price;
+        return 0;
+    }
+
+    function getBurgerPriceDiffText(burger) {
+        const premiumPrice = getPremiumBurgerPrice();
+        const burgerPrice = (burger && typeof burger.price === 'number') ? burger.price : premiumPrice;
+        const diff = burgerPrice - premiumPrice;
+        if (diff === 0) return 'Precio base';
+        if (diff > 0) return `(+ ${diff.toFixed(0)})`;
+        return `(- ${Math.abs(diff).toFixed(0)})`;
+    }
+
+    function getComboAvailableBurgerIds(combo) {
+        const burgers = (menuData && Array.isArray(menuData['Hamburguesas'])) ? menuData['Hamburguesas'] : [];
+        const ids = burgers
+            .map(b => Number(b?.id))
+            .filter(id => Number.isFinite(id));
+
+        const filtered = (typeof isProductHidden === 'function')
+            ? ids.filter(id => !isProductHidden(id))
+            : ids;
+
+        if (filtered.length > 0) return filtered;
+
+        const fallback = Array.isArray(combo?.availableBurgers) ? combo.availableBurgers.map(Number).filter(Number.isFinite) : [];
+        return fallback;
+    }
+
     function openComboModal(comboId) {
         const combo = findItemById(comboId);
         if (!combo) return;
@@ -2114,18 +2815,27 @@ document.addEventListener('DOMContentLoaded', () => {
             choices: [],
             includedFries: {
                 type: 'Gajo', // Tipo por defecto
-                size: 'Medianas'
+                size: (combo && Number(combo.id) === 14) ? 'Grandes' : 'Medianas'
             }
         };
         
         comboModalTitle.textContent = `Configura tu ${combo.name}`;
         comboModalBody.innerHTML = '';
-        
-        const clasicaPrice = findItemById(1).price;
+
+        // Guardar opciones disponibles (incluye hamburguesas agregadas desde Admin)
+        tempComboConfig.availableBurgers = getComboAvailableBurgerIds(combo);
+        const premiumPrice = getPremiumBurgerPrice();
         
         // Añadir hamburguesas al combo
         for (let i = 0; i < combo.burgerChoices; i++) {
-            const defaultBurger = findItemById(combo.availableBurgers[0]);
+            const preferredDefaultId = tempComboConfig.availableBurgers.includes(1)
+                ? 1
+                : (tempComboConfig.availableBurgers[0] ?? (combo.availableBurgers ? combo.availableBurgers[0] : 1));
+            const defaultBurger = findItemById(preferredDefaultId)
+                || findItemById(tempComboConfig.availableBurgers[0])
+                || findItemById(combo.availableBurgers ? combo.availableBurgers[0] : preferredDefaultId)
+                || ((Array.isArray(menuData?.['Hamburguesas']) ? menuData['Hamburguesas'] : [])[0])
+                || { id: preferredDefaultId, name: 'Hamburguesa', price: premiumPrice, image: '' };
             
             tempComboConfig.choices[i] = {
                 burger: defaultBurger,
@@ -2138,7 +2848,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4 class="font-bold text-lg mb-3">Hamburguesa ${i + 1}</h4>
                     <div class="burger-selector mb-4">
                         <div class="relative bg-gray-100 rounded-lg overflow-hidden">
-                            <img id="burger-img-${i}" src="${defaultBurger.image}" alt="${defaultBurger.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg">
+                            <img id="burger-img-${i}" src="${defaultBurger.image}" alt="${defaultBurger.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">
                             <div class="absolute inset-0 flex items-center justify-between px-3">
                                 <button class="prev-burger-btn bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-sm" data-choice-index="${i}">
                                     <i class="fas fa-chevron-left"></i>
@@ -2150,11 +2860,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="text-center mt-3">
                             <h5 id="burger-name-${i}" class="font-semibold text-lg text-gray-800">${defaultBurger.name}</h5>
-                            <p id="burger-price-${i}" class="text-sm text-gray-600 font-medium">Precio base</p>
+                            <p id="burger-price-${i}" class="text-sm text-gray-600 font-medium">${getBurgerPriceDiffText(defaultBurger)}</p>
                         </div>
                     </div>
                     <div class="customizations-summary text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded">Sin personalización.</div>
-                    <button class="combo-customize-btn w-full text-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-md transition-colors duration-200">Personalizar</button>
+                    <button class="combo-customize-btn w-full text-sm bg-gray-200 hover:bg-gray-300 text-black py-2 px-4 rounded-md transition-colors duration-200">Personalizar</button>
                 </div>
             `;
             
@@ -2164,7 +2874,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Añadir hotdogs al combo (si aplica)
         if (combo.hotdogChoices && combo.availableHotdogs) {
             for (let i = 0; i < combo.hotdogChoices; i++) {
-                const defaultHotdog = findItemById(combo.availableHotdogs[0]);
+                const baseHotdogItem = findItemById(5);
+                const baseHotdogPrice = baseHotdogItem && typeof baseHotdogItem.price === 'number' ? baseHotdogItem.price : 0;
+                const defaultHotdog = findItemById(combo.availableHotdogs[0])
+                    || findItemById(5)
+                    || { id: combo.availableHotdogs[0], name: 'Hot Dog', price: baseHotdogPrice, image: '' };
                 
                 tempComboConfig.hotdogs = tempComboConfig.hotdogs || [];
                 tempComboConfig.hotdogs[i] = {
@@ -2179,7 +2893,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4 class="font-bold text-lg mb-3">Hot Dog ${hotdogIndex + 1}</h4>
                         <div class="hotdog-selector mb-4">
                             <div class="relative bg-gray-100 rounded-lg overflow-hidden">
-                                <img id="hotdog-img-${hotdogIndex}" src="${defaultHotdog.image}" alt="${defaultHotdog.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg">
+                                <img id="hotdog-img-${hotdogIndex}" src="${defaultHotdog.image}" alt="${defaultHotdog.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">
                                 <div class="absolute inset-0 flex items-center justify-between px-3">
                                     <button class="prev-hotdog-btn bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-sm" data-hotdog-index="${hotdogIndex}">
                                         <i class="fas fa-chevron-left"></i>
@@ -2195,7 +2909,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                         <div class="customizations-summary text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded">Sin personalización.</div>
-                        <button class="hotdog-customize-btn w-full text-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-md transition-colors duration-200" data-hotdog-index="${hotdogIndex}">Personalizar</button>
+                        <button class="hotdog-customize-btn w-full text-sm bg-gray-200 hover:bg-gray-300 text-black py-2 px-4 rounded-md transition-colors duration-200" data-hotdog-index="${hotdogIndex}">Personalizar</button>
                     </div>
                 `;
                 
@@ -2204,31 +2918,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Añadir selección de papas incluidas en el combo
+        const isComboFamiliar = !!(tempComboConfig && tempComboConfig.baseCombo && tempComboConfig.baseCombo.id === 14);
+        const friesTitle = isComboFamiliar
+            ? 'Incluye: Papas Grandes, Aros de Cebolla Medianos y Coca-Cola 3L'
+            : 'Papas Medianas Incluidas';
+        const friesGajoLabel = isComboFamiliar ? 'Papas Gajo Grandes' : 'Papas Gajo Medianas';
+        const friesFrancesasLabel = isComboFamiliar ? 'Papas a la Francesa Grandes' : 'Papas a la Francesa Medianas';
+
         const friesSelectionHtml = `
             <div class="border rounded-lg p-4 mt-6">
-                <h4 class="font-bold text-lg mb-3">Papas Medianas Incluidas</h4>
+                <h4 class="font-bold text-lg mb-3">${friesTitle}</h4>
                 <p class="text-sm text-gray-600 mb-3">Elige qué tipo de papas quieres en tu combo:</p>
                 <div class="space-y-3">
                     <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-all duration-200 bg-[#FFB300]/10 border-[#FFB300]">
                         <input type="radio" name="combo-fries-type" value="Gajo" class="form-radio text-[#FFB300]" checked>
-                        <div class="ml-3 mr-3">
-                            <img src="https://imgur.com/0n0jSEh.jpg" alt="Papas Gajo" class="w-12 h-8 object-cover rounded shadow-sm">
-                        </div>
-                        <span class="font-medium">Papas Gajo Medianas</span>
+                        <span class="font-medium">${friesGajoLabel}</span>
                     </label>
                     <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-all duration-200">
                         <input type="radio" name="combo-fries-type" value="Francesas" class="form-radio text-[#FFB300]">
-                        <div class="ml-3 mr-3">
-                            <img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&h=200&fit=crop&crop=center" alt="Papas Francesas" class="w-12 h-8 object-cover rounded shadow-sm">
-                        </div>
-                        <span class="font-medium">Papas a la Francesa Medianas</span>
-                    </label>
-                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-all duration-200">
-                        <input type="radio" name="combo-fries-type" value="Crispy" class="form-radio text-[#FFB300]">
-                        <div class="ml-3 mr-3">
-                            <img src="https://imgur.com/4bflLWp.jpg" alt="Papas Crispy" class="w-12 h-8 object-cover rounded shadow-sm">
-                        </div>
-                        <span class="font-medium">Papas Crispy Medianas</span>
+                        <span class="font-medium">${friesFrancesasLabel}</span>
                     </label>
                 </div>
             </div>
@@ -2249,13 +2957,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateComboModalTotal() {
         let total = tempComboConfig.baseCombo.price;
-        const clasicaPrice = findItemById(1).price;
-        const baseHotdogPrice = findItemById(5).price; // Precio base del Hotdog Jumbo
+        const clasicaPrice = getPremiumBurgerPrice();
+        const baseHotdogItem = findItemById(5);
+        const baseHotdogPrice = baseHotdogItem && typeof baseHotdogItem.price === 'number' ? baseHotdogItem.price : 0; // Precio base del Hotdog Jumbo
         
         // Calcular precio de las hamburguesas
         tempComboConfig.choices.forEach(choice => {
             const upgradeCost = choice.burger.price - clasicaPrice;
-            if (upgradeCost > 0) total += upgradeCost;
+            total += upgradeCost;
             
             if (choice.customizations) {
                 choice.customizations.forEach(cust => total += cust.price);
@@ -2273,7 +2982,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tempComboConfig.hotdogs) {
             tempComboConfig.hotdogs.forEach(hotdogChoice => {
                 const upgradeCost = hotdogChoice.hotdog.price - baseHotdogPrice;
-                if (upgradeCost > 0) total += upgradeCost;
+                total += upgradeCost;
                 
                 if (hotdogChoice.customizations) {
                     hotdogChoice.customizations.forEach(cust => total += cust.price);
@@ -2296,6 +3005,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let realPrice = 0;
         
         switch (combo.id) {
+            case 26: // Combo Dobles Dobles: referencia de precio individual $300
+                realPrice = 300;
+                break;
             case 6: // Combo Pareja: 2 Hamburguesas + 1 Papas Medianas + 7 Aros de Cebolla
                 realPrice = (100 * 2) + 60 + 45; // 2 Clásicas + Papas Medianas + Aros (7pz)
                 break;
@@ -2304,12 +3016,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 realPrice = 100 + 60 + 60; // Clásica + Hotdog + Papas Medianas
                 break;
                 
-            case 7: // Combo Amigos: 3 Hamburguesas + 1 Papas Medianas + 1 Coca-Cola 1.75L
-                realPrice = (100 * 3) + 60 + 40; // 3 Clásicas + Papas Medianas + Coca 1.75L
+            case 7: // Combo Amigos: baseline de comparación anterior (ahorro visible)
+                realPrice = 400; // Antes: 3 Clásicas + Papas Medianas + Coca 1.75L
                 break;
                 
-            case 14: // Combo Familiar: 5 Hamburguesas + 1 Papas Gajo Grandes + 1 Aros Grande + 1 Coca 3L
-                realPrice = (100 * 5) + 100 + 80 + 60; // 5 Clásicas + Papas Grandes + Aros Grandes + Coca 3L
+            case 14: // Combo Familiar: 5 Hamburguesas + 1 Papas Grandes (Gajo o Francesas) + 1 Aros Grande + 1 Coca 3L
+                realPrice = (100 * 5) + 120 + 80 + 60; // 5 Clásicas + Papas Grandes (120) + Aros Grandes + Coca 3L
                 break;
                 
             default:
@@ -2321,17 +3033,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function navigateBurger(choiceIndex, direction) {
         const combo = tempComboConfig.baseCombo;
-        const currentBurgerIndex = combo.availableBurgers.indexOf(tempComboConfig.choices[choiceIndex].burger.id);
+        const availableBurgerIds = Array.isArray(tempComboConfig.availableBurgers) && tempComboConfig.availableBurgers.length
+            ? tempComboConfig.availableBurgers
+            : (Array.isArray(combo.availableBurgers) ? combo.availableBurgers : []);
+
+        if (!Array.isArray(availableBurgerIds) || availableBurgerIds.length === 0) return;
+
+        const currentId = Number(tempComboConfig.choices[choiceIndex].burger.id);
+        const currentBurgerIndex = availableBurgerIds.map(Number).indexOf(currentId);
         
         let newIndex;
         if (direction === 'next') {
-            newIndex = (currentBurgerIndex + 1) % combo.availableBurgers.length;
+            const safeIndex = currentBurgerIndex >= 0 ? currentBurgerIndex : 0;
+            newIndex = (safeIndex + 1) % availableBurgerIds.length;
         } else {
-            newIndex = currentBurgerIndex === 0 ? combo.availableBurgers.length - 1 : currentBurgerIndex - 1;
+            const safeIndex = currentBurgerIndex >= 0 ? currentBurgerIndex : 0;
+            newIndex = safeIndex === 0 ? availableBurgerIds.length - 1 : safeIndex - 1;
         }
-        
-        const newBurgerId = combo.availableBurgers[newIndex];
+
+        const newBurgerId = availableBurgerIds[newIndex];
         const newBurger = findItemById(newBurgerId);
+        if (!newBurger) return;
         
         tempComboConfig.choices[choiceIndex].burger = newBurger;
         tempComboConfig.choices[choiceIndex].customizations = [];
@@ -2347,9 +3069,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateBurgerDisplay(choiceIndex, burger) {
-        const clasicaPrice = findItemById(1).price;
-        const priceDiff = burger.price - clasicaPrice;
-        const priceText = priceDiff > 0 ? `(+ ${priceDiff.toFixed(0)})` : 'Precio base';
+        const priceText = getBurgerPriceDiffText(burger);
         
         document.getElementById(`burger-img-${choiceIndex}`).src = burger.image;
         document.getElementById(`burger-img-${choiceIndex}`).alt = burger.name;
@@ -2359,17 +3079,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function navigateHotdog(hotdogIndex, direction) {
         const combo = tempComboConfig.baseCombo;
-        const currentHotdogIndex = combo.availableHotdogs.indexOf(tempComboConfig.hotdogs[hotdogIndex].hotdog.id);
+        const availableHotdogIds = Array.isArray(combo.availableHotdogs) ? combo.availableHotdogs : [];
+        if (availableHotdogIds.length === 0) return;
+
+        const currentId = Number(tempComboConfig.hotdogs?.[hotdogIndex]?.hotdog?.id);
+        const currentHotdogIndex = availableHotdogIds.map(Number).indexOf(currentId);
         
         let newIndex;
         if (direction === 'next') {
-            newIndex = (currentHotdogIndex + 1) % combo.availableHotdogs.length;
+            const safeIndex = currentHotdogIndex >= 0 ? currentHotdogIndex : 0;
+            newIndex = (safeIndex + 1) % availableHotdogIds.length;
         } else {
-            newIndex = currentHotdogIndex === 0 ? combo.availableHotdogs.length - 1 : currentHotdogIndex - 1;
+            const safeIndex = currentHotdogIndex >= 0 ? currentHotdogIndex : 0;
+            newIndex = safeIndex === 0 ? availableHotdogIds.length - 1 : safeIndex - 1;
         }
         
-        const newHotdogId = combo.availableHotdogs[newIndex];
+        const newHotdogId = availableHotdogIds[newIndex];
         const newHotdog = findItemById(newHotdogId);
+        if (!newHotdog) return;
         
         tempComboConfig.hotdogs[hotdogIndex].hotdog = newHotdog;
         tempComboConfig.hotdogs[hotdogIndex].customizations = [];
@@ -2387,7 +3114,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateHotdogDisplay(hotdogIndex, hotdog) {
         const baseHotdogPrice = findItemById(5).price; // Precio base del Hotdog Jumbo
         const priceDiff = hotdog.price - baseHotdogPrice;
-        const priceText = priceDiff > 0 ? `(+ ${priceDiff.toFixed(0)})` : 'Precio base';
+        const priceText = priceDiff === 0
+            ? 'Precio base'
+            : (priceDiff > 0 ? `(+ ${priceDiff.toFixed(0)})` : `(- ${Math.abs(priceDiff).toFixed(0)})`);
         
         document.getElementById(`hotdog-img-${hotdogIndex}`).src = hotdog.image;
         document.getElementById(`hotdog-img-${hotdogIndex}`).alt = hotdog.name;
@@ -2437,8 +3166,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openCart() {
-        cartSidebar.classList.remove('translate-x-full');
-        cartOverlay.classList.remove('hidden');
+        if (cartSidebar && cartOverlay) {
+            cartSidebar.classList.remove('translate-x-full');
+            cartOverlay.classList.remove('hidden');
+        }
     }
 
     function updateCart() {
@@ -2470,7 +3201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             cart.forEach(item => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'flex border-b border-gray-200 py-4';
+                itemDiv.className = 'flex items-start p-3 bg-white rounded-xl border border-gray-100 shadow-sm mb-3';
                 
                 let itemName = item.baseItem.name;
                 let customizationsText = '';
@@ -2489,6 +3220,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Añadir información de papas incluidas
                     if (item.includedFries) {
                         comboDetails += `, Papas ${item.includedFries.type} ${item.includedFries.size}`;
+                    }
+                    
+                    // Añadir extras específicos por combo
+                    if (item.baseItem && Number(item.baseItem.id) === 14) {
+                        // Combo Familiar incluye Aros Medianos y Coca-Cola 3L
+                        comboDetails += `, Aros de Cebolla Medianos, Coca-Cola 3L`;
+                    } else if (item.baseItem && Number(item.baseItem.id) === 6) {
+                        // Combo Pareja incluye aros (7 pz)
+                        comboDetails += `, Aros de Cebolla (7 pz)`;
                     }
                     
                     customizationsText = comboDetails;
@@ -2519,24 +3259,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 itemDiv.innerHTML = `
-                    <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
-                        <img src="${item.baseItem.image}" alt="${itemName}" class="w-full h-full object-cover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden ring-1 ring-gray-200">
+                        ${item.baseItem && item.baseItem.image ? `<img src="${item.baseItem.image}" alt="${itemName}" class="w-full h-full object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                     </div>
                     <div class="ml-4 flex-grow">
-                        <div class="flex justify-between">
-                            <h4 class="font-semibold text-gray-800">${itemName}${promotionBadge}</h4>
-                            <button class="remove-item-btn text-gray-400 hover:text-red-500" data-id="${item.id}">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-semibold text-gray-800 leading-tight">${itemName}${promotionBadge}</h4>
+                            <button class="remove-item-btn text-gray-400 hover:text-red-500" data-id="${item.id}" aria-label="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
-                        <p class="text-sm text-gray-500 mb-2">${customizationsText}</p>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center border rounded-md">
-                                <button class="cart-qty-btn px-2 py-1 border-r" data-id="${item.id}" data-action="decrease">-</button>
-                                <span class="px-4">${item.quantity}</span>
-                                <button class="cart-qty-btn px-2 py-1 border-l" data-id="${item.id}" data-action="increase">+</button>
+                        ${customizationsText ? `<p class=\"text-xs text-gray-500 mt-1\">${customizationsText}</p>` : ''}
+                        <div class="mt-2 flex items-center justify-between">
+                            <div class="inline-flex items-center bg-gray-100 rounded-full overflow-hidden">
+                                <button class="cart-qty-btn w-8 h-8 grid place-items-center text-gray-700 hover:bg-gray-200" data-id="${item.id}" data-action="decrease" aria-label="Disminuir">−</button>
+                                <span class="min-w-[2rem] text-center text-sm font-semibold">${item.quantity}</span>
+                                <button class="cart-qty-btn w-8 h-8 grid place-items-center text-gray-700 hover:bg-gray-200" data-id="${item.id}" data-action="increase" aria-label="Aumentar">＋</button>
                             </div>
-                            <span class="font-bold text-[#FFB300]">${(item.price * item.quantity).toFixed(0)}</span>
+                            <span class="font-bold text-[#FFB300] text-lg">$${(item.price * item.quantity).toFixed(0)}</span>
                         </div>
                     </div>
                 `;
@@ -2574,33 +3314,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Exponer funciones clave al ámbito global para los onclick inline
+    window.openCart = openCart;
+    window.getCartTotal = getCartTotal;
+    window.updateCart = updateCart;
+
     // Funciones de checkout
     function renderOrderSummary() {
-        orderSummaryContainer.innerHTML = '<h4 class="font-semibold text-lg mb-4">Resumen de tu pedido:</h4>';
-        
-        const orderSummaryList = document.createElement('div');
-        orderSummaryList.className = 'space-y-3';
-        
+        orderSummaryContainer.innerHTML = '<h4 class="font-semibold text-lg mb-3 flex items-center"><i class="fas fa-receipt mr-2 text-yellow-600"></i>Resumen de tu pedido:</h4>';
+
+        const list = document.createElement('div');
+        list.className = 'space-y-2';
+
         cart.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex justify-between items-start border-b pb-3';
-            
             let customizationsText = '';
-            
             if (item.isCombo) {
-                // Para combos, listar hamburguesas seleccionadas
                 const burgerList = item.choices.map(choice => {
-                    let text = `• ${choice.burger.name}`;
+                    let text = `${choice.burger.name}`;
                     if (choice.customizations && choice.customizations.length > 0) {
                         text += ` (+ ${choice.customizations.map(c => c.name).join(', ')})`;
                     }
                     return text;
                 });
-                
-                // Añadir hotdogs si existen
                 if (item.hotdogs && item.hotdogs.length > 0) {
                     const hotdogList = item.hotdogs.map(hotdog => {
-                        let text = `• ${hotdog.hotdog.name}`;
+                        let text = `${hotdog.hotdog.name}`;
                         if (hotdog.customizations && hotdog.customizations.length > 0) {
                             text += ` (+ ${hotdog.customizations.map(c => c.name).join(', ')})`;
                         }
@@ -2608,88 +3346,75 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     burgerList.push(...hotdogList);
                 }
-                
                 // Añadir información de papas incluidas
                 if (item.includedFries) {
-                    burgerList.push(`• Papas ${item.includedFries.type} ${item.includedFries.size}`);
+                    burgerList.push(`Papas ${item.includedFries.type} ${item.includedFries.size}`);
                 }
                 
-                customizationsText = burgerList.join('<br>');
-            } else if (item.customizations && item.customizations.length > 0) {
-                // Para items personalizados, listar extras
-                const extras = [];
-                
-                if (item.customizations.length > 0) {
-                    extras.push(`+ ${item.customizations.map(c => c.name).join(', ')}`);
+                // Añadir extras específicos por combo
+                if (item.baseItem && Number(item.baseItem.id) === 14) {
+                    // Combo Familiar incluye Aros Medianos y Coca-Cola 3L
+                    burgerList.push(`Aros de Cebolla Medianos`);
+                    burgerList.push(`Coca-Cola 3L`);
+                } else if (item.baseItem && Number(item.baseItem.id) === 6) {
+                    // Combo Pareja incluye aros (7 pz)
+                    burgerList.push(`Aros de Cebolla (7 pz)`);
                 }
-                
-                if (item.fries) {
-                    extras.push(`+ Papas ${item.fries.type}`);
-                }
-                
-                if (item.onionRings) {
-                    extras.push('+ Aros de Cebolla');
-                }
-                
-                if (item.freeFriesIncluded) {
-                    extras.push(`+ ${item.freeFriesIncluded.name} (GRATIS 🎉)`);
-                }
-
-                customizationsText = extras.join('<br>');
-            }
-            
-            // Preparar información de precio y ahorro
-            let priceDisplay = '';
-            if (item.isCombo) {
-                const realPrice = calculateComboRealPrice(item.baseItem);
-                const savings = realPrice - item.baseItem.price;
-                priceDisplay = `
-                    <div class="text-right">
-                        <div class="text-xs text-gray-400 line-through">Individual: ${realPrice.toFixed(0)}</div>
-                        <span class="font-bold">${(item.price * item.quantity).toFixed(0)}</span>
-                        <div class="text-xs text-green-600">Ahorras: ${(savings * item.quantity).toFixed(0)}</div>
-                    </div>
-                `;
+                customizationsText = burgerList.join(' • ');
             } else {
-                priceDisplay = `<span class="font-bold">${(item.price * item.quantity).toFixed(0)}</span>`;
+                const extras = [];
+                if (item.customizations && item.customizations.length > 0) extras.push(`${item.customizations.map(c => c.name).join(', ')}`);
+                if (item.fries) extras.push(`Papas ${item.fries.type}`);
+                if (item.onionRings) extras.push('Aros de Cebolla');
+                if (item.freeFriesIncluded) extras.push(`${item.freeFriesIncluded.name} (GRATIS)`);
+                customizationsText = extras.join(' • ');
             }
-            
-            itemDiv.innerHTML = `
-                <div>
-                    <span class="font-semibold">${item.quantity}x ${item.baseItem.name}</span>
-                    <p class="text-xs text-gray-500">${customizationsText}</p>
+
+            const priceHTML = item.isCombo
+                ? (() => {
+                    const realPrice = calculateComboRealPrice(item.baseItem);
+                    const savings = realPrice - item.baseItem.price;
+                    return `
+                        <div class=\"text-right\">
+                            <div class=\"text-[11px] text-gray-400 line-through\">$${realPrice.toFixed(0)}</div>
+                            <div class=\"font-bold\">$${(item.price * item.quantity).toFixed(0)}</div>
+                            <div class=\"text-[11px] text-green-600\">Ahorras $${(savings * item.quantity).toFixed(0)}</div>
+                        </div>
+                    `;
+                })()
+                : `<div class=\"font-bold text-right\">$${(item.price * item.quantity).toFixed(0)}</div>`;
+
+            const itemRow = document.createElement('div');
+            itemRow.className = 'order-summary-item flex items-start justify-between p-3 bg-white rounded-lg border border-gray-100 shadow-sm';
+            itemRow.innerHTML = `
+                <div class=\"flex items-start\">
+                    ${item.baseItem && item.baseItem.image ? `<img src=\"${item.baseItem.image}\" alt=\"${item.baseItem.name}\" class=\"w-10 h-10 rounded-md object-cover mr-3\" referrerpolicy=\"no-referrer\" onerror=\"this.onerror=null;this.style.display='none';\">` : ''}
+                    <div>
+                        <div class=\"order-summary-title font-semibold text-sm\">${item.quantity}x ${item.baseItem.name}</div>
+                        ${customizationsText ? `<div class=\"order-summary-meta mt-0.5 text-[12px]\">${customizationsText}</div>` : ''}
+                    </div>
                 </div>
-                ${priceDisplay}
+                ${priceHTML}
             `;
-            
-            orderSummaryList.appendChild(itemDiv);
+            list.appendChild(itemRow);
         });
-        
-        // Añadir subtotal y envío
+
+        // Totales
         const deliveryTypeValue = document.querySelector('input[name="delivery-type"]:checked').value;
         const subtotal = getCartTotal();
         const deliveryCost = deliveryTypeValue === 'delivery' ? DELIVERY_PRICE : 0;
         const total = subtotal + deliveryCost;
-        
-        const totalsDiv = document.createElement('div');
-        totalsDiv.className = 'mt-4 space-y-2';
-        totalsDiv.innerHTML = `
-            <div class="flex justify-between text-gray-600">
-                <span>Subtotal:</span>
-                <span>${subtotal.toFixed(0)}</span>
-            </div>
-            <div class="flex justify-between text-gray-600">
-                <span>Envío:</span>
-                <span>${deliveryTypeValue === 'delivery' ? `${DELIVERY_PRICE.toFixed(0)}` : 'Gratis'}</span>
-            </div>
-            <div class="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
-                <span>Total:</span>
-                <span class="text-[#FFB300]">${total.toFixed(0)}</span>
-            </div>
+
+        const totals = document.createElement('div');
+        totals.className = 'order-summary-totals mt-3 p-3 bg-gray-50 rounded-lg border';
+        totals.innerHTML = `
+            <div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Subtotal:</span><span>$${subtotal.toFixed(0)}</span></div>
+            <div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Envío:</span><span>${deliveryTypeValue === 'delivery' ? `+$${DELIVERY_PRICE.toFixed(0)}` : 'Gratis'}</span></div>
+            <div class=\"flex items-center justify-between font-bold text-lg mt-2 pt-2 border-t\"><span>Total:</span><span class=\"text-[#FFB300]\">$${total.toFixed(0)}</span></div>
         `;
-        
-        orderSummaryList.appendChild(totalsDiv);
-        orderSummaryContainer.appendChild(orderSummaryList);
+
+        orderSummaryContainer.appendChild(list);
+        orderSummaryContainer.appendChild(totals);
     }
 
     // Validación del formulario de checkout
@@ -3137,18 +3862,70 @@ document.addEventListener('DOMContentLoaded', () => {
     let map;
     let marker;
     let selectedPlace = null;
+    // Hero map (ubicación en el hero)
+    let heroMap = null;
+    let heroMarker = null;
+    let heroGeocoder = null;
+    let heroSelectedLatLng = null; // Última posición elegida en el hero
     
     // Initialize Google Maps when API is loaded (ACTIVADO CON API REAL)
     window.initializeGoogleMaps = function() {
-        console.log('🗺️ Google Maps API cargada exitosamente con tu API key');
-        console.log('📍 Iniciando configuración del autocompletado real...');
-        initializeAddressAutocomplete();
+        console.log('🗺️ Inicializando sistema de mapas...');
+        
+        // Verificar si Google Maps está realmente disponible
+        if (window.google && window.google.maps && window.google.maps.places) {
+            console.log('✅ Google Maps API disponible - configurando autocompletado avanzado');
+            try {
+                initializeAddressAutocomplete();
+                console.log('🎯 Autocompletado de Google Maps configurado exitosamente');
+            } catch (error) {
+                console.warn('⚠️ Error configurando autocompletado, usando entrada manual:', error);
+                const addressInput = document.getElementById('address-input');
+                if (addressInput) {
+                    setupFreeTextInput(addressInput);
+                }
+            }
+        } else {
+            console.log('⚠️ Google Maps no disponible - configurando entrada manual');
+            const addressInput = document.getElementById('address-input');
+            if (addressInput) {
+                setupFreeTextInput(addressInput);
+            }
+        }
+        
+        // Si el bloque de ubicación del hero está visible, inicializar el mapa ahí también
+        const heroSection = document.getElementById('hero-location');
+        if (heroSection && !heroSection.classList.contains('hidden')) {
+            setTimeout(() => {
+                if (window.google && window.google.maps) {
+                    console.log('🗺️ Inicializando mapa del hero...');
+                    try {
+                        initializeHeroMap();
+                        console.log('✅ Mapa del hero inicializado');
+                    } catch (error) {
+                        console.warn('⚠️ Error inicializando mapa del hero:', error);
+                        setupHeroLocationFallback();
+                    }
+                } else {
+                    console.log('📍 Hero map no disponible - usando entrada manual');
+                    setupHeroLocationFallback();
+                }
+            }, 100);
+        }
     };
     
     // Intentar inicializar inmediatamente si Google Maps ya está disponible
     if (window.google && window.google.maps && window.google.maps.places) {
         console.log('✅ Google Maps ya disponible - inicializando ahora');
         initializeAddressAutocomplete();
+    } else {
+        // No hay Google Maps disponible, inicializar sin maps
+        console.log('🔄 Google Maps no disponible - inicializando sin mapas');
+        setTimeout(() => {
+            if (typeof window.initializeGoogleMaps === 'function') {
+                window.initializeGoogleMaps();
+            }
+        }, 1000);
     }
     
     // Fallback mejorado: esperar un poco más para la carga de Google Maps
@@ -3248,6 +4025,519 @@ document.addEventListener('DOMContentLoaded', () => {
             showMapBtn.addEventListener('click', toggleMapView);
         }
     }
+
+    // --- HERO MAP: Selección de ubicación en el hero ---
+    function initializeHeroMap() {
+        const mapDiv = document.getElementById('hero-map');
+        if (!mapDiv) return;
+
+        if (!window.google || !window.google.maps) {
+            const preview = document.getElementById('hero-address-preview');
+            if (preview) preview.textContent = 'Escribe tu dirección en el buscador y confirma para validar cobertura.';
+            // Fallback: permitir búsqueda por texto y confirmación sin Google Maps
+            const inputA = document.getElementById('hero-search-input');
+            const btnA = document.getElementById('hero-search-btn');
+            const geoBtn = document.getElementById('hero-use-geolocation');
+            const confirmBtn = document.getElementById('hero-confirm-location');
+            let lastResult = null; // {formatted_address, location:{lat,lng}}
+
+            const updatePreviewFromResult = (res) => {
+                if (!res || !preview) return;
+                const { lat, lng } = res.location;
+                const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, lat, lng);
+                const zone = getDeliveryZone(distance);
+                const feeText = zone && zone.price !== null ? `$${zone.price}` : 'Lo sentimos estas demasiado lejos';
+                preview.innerHTML = `
+                    <div><strong>Dirección:</strong> ${res.formatted_address}</div>
+                    <div class="text-sm text-gray-700">Distancia: ${distance.toFixed(1)} km • Envío: ${feeText}</div>
+                `;
+            };
+
+            const doSearch = async (el) => {
+                if (!el) return;
+                const q = el.value.trim();
+                if (!q) return;
+                try {
+                    const r = await fallbackGeocodeAddress(q);
+                    lastResult = r;
+                    updatePreviewFromResult(r);
+                } catch (_) { /* ignore */ }
+            };
+
+            if (inputA) inputA.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSearch(inputA); } });
+            if (btnA) btnA.addEventListener('click', () => doSearch(inputA));
+            if (geoBtn && navigator.geolocation) {
+                geoBtn.addEventListener('click', () => {
+                    geoBtn.disabled = true; geoBtn.textContent = 'Localizando…';
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        lastResult = {
+                            formatted_address: `Lat ${latitude.toFixed(5)}, Lng ${longitude.toFixed(5)}`,
+                            location: { lat: latitude, lng: longitude }
+                        };
+                        updatePreviewFromResult(lastResult);
+                        geoBtn.disabled = false; geoBtn.textContent = 'Usar mi ubicación';
+                    }, () => { geoBtn.disabled = false; geoBtn.textContent = 'Usar mi ubicación'; }, { enableHighAccuracy: true, timeout: 8000 });
+                });
+            }
+            if (confirmBtn) {
+                console.log('✅ Botón hero-confirm-location encontrado, agregando event listener');
+                
+                // Asegurar que el botón sea clickeable
+                confirmBtn.style.pointerEvents = 'auto';
+                confirmBtn.style.cursor = 'pointer';
+                confirmBtn.style.touchAction = 'manipulation';
+                
+                confirmBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    console.log('🔘 ¡CLICK! Botón "Confirmar ubicación" clickeado');
+                    console.log('📱 Tipo de evento:', event.type);
+                    console.log('🖱️ Origen:', event.target);
+                    
+                    // Feedback visual inmediato
+                    confirmBtn.style.opacity = '0.7';
+                    setTimeout(() => { confirmBtn.style.opacity = '1'; }, 200);
+                    
+                    // Si no hay resultado previo, intentar con texto
+                    if (!lastResult) {
+                        console.log('⚠️ No hay lastResult, intentando obtener de input');
+                        const q = (inputA && inputA.value.trim()) || '';
+                        if (q) {
+                            console.log('🔍 Buscando dirección:', q);
+                            try { 
+                                lastResult = await fallbackGeocodeAddress(q);
+                                console.log('✅ Dirección encontrada:', lastResult);
+                            } catch (err) {
+                                console.error('❌ Error geocoding:', err);
+                            }
+                        } else {
+                            console.log('⚠️ No hay dirección en el input');
+                        }
+                    }
+                    
+                    console.log('📍 LastResult:', lastResult);
+                    
+                    // Remover mensajes anteriores
+                    const noticeId = 'hero-confirm-notice';
+                    const old = document.getElementById(noticeId);
+                    if (old) old.remove();
+                    
+                    if (lastResult) {
+                        const { lat, lng } = lastResult.location;
+                        const d = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, lat, lng);
+                        const zone = getDeliveryZone(d);
+                        
+                        console.log('📏 Distancia:', d.toFixed(2), 'km');
+                        console.log('🗺️ Zona:', zone);
+                        
+                        if (zone && zone.price !== null) {
+                            console.log('✅ SÍ ENTREGAMOS - Mostrando modal grande');
+                            
+                            // ✅ SÍ ENTREGAMOS - Mensaje grande y llamativo
+                            
+                            // Guardar la ubicación confirmada para el checkout
+                            userAddress = {
+                                formatted_address: lastResult.formatted_address,
+                                distance: d,
+                                deliveryPrice: zone.price,
+                                zone: zone.zone,
+                                coordinates: { lat, lng }
+                            };
+                            
+                            // Crear mensaje compacto y visible
+                            const bigMessage = document.createElement('div');
+                            bigMessage.id = noticeId;
+                            bigMessage.className = 'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 animate-fade-in';
+                            bigMessage.innerHTML = `
+                                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-2xl p-4 sm:p-5 transform animate-scale-in">
+                                    <!-- Header compacto -->
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-check-circle text-white text-xl"></i>
+                                            </div>
+                                            <h3 class="text-lg font-bold text-white leading-tight">
+                                                ¡Sí entregamos! 🎉
+                                            </h3>
+                                        </div>
+                                        <button id="hero-close-message-btn" class="text-white/70 hover:text-white transition-colors">
+                                            <i class="fas fa-times text-xl"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Info compacta -->
+                                    <div class="bg-white/15 backdrop-blur-sm rounded-xl p-3 mb-3">
+                                        <div class="flex items-center justify-between text-white text-sm mb-2">
+                                            <span><i class="fas fa-route mr-1"></i> ${d.toFixed(1)} km</span>
+                                            <span><i class="fas fa-dollar-sign mr-1"></i> $${zone.price}</span>
+                                            <span><i class="fas fa-clock mr-1"></i> ${d <= 4 ? '25-35' : '35-45'} min</span>
+                                        </div>
+                                        <p class="text-white/90 text-xs truncate">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            ${lastResult.formatted_address}
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Botón compacto -->
+                                    <button id="hero-go-to-menu-btn" class="w-full bg-white text-green-600 px-4 py-3 rounded-xl font-bold text-sm hover:bg-green-50 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                                        <i class="fas fa-utensils mr-2"></i>
+                                        VER MENÚ Y ORDENAR
+                                    </button>
+                                </div>
+                            `;
+                            document.body.appendChild(bigMessage);
+                            
+                            // Event listener para ir al menú
+                            const goToMenuBtn = document.getElementById('hero-go-to-menu-btn');
+                            if (goToMenuBtn) {
+                                goToMenuBtn.addEventListener('click', () => {
+                                    // Cerrar el modal
+                                    bigMessage.style.opacity = '0';
+                                    setTimeout(() => bigMessage.remove(), 300);
+                                    
+                                    // Ir al menú con scroll suave
+                                    setTimeout(() => {
+                                        const menuSection = document.getElementById('menu');
+                                        if (menuSection) {
+                                            menuSection.scrollIntoView({ 
+                                                behavior: 'smooth', 
+                                                block: 'start' 
+                                            });
+                                            
+                                            // Mostrar mensaje de bienvenida flotante
+                                            const welcomeMsg = document.createElement('div');
+                                            welcomeMsg.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-2xl z-50 animate-bounce';
+                                            welcomeMsg.innerHTML = '🍔 ¡Elige tus hamburguesas favoritas!';
+                                            document.body.appendChild(welcomeMsg);
+                                            
+                                            setTimeout(() => {
+                                                welcomeMsg.style.opacity = '0';
+                                                welcomeMsg.style.transition = 'opacity 0.5s';
+                                                setTimeout(() => welcomeMsg.remove(), 500);
+                                            }, 3000);
+                                        }
+                                    }, 100);
+                                });
+                            }
+                            
+                            // Event listener para cerrar
+                            const closeBtn = document.getElementById('hero-close-message-btn');
+                            if (closeBtn) {
+                                closeBtn.addEventListener('click', () => {
+                                    bigMessage.style.opacity = '0';
+                                    setTimeout(() => bigMessage.remove(), 300);
+                                });
+                            }
+                            
+                            // Cerrar al hacer clic fuera del modal
+                            bigMessage.addEventListener('click', (e) => {
+                                if (e.target === bigMessage) {
+                                    bigMessage.style.opacity = '0';
+                                    setTimeout(() => bigMessage.remove(), 300);
+                                }
+                            });
+                            
+                        } else {
+                            // ❌ NO ENTREGAMOS - Mensaje de error compacto
+                            const errorMessage = document.createElement('div');
+                            errorMessage.id = noticeId;
+                            errorMessage.className = 'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 animate-fade-in';
+                            errorMessage.innerHTML = `
+                                <div class="bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl shadow-2xl p-4 sm:p-5 transform animate-scale-in">
+                                    <!-- Header compacto -->
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                                            </div>
+                                            <h3 class="text-lg font-bold text-white leading-tight">
+                                                Demasiado lejos 😔
+                                            </h3>
+                                        </div>
+                                        <button id="hero-close-error-btn" class="text-white/70 hover:text-white transition-colors">
+                                            <i class="fas fa-times text-xl"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Info compacta -->
+                                    <div class="bg-white/15 backdrop-blur-sm rounded-xl p-3 mb-3">
+                                        <p class="text-white text-sm mb-2">
+                                            <i class="fas fa-route mr-1"></i> 
+                                            Distancia: <strong>${d.toFixed(1)} km</strong>
+                                        </p>
+                                        <p class="text-white/80 text-xs">
+                                            Cobertura máxima: ${MAX_DELIVERY_DISTANCE} km
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Alternativa -->
+                                    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3">
+                                        <p class="text-white text-xs">
+                                            <i class="fas fa-store mr-1"></i>
+                                            <strong>Recoge en local:</strong><br>
+                                            Coahuila 36, Minatitlán
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Botón compacto -->
+                                    <button id="hero-close-error-btn-main" class="w-full bg-white text-red-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-red-50 transition-all shadow-lg">
+                                        Entendido
+                                    </button>
+                                </div>
+                            `;
+                            document.body.appendChild(errorMessage);
+                            
+                            // Event listeners para cerrar (ambos botones)
+                            const closeErrorBtn = document.getElementById('hero-close-error-btn');
+                            const closeErrorBtnMain = document.getElementById('hero-close-error-btn-main');
+                            
+                            const closeError = () => {
+                                errorMessage.style.opacity = '0';
+                                setTimeout(() => errorMessage.remove(), 300);
+                            };
+                            
+                            if (closeErrorBtn) closeErrorBtn.addEventListener('click', closeError);
+                            if (closeErrorBtnMain) closeErrorBtnMain.addEventListener('click', closeError);
+                        }
+                    } else {
+                        // ⚠️ NO HAY DIRECCIÓN - Pedir que escriba una
+                        const warningMessage = document.createElement('div');
+                        warningMessage.id = noticeId;
+                        warningMessage.className = 'bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg mt-3 animate-fade-in';
+                        warningMessage.innerHTML = `
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-circle text-orange-500 text-xl mr-3"></i>
+                                <p class="text-orange-800 font-medium">
+                                    ⚠️ Por favor, escribe tu dirección arriba y haz clic en "Buscar" primero.
+                                </p>
+                            </div>
+                        `;
+                        if (preview) preview.appendChild(warningMessage);
+                        
+                        // Auto-eliminar después de 5 segundos
+                        setTimeout(() => {
+                            warningMessage.style.opacity = '0';
+                            setTimeout(() => warningMessage.remove(), 300);
+                        }, 5000);
+                    }
+                });
+            }
+            return;
+        }
+
+        try {
+            if (!heroGeocoder) heroGeocoder = new google.maps.Geocoder();
+            // Centro: ubicación del restaurante por defecto o la última posición elegida
+            const center = heroSelectedLatLng || new google.maps.LatLng(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng);
+            heroMap = new google.maps.Map(mapDiv, {
+                center,
+                zoom: 15,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+            heroMarker = new google.maps.Marker({
+                map: heroMap,
+                position: center,
+                draggable: true,
+                icon: {
+                    url: 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
+                            <path fill="#FFB300" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(36, 36)
+                }
+            });
+
+            heroSelectedLatLng = center;
+            // Actualizar preview inicial
+            updateHeroLocation(center);
+
+            // Drag para ajustar ubicación
+            heroMarker.addListener('dragend', () => {
+                const pos = heroMarker.getPosition();
+                heroSelectedLatLng = pos;
+                updateHeroLocation(pos);
+            });
+
+            // Botones del hero
+            const geoBtn = document.getElementById('hero-use-geolocation');
+            if (geoBtn) {
+                geoBtn.addEventListener('click', () => {
+                    if (!navigator.geolocation) return;
+                    geoBtn.disabled = true;
+                    geoBtn.textContent = 'Localizando…';
+                    navigator.geolocation.getCurrentPosition((res) => {
+                        const { latitude, longitude } = res.coords;
+                        const pos = new google.maps.LatLng(latitude, longitude);
+                        heroSelectedLatLng = pos;
+                        heroMap.setCenter(pos);
+                        heroMarker.setPosition(pos);
+                        updateHeroLocation(pos);
+                        geoBtn.disabled = false;
+                        geoBtn.textContent = 'Usar mi ubicación';
+                    }, () => {
+                        geoBtn.disabled = false;
+                        geoBtn.textContent = 'Usar mi ubicación';
+                    }, { enableHighAccuracy: true, timeout: 8000 });
+                });
+            }
+
+            // NOTA: Event listener para hero-confirm-location ya está definido arriba
+            // con el modal grande y llamativo. Este código está comentado para evitar duplicados.
+            /*
+            const confirmBtn = document.getElementById('hero-confirm-location');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    if (!heroSelectedLatLng) return;
+                    const preview = document.getElementById('hero-address-preview');
+                    let formatted = '';
+                    if (heroGeocoder) {
+                        try {
+                            const geoRes = await heroGeocoder.geocode({ location: heroSelectedLatLng });
+                            if (geoRes && geoRes.results && geoRes.results[0]) {
+                                formatted = geoRes.results[0].formatted_address;
+                            }
+                        } catch (e) { }
+                    }
+                    if (!formatted) formatted = `Lat ${heroSelectedLatLng.lat().toFixed(5)}, Lng ${heroSelectedLatLng.lng().toFixed(5)}`;
+
+                    // Calcular distancia y zona
+                    const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, heroSelectedLatLng.lat(), heroSelectedLatLng.lng());
+                    const zone = getDeliveryZone(distance);
+
+                    // Establecer como dirección seleccionada global
+                    if (window.google && window.google.maps) {
+                        selectedPlace = {
+                            formatted_address: formatted,
+                            geometry: { location: heroSelectedLatLng }
+                        };
+                    }
+
+                    if (zone && zone.price !== null) {
+                        userAddress = {
+                            formatted_address: formatted,
+                            distance: distance,
+                            deliveryPrice: zone.price,
+                            zone: zone.zone,
+                            coordinates: { lat: heroSelectedLatLng.lat(), lng: heroSelectedLatLng.lng() }
+                        };
+                    } else {
+                        userAddress = null;
+                    }
+
+                    // Escribir en el input de dirección del checkout si existe
+                    const checkoutInput = document.getElementById('address-input');
+                    if (checkoutInput) checkoutInput.value = formatted;
+
+                    updateCheckoutTotals();
+                    if (preview) {
+                        // Quitar aviso anterior
+                        const noticeId = 'hero-confirm-notice';
+                        const old = document.getElementById(noticeId);
+                        if (old) old.remove();
+                        const msg = document.createElement('div');
+                        msg.id = noticeId;
+                        msg.className = 'mt-2 text-sm';
+                        if (zone && zone.price !== null) {
+                            msg.classList.add('text-green-700');
+                            msg.textContent = 'Sí, entregamos en tu zona ✔';
+                        } else {
+                            msg.classList.add('text-red-700');
+                            msg.textContent = 'Lo sentimos estas demasiado lejos';
+                        }
+                        preview.appendChild(msg);
+                    }
+                });
+            }
+            */
+
+            // Hero search: Places if available, else Enter/click to fallback geocode
+    const heroSearch = document.getElementById('hero-search-input');
+    const heroSearchBtn = document.getElementById('hero-search-btn');
+        const runHeroSearch = async (el) => {
+            if (!el) return;
+            const q = el.value.trim();
+            if (!q) return;
+            try {
+                const r = await fallbackGeocodeAddress(q);
+                if (r && r.location && window.google && window.google.maps) {
+                    const loc = new google.maps.LatLng(r.location.lat, r.location.lng);
+                    heroMap.panTo(loc);
+                    heroMap.setZoom(15);
+                    heroMarker.setPosition(loc);
+                    heroSelectedLatLng = loc;
+                    updateHeroLocation(loc);
+                }
+            } catch (err) {
+                console.warn('No se pudo geocodificar la búsqueda del héroe', err);
+            }
+        };
+        const hookSearch = (el) => {
+        if (!el) return;
+                if (google.maps.places) {
+                    try {
+            const heroAutocomplete = new google.maps.places.Autocomplete(el, {
+                            fields: ['geometry','formatted_address'],
+                            componentRestrictions: { country: ['mx'] }
+                        });
+                        heroAutocomplete.addListener('place_changed', () => {
+                            const p = heroAutocomplete.getPlace();
+                            if (p && p.geometry && p.geometry.location) {
+                                const loc = p.geometry.location;
+                                heroMap.panTo(loc);
+                                heroMap.setZoom(15);
+                                heroMarker.setPosition(loc);
+                                heroSelectedLatLng = loc;
+                                updateHeroLocation(loc);
+                            }
+                        });
+                    } catch (_) { /* ignore */ }
+                }
+        // Fallback Enter handling (works with or without Places)
+        el.addEventListener('keydown', async (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+            runHeroSearch(el);
+                    }
+        });
+        };
+    hookSearch(heroSearch);
+    if (heroSearchBtn) heroSearchBtn.addEventListener('click', () => runHeroSearch(heroSearch));
+        } catch (err) {
+            console.error('Error inicializando hero map', err);
+        }
+    }
+
+    async function updateHeroLocation(latLng) {
+        const preview = document.getElementById('hero-address-preview');
+        if (!preview) return;
+        if (!window.google || !window.google.maps) {
+            preview.textContent = 'Google Maps no está cargado.';
+            return;
+        }
+        try {
+            if (!heroGeocoder) heroGeocoder = new google.maps.Geocoder();
+            const res = await heroGeocoder.geocode({ location: latLng });
+            const formatted = res && res.results && res.results[0] ? res.results[0].formatted_address : null;
+            const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, latLng.lat(), latLng.lng());
+            const zone = getDeliveryZone(distance);
+            if (formatted) {
+                const feeText = zone && zone.price !== null ? `$${zone.price}` : 'Lo sentimos estas demasiado lejos';
+                preview.innerHTML = `
+                    <div><strong>Dirección:</strong> ${formatted}</div>
+                    <div class="text-sm text-gray-700">Distancia: ${distance.toFixed(1)} km • Envío: ${feeText}</div>
+                `;
+            } else {
+                preview.textContent = `Lat ${latLng.lat().toFixed(5)}, Lng ${latLng.lng().toFixed(5)}`;
+            }
+        } catch (e) {
+            preview.textContent = `Lat ${latLng.lat().toFixed(5)}, Lng ${latLng.lng().toFixed(5)}`;
+        }
+    }
     
     // Función para configurar entrada libre de texto con simulación de autocompletado
     function setupFreeTextInput(addressInput) {
@@ -3309,6 +4599,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideSuggestions();
             }
         });
+
+        // Validar de inmediato al presionar Enter
+        addressInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = addressInput.value.trim();
+                if (value.length >= 3) {
+                    showAddressConfirmation(value);
+                }
+            }
+        });
         
         // Función para mostrar sugerencias
         function showSuggestions(suggestions, query) {
@@ -3351,56 +4652,87 @@ document.addEventListener('DOMContentLoaded', () => {
             showAddressConfirmation(address);
         };
         
-        // Función para mostrar confirmación de dirección
-        function showAddressConfirmation(address) {
+        // Confirmación y validación con geocoding de respaldo
+        async function showAddressConfirmation(address) {
             const mapContainer = document.getElementById('map-container');
             const selectedAddressDiv = document.getElementById('selected-address');
-            
-            if (mapContainer && selectedAddressDiv) {
-                mapContainer.classList.remove('hidden');
-                
-                selectedAddressDiv.innerHTML = `
-                    <div class="flex items-start space-x-2">
-                        <i class="fas fa-map-marker-alt text-green-600 mt-1"></i>
-                        <div>
-                            <div class="font-medium text-gray-800">${address}</div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                <i class="fas fa-check-circle text-green-500 mr-1"></i>
-                                Dirección válida para entrega
-                            </div>
-                        </div>
+            if (!mapContainer || !selectedAddressDiv) return;
+
+            mapContainer.classList.remove('hidden');
+            selectedAddressDiv.innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-map-marker-alt text-green-600 mt-1"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">${address}</div>
+                        <div class="text-xs text-gray-500 mt-1">Validando distancia...</div>
                     </div>
-                `;
-                
-                // Simular información de zona de entrega
-                showSimulatedDeliveryZone();
-            }
-        }
-        
-        // Función para simular zona de entrega
-        function showSimulatedDeliveryZone() {
-            const mapContainer = document.getElementById('map-container');
-            if (!mapContainer) return;
-            
-            // Remover info anterior
-            const existingZoneInfo = mapContainer.querySelector('.zone-info');
-            if (existingZoneInfo) existingZoneInfo.remove();
-            
-            const zoneInfo = document.createElement('div');
-            zoneInfo.className = 'zone-info bg-green-50 border border-green-200 rounded-lg p-3 mt-2';
-            zoneInfo.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-truck text-green-600"></i>
-                        <div>
-                            <div class="font-medium text-green-800">Zona de entrega: Centro</div>
-                            <div class="text-sm text-green-700">Distancia estimada: 2.1 km • Costo de envío: $50</div>
-                        </div>
-                    </div>
-                    <div class="text-green-600 font-bold">✓</div>
                 </div>
             `;
-            mapContainer.appendChild(zoneInfo);
+
+            try {
+                const result = await fallbackGeocodeAddress(address);
+                if (!result) {
+                    showAddressError('No se pudo localizar esa dirección. Intenta ser más específico.');
+                    return;
+                }
+                const lat = result.location.lat;
+                const lng = result.location.lng;
+                const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, lat, lng);
+                const zone = getDeliveryZone(distance);
+
+                if (zone.price !== null) {
+                    userAddress = {
+                        formatted_address: result.formatted_address,
+                        distance,
+                        deliveryPrice: zone.price,
+                        zone: zone.zone,
+                        coordinates: { lat, lng }
+                    };
+
+                    selectedAddressDiv.innerHTML = `
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-map-marker-alt text-green-600 mt-1"></i>
+                            <div>
+                                <div class="font-medium text-gray-800">${result.formatted_address}</div>
+                                <div class="text-xs text-blue-600 mt-1">
+                                    <i class="fas fa-route mr-1"></i>
+                                    Aproximadamente ${distance.toFixed(1)} km desde SR & SRA BURGER
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    showDeliveryZoneInfo({
+                        name: zone.zone,
+                        distance,
+                        fee: zone.price,
+                        time: distance <= 4 ? '25-35 min' : '35-45 min',
+                        description: zone.description,
+                        color: zone.color
+                    });
+                    updateCheckoutTotals();
+                } else {
+                    userAddress = null;
+                    // Mostrar mensaje exacto solicitado
+                    const existingInfo = mapContainer.querySelector('.zone-info');
+                    if (existingInfo) existingInfo.remove();
+                    const warning = document.createElement('div');
+                    warning.className = 'zone-info bg-red-50 border border-red-200 rounded-lg p-3 mt-2';
+                    warning.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                            <div>
+                                <div class="font-medium text-red-800">Lo sentimos estas demasiado lejos</div>
+                                <div class="text-sm text-red-700">Tu dirección está a ${distance.toFixed(1)} km. Solo entregamos dentro de ${MAX_DELIVERY_DISTANCE} km.</div>
+                            </div>
+                        </div>
+                    `;
+                    mapContainer.appendChild(warning);
+                }
+            } catch (e) {
+                console.error('Fallback geocoding failed', e);
+                showAddressError('No se pudo validar la dirección en este momento.');
+            }
         }
         
         // Ocultar sugerencias al hacer clic fuera
@@ -3410,7 +4742,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        console.log('✅ Entrada libre de texto con autocompletado simulado configurada');
+    console.log('✅ Entrada libre de texto con autocompletado simulado configurada');
     }
     
     function onPlaceChanged() {
@@ -3506,7 +4838,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lng: place.geometry.location.lng()
         };
         
-        const distance = calculateDistance(restaurantLocation, customerLocation);
+    const distance = calculateDistance(restaurantLocation.lat, restaurantLocation.lng, customerLocation.lat, customerLocation.lng);
         
         const selectedAddressDiv = document.getElementById('selected-address');
         if (selectedAddressDiv && distance) {
@@ -3541,6 +4873,92 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i class="fas fa-check-circle ${iconClass}"></i>
                 <div class="flex-1">
                     <div class="font-medium ${textClass}">${zone.name} - ${zone.distance.toFixed(1)} km</div>
+                    <div class="text-xs ${textClass}/70">${zone.description}</div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold ${textClass}">$${zone.fee}</div>
+                    <div class="text-xs ${textClass}/70">${zone.time}</div>
+                </div>
+            </div>
+        `;
+        mapContainer.appendChild(zoneInfo);
+    }
+    
+    // Función fallback para cuando Google Maps no está disponible en el hero
+    function setupHeroLocationFallback() {
+        console.log('📍 Configurando ubicación del hero sin Google Maps');
+        
+        const heroMapElement = document.getElementById('hero-map');
+        if (heroMapElement) {
+            heroMapElement.innerHTML = `
+                <div class="flex items-center justify-center h-full bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-dashed border-yellow-300">
+                    <div class="text-center p-6">
+                        <i class="fas fa-map-marker-alt text-yellow-600 text-4xl mb-3"></i>
+                        <h3 class="font-bold text-gray-800 mb-2">SR & SRA BURGER</h3>
+                        <p class="text-sm text-gray-600 mb-1">Coahuila 36, Emiliano Zapata</p>
+                        <p class="text-sm text-gray-600 mb-3">Minatitlán, Veracruz</p>
+                        <div class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full inline-block">
+                            <i class="fas fa-clock mr-1"></i>
+                            Entrega disponible 4-12 km
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Configurar botón "Usar mi ubicación" sin GPS real
+        const useLocationBtn = document.getElementById('use-location-btn');
+        if (useLocationBtn) {
+            useLocationBtn.onclick = function() {
+                // Simular que se está obteniendo la ubicación
+                useLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Obteniendo ubicación...';
+                useLocationBtn.disabled = true;
+                
+                setTimeout(() => {
+                    useLocationBtn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Ubicación no disponible';
+                    useLocationBtn.disabled = true;
+                    
+                    // Mostrar mensaje alternativo
+                    const heroSection = document.getElementById('hero-location');
+                    if (heroSection) {
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3';
+                        infoDiv.innerHTML = `
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                                <div class="text-sm text-blue-800">
+                                    <strong>Tip:</strong> Puedes escribir tu dirección manualmente en el formulario de pedido para calcular el costo de envío.
+                                </div>
+                            </div>
+                        `;
+                        heroSection.appendChild(infoDiv);
+                    }
+                }, 2000);
+            };
+        }
+    }
+    
+    // Función para mostrar información de zona de entrega
+    function showDeliveryZoneInfo(zone, distance) {
+        const mapContainer = document.getElementById('map-container');
+        if (!mapContainer) return;
+        
+        // Limpiar información anterior
+        const existingInfo = mapContainer.querySelector('.zone-info');
+        if (existingInfo) existingInfo.remove();
+        
+        const zoneInfo = document.createElement('div');
+        const bgClass = zone.price === 0 ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200';
+        const textClass = zone.price === 0 ? 'text-green-800' : 'text-blue-800';
+        
+        zoneInfo.className = `zone-info ${bgClass} border rounded-lg p-3 mt-2`;
+        zoneInfo.innerHTML = `
+            <div class="flex items-start space-x-2">
+                <i class="fas fa-check-circle ${zone.price === 0 ? 'text-green-600' : 'text-blue-600'} mt-0.5"></i>
+                <div>
+                    <div class="font-medium ${textClass}">
+                        ${zone.name} - Tu dirección está a ${distance.toFixed(1)} km
+                    </div>
                     <div class="text-sm ${textClass.replace('800', '700')}">
                         Costo de envío: $${zone.fee} • Tiempo estimado: ${zone.time}
                     </div>
@@ -3574,14 +4992,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex items-center space-x-2">
                 <i class="fas fa-exclamation-triangle text-red-600"></i>
                 <div>
-                    <div class="font-medium text-red-800">Fuera del área de entrega</div>
+                    <div class="font-medium text-red-800">Lo sentimos estas demasiado lejos</div>
                     <div class="text-sm text-red-700">
                         Tu dirección está a ${distance.toFixed(1)} km. Solo entregamos dentro de un radio de ${MAX_DELIVERY_DISTANCE} km desde nuestro restaurante en Coahuila 36, Emiliano Zapata, Minatitlán.
                     </div>
                     <div class="text-xs text-red-600 mt-2">
                         <strong>Zonas de entrega:</strong><br>
                         • Zona 1 (0-4 km): $${DELIVERY_PRICE}<br>
-                        • Zona 2 (4-7 km): $${DELIVERY_PRICE} + $${EXTRA_KM_PRICE}/km adicional
+                        • Zona 2 (4-12 km): $${DELIVERY_PRICE} + $${EXTRA_KM_PRICE}/km adicional
                     </div>
                 </div>
             </div>
@@ -3685,8 +5103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fallback if Google Maps fails to load
     setTimeout(() => {
         if (!window.google) {
-            console.log('⚠️ Google Maps no se cargó - La API key puede ser inválida');
-            console.log('💡 Para usar Google Maps necesitas una API key válida en el HTML');
+            console.log('⚠️ Google Maps no se cargó; funcionará la validación con dirección escrita.');
             
             // Asegurar que el campo de dirección funcione sin Google Maps
             const addressInput = document.getElementById('address-input');
@@ -3700,20 +5117,42 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.log('✅ Google Maps cargado correctamente');
         }
-    }, 2000);
+    }, 3500);
     
     // Función para mostrar información sobre Google Maps
     function showGoogleMapsInfo() {
-        const helpText = document.querySelector('.text-xs.text-gray-500');
+        const helpText = document.getElementById('maps-help-text') || document.querySelector('.text-xs.text-gray-500');
         if (helpText) {
             helpText.innerHTML = `
                 <i class="fas fa-info-circle text-blue-500 mr-1"></i>
-                Autocompletado simulado activo. Escribe tu dirección y aparecerán sugerencias locales.
-                <br><small class="text-gray-400">Para Google Maps real se requiere API key válida.</small>
+                Escribe tu dirección completa y validaremos la distancia desde Coahuila 36. Si estás a más de 12 km verás: "Lo sentimos estas demasiado lejos".
             `;
             helpText.classList.remove('text-gray-500');
             helpText.classList.add('text-blue-600');
         }
+    }
+
+    // Fallback geocoding with OpenStreetMap Nominatim (no API key required)
+    async function fallbackGeocodeAddress(query) {
+        // Prefer local proxy to avoid CORS and attach headers; try both 3000 and 3001
+        const bases = API_BASES || [''];
+        let best = null;
+        let lastErr;
+        for (const base of bases) {
+            try {
+                const url = `${base}/api/geocode?q=${encodeURIComponent(query + ', Minatitlán, Veracruz, México')}`;
+                const resp = await fetch(url);
+                if (!resp.ok) { lastErr = new Error(`HTTP ${resp.status}`); continue; }
+                const data = await resp.json();
+                const arr = data && data.data;
+                if (Array.isArray(arr) && arr.length) { best = arr[0]; break; }
+            } catch (e) { lastErr = e; continue; }
+        }
+        if (!best) throw lastErr || new Error('Geocoding error');
+        return {
+            formatted_address: best.display_name,
+            location: { lat: parseFloat(best.lat), lng: parseFloat(best.lon) }
+        };
     }
     
     // Inicialización inmediata del campo de dirección (sin esperar Google Maps)
@@ -3868,19 +5307,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Enviar a Firebase usando el manager global
             if (window.firebaseOrderManager) {
                 window.firebaseOrderManager.addOrder(orderData)
-                    .then((orderId) => {
-                        console.log('✅ Pedido guardado en Firebase con ID:', orderId);
+                    .then((res) => {
+                        const orderId = typeof res === 'object' ? res.id : res;
+                        const orderNumber = typeof res === 'object' && res.orderNumber ? res.orderNumber : null;
+                        console.log('✅ Pedido guardado en Firebase con ID:', orderId, 'No. Orden:', orderNumber);
+                        // Mostrar número de orden en el modal de éxito si existe
+                        setLastOrderNumber(orderNumber);
                         showNotification('¡Pedido enviado exitosamente!', 'success');
                     })
                     .catch((error) => {
                         console.error('❌ Error al guardar en Firebase:', error);
                         // Fallback: guardar en localStorage si Firebase falla
-                        saveToLocalStorageBackup(orderData);
+                        const localNumber = saveToLocalStorageBackup(orderData);
+                        setLastOrderNumber(localNumber);
                         showNotification('Pedido guardado localmente (sin conexión)', 'warning');
                     });
             } else {
                 console.warn('⚠️ Firebase no está disponible, guardando en localStorage');
-                saveToLocalStorageBackup(orderData);
+                const localNumber = saveToLocalStorageBackup(orderData);
+                setLastOrderNumber(localNumber);
                 showNotification('Pedido guardado localmente', 'warning');
             }
             
@@ -3894,10 +5339,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveToLocalStorageBackup(orderData) {
         try {
             const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+            // Generar número de orden local: YYYYMMDD-XYZ
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const rand = Math.floor(Math.random() * 900) + 100;
+            const orderNumber = `${yyyy}${mm}${dd}-${rand}`;
             const newOrder = {
                 id: Date.now().toString(),
                 timestamp: new Date().toISOString(),
                 status: 'pending',
+                orderNumber,
                 customer: orderData.customer,
                 items: orderData.items,
                 total: orderData.total,
@@ -3913,8 +5366,26 @@ document.addEventListener('DOMContentLoaded', () => {
             existingOrders.unshift(newOrder);
             localStorage.setItem('orders', JSON.stringify(existingOrders));
             console.log('💾 Pedido guardado en localStorage como respaldo');
+            return orderNumber;
         } catch (error) {
             console.error('Error al guardar en localStorage:', error);
+            return null;
+        }
+    }
+
+    // Guardar y pintar el último número de orden en el modal
+    function setLastOrderNumber(orderNumber) {
+        const span = document.getElementById('order-number-display');
+        const link = document.getElementById('track-order-link');
+        const copyBtn = document.getElementById('copy-order-number');
+        if (span && orderNumber) span.textContent = orderNumber;
+        if (link && orderNumber) link.href = `tuenvio.html?order=${encodeURIComponent(orderNumber)}`;
+        if (copyBtn && orderNumber) {
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(orderNumber).then(() => {
+                    showNotification('Número de orden copiado', 'success');
+                }).catch(() => {});
+            };
         }
     }
 
@@ -4031,7 +5502,7 @@ function updateDailyPromotions() {
         },
         2: { // Martes - BBQ por $100
             day: 'MARTES',
-            title: 'BBQ BEACON',
+            title: 'BBQ BEACON CRUNCH',
             discount: 'Precio único',
             description: '$100 pesos',
             color: 'from-green-600 to-green-800',
@@ -4129,4 +5600,870 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         updateDailyPromotions();
     }, 500);
+    
+    // Inicializar mejoras de responsividad móvil - VERSION SIMPLIFICADA
+    initMobileEnhancements();
+    
+    // Inicializar modal de mapa grande
+    initMapModal();
 });
+
+// ============================================
+// MODAL DE MAPA GRANDE
+// ============================================
+
+function initMapModal() {
+    console.log('🗺️ Inicializando modal de mapa grande...');
+    
+    const openBtn = document.getElementById('open-map-modal');
+    const openCheckoutBtn = document.getElementById('open-checkout-map');
+    const changeAddressBtn = document.getElementById('change-checkout-address');
+    const modal = document.getElementById('map-modal');
+    const closeBtn = document.getElementById('close-map-modal');
+    const cancelBtn = document.getElementById('modal-cancel');
+    const confirmBtn = document.getElementById('modal-confirm-location');
+    const searchInput = document.getElementById('modal-search-input');
+    const geoBtn = document.getElementById('modal-use-geolocation');
+    const preview = document.getElementById('modal-address-preview');
+    
+    // Diagnóstico
+    console.log('🔍 Diagnóstico de elementos del modal:');
+    console.log('  - openBtn:', openBtn ? '✅' : '❌');
+    console.log('  - modal:', modal ? '✅' : '❌');
+    console.log('  - geoBtn:', geoBtn ? '✅' : '❌');
+    console.log('  - searchInput:', searchInput ? '✅' : '❌');
+    console.log('  - confirmBtn:', confirmBtn ? '✅' : '❌');
+    
+    // Variables compartidas en el scope de initMapModal
+    let modalMap = null;
+    let modalMarker = null;
+    let modalSelectedLocation = null;
+    let modalAutocomplete = null;
+    let openedFrom = 'hero'; // 'hero' o 'checkout'
+    
+    // Función para configurar geolocalización
+    const setupGeolocation = () => {
+        const btn = document.getElementById('modal-use-geolocation');
+        if (!btn) {
+            console.error('❌ Botón GPS no encontrado en el DOM');
+            console.error('  Buscando ID: modal-use-geolocation');
+            return;
+        }
+        
+        console.log('✅ Botón GPS encontrado, agregando event listener...');
+        
+        // Remover event listeners previos (si existen)
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Botón GPS clickeado');
+            
+            // Verificar soporte de geolocalización
+            if (!navigator.geolocation) {
+                console.error('❌ Geolocalización no soportada');
+                alert('❌ Tu navegador no soporta geolocalización.\n\nPor favor, busca tu ubicación manualmente en el campo de arriba.');
+                return;
+            }
+            
+            console.log('✅ Geolocalización soportada, solicitando ubicación...');
+            
+            // Deshabilitar botón y mostrar loading
+            newBtn.disabled = true;
+            const originalHTML = newBtn.innerHTML;
+            newBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Obteniendo GPS...';
+            newBtn.classList.add('opacity-75');
+            
+            // Configuración optimizada para móvil
+            const options = {
+                enableHighAccuracy: true,    // Usa GPS en lugar de WiFi/celular
+                timeout: 30000,               // 30 segundos para móviles lentos
+                maximumAge: 0                 // No usar caché, ubicación fresh
+            };
+            
+            console.log('⏳ Esperando respuesta del GPS (máximo 30s)...');
+            
+            navigator.geolocation.getCurrentPosition(
+                // SUCCESS
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    
+                    console.log(`✅ Ubicación obtenida: ${lat.toFixed(6)}, ${lng.toFixed(6)} (precisión: ${accuracy.toFixed(0)}m)`);
+                    
+                    if (!window.google || !window.google.maps) {
+                        console.error('❌ Google Maps no disponible');
+                        alert('Google Maps no está disponible. Por favor recarga la página.');
+                        newBtn.disabled = false;
+                        newBtn.innerHTML = originalHTML;
+                        newBtn.classList.remove('opacity-75');
+                        return;
+                    }
+                    
+                    const location = new google.maps.LatLng(lat, lng);
+                    
+                    if (modalMap) {
+                        // Centrar mapa en ubicación con animación
+                        modalMap.panTo(location);
+                        modalMap.setZoom(17);
+                        
+                        // Guardar ubicación seleccionada
+                        modalSelectedLocation = location;
+                        
+                        // Actualizar preview
+                        updateModalPreview(location);
+                        
+                        console.log('✅ Mapa actualizado con ubicación GPS');
+                    } else {
+                        console.error('❌ modalMap no está inicializado');
+                    }
+                    
+                    // Restaurar botón con mensaje de éxito temporal
+                    newBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>¡Ubicación obtenida!';
+                    newBtn.classList.remove('opacity-75');
+                    
+                    setTimeout(() => {
+                        newBtn.innerHTML = originalHTML;
+                        newBtn.disabled = false;
+                    }, 2000);
+                },
+                // ERROR
+                (error) => {
+                    console.error('❌ Error de geolocalización:', error);
+                    
+                    let errorMessage = '';
+                    let errorDetail = '';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '❌ Permiso de ubicación denegado';
+                            errorDetail = 'Por favor, activa los permisos de ubicación en la configuración de tu navegador o dispositivo.';
+                            console.error('🚫 Usuario denegó permiso de ubicación');
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '❌ Ubicación no disponible';
+                            errorDetail = 'No se pudo determinar tu ubicación. Verifica que el GPS esté activado.';
+                            console.error('📡 GPS no disponible o señal débil');
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '⏱️ Tiempo de espera agotado';
+                            errorDetail = 'La búsqueda de GPS tardó demasiado. Intenta de nuevo o busca manualmente.';
+                            console.error('⏰ Timeout después de 30 segundos');
+                            break;
+                        default:
+                            errorMessage = '❌ Error desconocido';
+                            errorDetail = 'Ocurrió un error inesperado. Intenta buscar manualmente.';
+                            console.error('⚠️ Error desconocido:', error.message);
+                    }
+                    
+                    alert(`${errorMessage}\n\n${errorDetail}\n\n💡 Consejo: Puedes escribir tu dirección en el campo de búsqueda arriba.`);
+                    
+                    // Restaurar botón
+                    newBtn.disabled = false;
+                    newBtn.innerHTML = originalHTML;
+                    newBtn.classList.remove('opacity-75');
+                },
+                options
+            );
+        });
+    };
+    
+    // Función para abrir el modal
+    const openModal = (source = 'hero') => {
+        console.log(`📍 Abriendo modal de mapa desde: ${source}`);
+        openedFrom = source;
+        modal.classList.add('show');
+        modal.classList.remove('hidden');
+        
+        // Inicializar mapa si no existe (con delay para que el modal esté visible)
+        setTimeout(() => {
+            if (!modalMap && window.google && window.google.maps) {
+                console.log('🗺️ Inicializando mapa por primera vez...');
+                initModalMap();
+            } else if (modalMap) {
+                console.log('🗺️ Mapa ya existe, actualizando...');
+                // Trigger resize para actualizar el mapa
+                google.maps.event.trigger(modalMap, 'resize');
+                // Si hay ubicación previa, centrar ahí
+                if (modalSelectedLocation) {
+                    modalMap.setCenter(modalSelectedLocation);
+                } else {
+                    const center = new google.maps.LatLng(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng);
+                    modalMap.setCenter(center);
+                }
+                
+                // Re-inicializar autocomplete si no existe
+                if (!modalAutocomplete && searchInput && window.google && window.google.maps && window.google.maps.places) {
+                    console.log('🔍 Re-inicializando autocomplete...');
+                    initAutocomplete();
+                }
+            } else if (!window.google || !window.google.maps) {
+                console.error('⚠️ Google Maps no está disponible');
+                alert('Error: Google Maps no se cargó correctamente. Por favor recarga la página.');
+            }
+            
+            // Re-configurar geolocalización cada vez que se abre el modal
+            try {
+                setupGeolocation();
+            } catch(e) {
+                console.error('Error en setupGeolocation:', e);
+            }
+        }, 250);
+    };
+    
+    // Event listeners para abrir modal
+    if (openBtn) {
+        openBtn.addEventListener('click', () => openModal('hero'));
+    }
+    
+    if (openCheckoutBtn) {
+        openCheckoutBtn.addEventListener('click', () => openModal('checkout'));
+    }
+    
+    if (changeAddressBtn) {
+        changeAddressBtn.addEventListener('click', () => openModal('checkout'));
+    }
+    
+    // Cerrar modal
+    const closeModal = () => {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    };
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    
+    // Cerrar con ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+    
+    // Cerrar al hacer click fuera
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Inicializar mapa del modal - OPTIMIZADO MÓVIL v6.0
+    function initModalMap() {
+        const mapDiv = document.getElementById('hero-map');
+        if (!mapDiv) {
+            console.error('❌ Div del mapa no encontrado');
+            return;
+        }
+        
+        const center = new google.maps.LatLng(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng);
+        
+        console.log('📱 Inicializando mapa optimizado para móvil...');
+        console.log('📍 Centro inicial:', center.lat(), center.lng());
+        
+        // Mapa optimizado para touch
+        modalMap = new google.maps.Map(mapDiv, {
+            center: center,
+            zoom: 15,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_CENTER
+            },
+            gestureHandling: 'greedy', // Permite scroll sin ctrl
+            clickableIcons: false, // No distraer con POIs
+            disableDefaultUI: false,
+            styles: [
+                {
+                    featureType: 'poi.business',
+                    stylers: [{ visibility: 'off' }]
+                }
+            ]
+        });
+        
+        console.log('✅ Mapa creado exitosamente');
+        
+        // Marcador del restaurante
+        const restaurantMarker = new google.maps.Marker({
+            map: modalMap,
+            position: center,
+            icon: {
+                url: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+                        <defs>
+                            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                                <feOffset dx="0" dy="2" result="offsetblur"/>
+                                <feComponentTransfer>
+                                    <feFuncA type="linear" slope="0.3"/>
+                                </feComponentTransfer>
+                                <feMerge>
+                                    <feMergeNode/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="24" cy="24" r="18" fill="#FFB300" filter="url(#shadow)"/>
+                        <circle cx="24" cy="24" r="16" fill="#FF8F00" stroke="#FFF" stroke-width="2"/>
+                        <text x="24" y="30" text-anchor="middle" font-size="20" font-weight="bold">🍔</text>
+                    </svg>
+                `),
+                scaledSize: new google.maps.Size(48, 48),
+                anchor: new google.maps.Point(24, 48)
+            },
+            title: 'SR & SRA BURGER',
+            zIndex: 1000,
+            animation: google.maps.Animation.DROP
+        });
+        
+        console.log('✅ Marcador del restaurante agregado');
+        
+        // Sistema de actualización OPTIMIZADO PARA MÓVIL
+        let updateTimeout;
+        let lastUpdate = 0;
+        const UPDATE_DELAY = 500; // Reducido para móvil
+        
+        // Elementos para feedback visual - USAR ID DEL NUEVO MARCADOR
+        const mapContainer = document.querySelector('#hero-map').parentElement;
+        const centerMarker = document.getElementById('map-center-marker'); // Nuevo marcador tipo mira
+        const instructionElement = mapContainer.querySelector('.absolute.top-2');
+        
+        // FUNCIÓN SIMPLE: Actualizar cuando el mapa se mueve
+        const handleMapMove = () => {
+            const center = modalMap.getCenter();
+            if (!center) return;
+            
+            modalSelectedLocation = center;
+            
+            // Debounce para no saturar
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                console.log('📍 Ubicación actualizada:', center.lat().toFixed(6), center.lng().toFixed(6));
+                updateModalPreview(center).then(() => {
+                    // Restaurar instrucción
+                    if (instructionElement) {
+                        const span = instructionElement.querySelector('span');
+                        if (span) span.textContent = 'Mueve el mapa con el dedo';
+                        instructionElement.classList.remove('bg-blue-50', 'border-blue-400');
+                        instructionElement.classList.add('bg-white', 'border-yellow-400');
+                    }
+                }).catch(err => {
+                    console.error('Error actualizando preview:', err);
+                });
+            }, UPDATE_DELAY);
+        };
+        
+        // Evento principal: cuando el mapa se detiene (funciona en móvil y desktop)
+        google.maps.event.addListener(modalMap, 'idle', () => {
+            console.log('�️ Mapa detenido, actualizando...');
+            handleMapMove();
+        });
+        
+        // Feedback visual al empezar a mover (SOLO VISUAL, no actualiza)
+        let moveStartTimeout;
+        google.maps.event.addListener(modalMap, 'dragstart', () => {
+            console.log('👆 Usuario moviendo mapa...');
+            
+            // Cambiar instrucción inmediatamente
+            if (instructionElement) {
+                const span = instructionElement.querySelector('span');
+                if (span) span.textContent = 'Buscando ubicación...';
+                instructionElement.classList.remove('bg-white', 'border-yellow-400');
+                instructionElement.classList.add('bg-blue-50', 'border-blue-400');
+            }
+            
+            // Pin sube levemente
+            if (centerMarker) {
+                centerMarker.style.transform = 'translate(-50%, -50%) scale(1.15)';
+                centerMarker.style.transition = 'transform 0.15s ease-out';
+            }
+        });
+        
+        // Cuando suelta el dedo
+        google.maps.event.addListener(modalMap, 'dragend', () => {
+            console.log('✋ Usuario soltó el mapa');
+            
+            // Pin baja a posición normal
+            if (centerMarker) {
+                centerMarker.style.transform = 'translate(-50%, -50%) scale(1)';
+            }
+            
+            // La actualización la hace 'idle' automáticamente
+        });
+        
+        // Inicializar autocomplete
+        initAutocomplete();
+        
+        // Actualizar preview inicial
+        modalSelectedLocation = center;
+        updateModalPreview(center);
+        
+        // FORZAR resize del mapa después de crearlo
+        setTimeout(() => {
+            google.maps.event.trigger(modalMap, 'resize');
+            modalMap.setCenter(center);
+            console.log('🔄 Mapa redimensionado');
+        }, 100);
+        
+        console.log('✅ Mapa móvil optimizado inicializado correctamente');
+        console.log('📱 Listo para usar en smartphones');
+    }
+    
+    // Función separada para inicializar autocomplete - MEJORADO
+    function initAutocomplete() {
+        if (!searchInput) {
+            console.log('⚠️ Input de búsqueda no encontrado');
+            return;
+        }
+        
+        if (modalAutocomplete) {
+            console.log('ℹ️ Autocomplete ya está inicializado');
+            return;
+        }
+        
+        console.log('🔍 Inicializando autocomplete en modal...');
+        
+        // Agregar sugerencias locales mientras se escribe
+        const suggestionsDiv = document.getElementById('modal-suggestions');
+        const localSuggestions = [
+            'Av Miguel Hidalgo, Minatitlán',
+            'Av Francisco I Madero, Minatitlán',
+            'Av Benito Juárez, Minatitlán',
+            'Col Emiliano Zapata, Minatitlán',
+            'Col Petrolera, Minatitlán',
+            'Col Insurgentes, Minatitlán',
+            'Centro, Minatitlán',
+            'Av José María Morelos, Minatitlán',
+            'Coahuila, Minatitlán',
+            'Veracruz, Minatitlán'
+        ];
+        
+        // Event listener para mostrar sugerencias mientras se escribe
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim().toLowerCase();
+            
+            if (query.length < 2) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Filtrar sugerencias locales
+            const matches = localSuggestions.filter(s => s.toLowerCase().includes(query));
+            
+            if (matches.length > 0) {
+                suggestionsDiv.classList.remove('hidden');
+                suggestionsDiv.innerHTML = `
+                    <div class="p-2">
+                        <div class="text-xs font-semibold text-gray-500 px-3 py-2">💡 Sugerencias rápidas:</div>
+                        ${matches.map(suggestion => `
+                            <button type="button" class="suggestion-item w-full text-left px-4 py-3 hover:bg-yellow-50 rounded-lg transition-colors flex items-center gap-3 group" data-suggestion="${suggestion}">
+                                <i class="fas fa-location-dot text-yellow-600 group-hover:text-yellow-700"></i>
+                                <span class="text-sm text-gray-700 group-hover:text-gray-900 font-medium">${suggestion}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // Event listeners para las sugerencias
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const suggestion = this.getAttribute('data-suggestion');
+                        searchInput.value = suggestion;
+                        suggestionsDiv.classList.add('hidden');
+                        
+                        // Trigger autocomplete si está disponible
+                        if (modalAutocomplete) {
+                            google.maps.event.trigger(searchInput, 'focus');
+                            google.maps.event.trigger(searchInput, 'keydown', {
+                                keyCode: 13,
+                                key: 'Enter'
+                            });
+                        }
+                    });
+                });
+            } else {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
+        
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
+        
+        // Verificar que Places API esté cargada
+        if (!window.google || !window.google.maps || !window.google.maps.places) {
+            console.error('❌ Google Maps Places API no está cargada');
+            console.log('💡 Asegúrate de que la API key tenga Places habilitado');
+            console.log('💡 URL debe incluir: &libraries=places');
+            
+            // Mostrar mensaje en el input
+            searchInput.placeholder = '🔍 Busca tu dirección (ejemplo: Av Miguel Hidalgo...)';
+            return;
+        }
+        
+        try {
+            // Crear autocomplete con configuración optimizada para Minatitlán
+            modalAutocomplete = new google.maps.places.Autocomplete(searchInput, {
+                componentRestrictions: { country: 'mx' },
+                fields: ['formatted_address', 'geometry', 'name', 'address_components'],
+                types: ['address', 'street_address', 'route', 'locality'],
+                // Área de búsqueda centrada en Minatitlán, Veracruz
+                bounds: new google.maps.LatLngBounds(
+                    new google.maps.LatLng(17.9, -94.6),  // Suroeste
+                    new google.maps.LatLng(18.1, -94.4)   // Noreste
+                ),
+                strictBounds: false
+            });
+            
+            // Listener para cuando se selecciona un lugar
+            modalAutocomplete.addListener('place_changed', () => {
+                console.log('📍 Lugar seleccionado del autocomplete');
+                const place = modalAutocomplete.getPlace();
+                
+                if (!place.geometry || !place.geometry.location) {
+                    console.log('⚠️ No se encontró geometría para:', place.name);
+                    alert('⚠️ No se encontraron coordenadas para esa dirección.\n\nPor favor:\n• Selecciona una opción de la lista de sugerencias\n• Escribe una dirección más específica\n• O arrastra el mapa al lugar correcto');
+                    return;
+                }
+                
+                console.log('✅ Lugar válido:', place.formatted_address);
+                console.log('📊 Coordenadas:', place.geometry.location.lat(), place.geometry.location.lng());
+                
+                // Ocultar sugerencias locales
+                suggestionsDiv.classList.add('hidden');
+                
+                // Centrar mapa en la ubicación seleccionada
+                if (modalMap) {
+                    modalMap.panTo(place.geometry.location);
+                    modalMap.setZoom(17);
+                }
+                
+                // Guardar ubicación seleccionada
+                modalSelectedLocation = place.geometry.location;
+                
+                // Actualizar preview
+                updateModalPreview(place.geometry.location);
+            });
+            
+            console.log('✅ Autocomplete inicializado correctamente para Minatitlán');
+            searchInput.placeholder = '🔍 Ejemplo: Av Miguel Hidalgo 123...';
+            
+        } catch (error) {
+            console.error('❌ Error al inicializar autocomplete:', error);
+            searchInput.placeholder = '🔍 Busca tu dirección manualmente';
+        }
+    }
+    
+    // Actualizar preview de dirección - MEJORADO
+    async function updateModalPreview(location) {
+        if (!location) {
+            console.log('⚠️ updateModalPreview: location es null/undefined');
+            return;
+        }
+        
+        console.log('🔄 updateModalPreview llamada con location:', location);
+        
+        const previewEl = document.getElementById('modal-address-preview');
+        const addressTextEl = document.getElementById('modal-address-text');
+        const availabilityEl = document.getElementById('modal-availability');
+        const loadingSpinner = document.getElementById('modal-loading-spinner');
+        const confirmTextEl = document.getElementById('modal-confirm-text');
+        
+        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+        
+        // Mostrar loading
+        if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+        if (addressTextEl) addressTextEl.textContent = 'Buscando dirección...';
+        
+        // Calcular distancia y zona
+        const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, lat, lng);
+        const zone = getDeliveryZone(distance);
+        const hasService = zone && zone.price !== null;
+        
+        // Geocoding reverso para obtener dirección legible
+        let address = `📍 Ubicación: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        if (window.google && window.google.maps && window.google.maps.Geocoder) {
+            try {
+                const geocoder = new google.maps.Geocoder();
+                const result = await geocoder.geocode({ location: { lat, lng } });
+                if (result && result.results && result.results[0]) {
+                    address = result.results[0].formatted_address;
+                }
+            } catch (e) {
+                console.log('Error geocoding:', e);
+            }
+        }
+        
+        // Ocultar loading
+        if (loadingSpinner) loadingSpinner.classList.add('hidden');
+        
+        // Actualizar texto de dirección
+        if (addressTextEl) {
+            addressTextEl.innerHTML = `
+                <span class="font-medium text-gray-900">${address}</span>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-xs border border-gray-300">
+                        <i class="fas fa-route text-blue-600"></i>
+                        <strong>${distance.toFixed(1)} km</strong> del restaurante
+                    </span>
+                    ${hasService ? `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-xs border border-gray-300">
+                            <i class="fas fa-truck text-green-600"></i>
+                            Envío: <strong>$${zone.price}</strong>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-xs border border-gray-300">
+                            <i class="fas fa-clock text-orange-600"></i>
+                            ${zone.time || '25-35 min'}
+                        </span>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Actualizar estilo del preview
+        if (previewEl) {
+            if (hasService) {
+                previewEl.className = 'mb-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 min-h-[100px] animate-fade-in';
+            } else {
+                previewEl.className = 'mb-3 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border-2 border-red-300 min-h-[100px] animate-fade-in';
+            }
+        }
+        
+        // Actualizar indicador de disponibilidad
+        if (availabilityEl) {
+            availabilityEl.classList.remove('hidden');
+            
+            if (hasService) {
+                availabilityEl.className = 'mb-3 p-4 bg-gradient-to-r from-green-600 to-green-700 rounded-xl text-white text-center animate-scale-in';
+                availabilityEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-check text-green-600 text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-bold text-lg">✅ ¡SÍ ENTREGAMOS A TU ZONA!</p>
+                            <p class="text-sm text-green-100 mt-0.5">
+                                ${zone.name} • Costo: $${zone.price} • ${zone.time || 'Tiempo estimado: 25-35 min'}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                availabilityEl.className = 'mb-3 p-4 bg-gradient-to-r from-red-600 to-red-700 rounded-xl text-white text-center animate-scale-in';
+                availabilityEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-times text-red-600 text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="font-bold text-lg">❌ LO SENTIMOS, ESTÁS MUY LEJOS</p>
+                            <p class="text-sm text-red-100 mt-0.5">
+                                Tu ubicación está a ${distance.toFixed(1)} km. Solo entregamos hasta ${MAX_DELIVERY_DISTANCE} km de distancia.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-white/10 rounded-lg">
+                        <p class="text-xs text-white/90 text-left">
+                            <strong>📍 Zonas de entrega:</strong><br>
+                            • Zona 1 (0-4 km): $${DELIVERY_PRICE}<br>
+                            • Zona 2 (4-12 km): $${DELIVERY_PRICE} + $${EXTRA_KM_PRICE}/km adicional
+                        </p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Actualizar botón de confirmar
+        if (confirmBtn) {
+            if (hasService) {
+                confirmBtn.disabled = false;
+                confirmBtn.className = 'flex-1 min-h-[56px] px-6 py-3.5 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200';
+                if (confirmTextEl) {
+                    confirmTextEl.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Confirmar y continuar';
+                }
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.className = 'flex-1 min-h-[56px] px-6 py-3.5 rounded-xl bg-gray-400 text-gray-700 font-bold text-base cursor-not-allowed opacity-60';
+                if (confirmTextEl) {
+                    confirmTextEl.innerHTML = '<i class="fas fa-ban mr-2"></i>Fuera de zona de entrega';
+                }
+            }
+        }
+    }
+    
+    // Geolocalización con mejor soporte móvil - usando event delegation
+    
+    // Confirmar ubicación
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            if (!modalSelectedLocation) return;
+            
+            const lat = typeof modalSelectedLocation.lat === 'function' ? modalSelectedLocation.lat() : modalSelectedLocation.lat;
+            const lng = typeof modalSelectedLocation.lng === 'function' ? modalSelectedLocation.lng() : modalSelectedLocation.lng;
+            
+            const distance = calculateDistance(RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lng, lat, lng);
+            const zone = getDeliveryZone(distance);
+            
+            if (zone && zone.price !== null) {
+                // Obtener dirección formateada
+                let formattedAddress = `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+                if (window.google && window.google.maps && window.google.maps.Geocoder) {
+                    try {
+                        const geocoder = new google.maps.Geocoder();
+                        const result = await geocoder.geocode({ location: { lat, lng } });
+                        if (result && result.results && result.results[0]) {
+                            formattedAddress = result.results[0].formatted_address;
+                        }
+                    } catch (e) {
+                        console.log('Error geocoding:', e);
+                    }
+                }
+                
+                // Guardar dirección global
+                userAddress = {
+                    formatted_address: formattedAddress,
+                    coordinates: { lat, lng },
+                    distance: distance,
+                    deliveryPrice: zone.price,
+                    zone: zone.zone
+                };
+                
+                // Actualizar preview en hero
+                const heroPreview = document.getElementById('hero-address-preview');
+                if (heroPreview && openedFrom === 'hero') {
+                    heroPreview.innerHTML = `<i class="fas fa-map-marker-alt mr-2"></i>${formattedAddress.substring(0, 50)}...`;
+                }
+                
+                // Actualizar preview en checkout
+                const checkoutPreview = document.getElementById('checkout-address-preview');
+                const checkoutAddressText = document.getElementById('checkout-address-text');
+                const checkoutDeliveryInfo = document.getElementById('checkout-delivery-info');
+                
+                if (checkoutPreview && checkoutAddressText && openedFrom === 'checkout') {
+                    checkoutPreview.classList.remove('hidden');
+                    checkoutAddressText.textContent = formattedAddress;
+                    checkoutDeliveryInfo.innerHTML = `
+                        <i class="fas fa-route mr-1"></i>${distance.toFixed(1)} km • 
+                        <i class="fas fa-dollar-sign mr-1"></i>Envío: $${zone.price} • 
+                        <i class="fas fa-clock mr-1"></i>${zone.time || '25-35 min'}
+                    `;
+                    
+                    // Ocultar botón de abrir mapa, mostrar el preview
+                    const openCheckoutBtn = document.getElementById('open-checkout-map');
+                    if (openCheckoutBtn) {
+                        openCheckoutBtn.classList.add('hidden');
+                    }
+                    
+                    // Actualizar costo de envío en el resumen
+                    updateDeliveryFee(zone.price);
+                }
+                
+                // Mostrar modal de éxito solo si viene del hero
+                if (openedFrom === 'hero') {
+                    showDeliveryZoneInfo(distance, zone);
+                }
+                
+                // Cerrar modal
+                closeModal();
+            }
+        });
+    }
+    
+    // Configurar geolocalización inicial
+    setupGeolocation();
+    
+    console.log('✅ Modal de mapa inicializado');
+}
+
+// Función helper para actualizar el costo de envío en checkout
+function updateDeliveryFee(price) {
+    const deliveryFeeElement = document.getElementById('checkout-delivery-fee');
+    if (deliveryFeeElement) {
+        deliveryFeeElement.classList.remove('hidden');
+        const feeSpan = deliveryFeeElement.querySelector('span:last-child');
+        if (feeSpan) {
+            feeSpan.textContent = `+$${price.toFixed(2)}`;
+        }
+        
+        // Recalcular total
+        const subtotalElement = document.getElementById('checkout-subtotal');
+        const totalElement = document.getElementById('checkout-total');
+        
+        if (subtotalElement && totalElement) {
+            const subtotal = parseFloat(subtotalElement.textContent.replace('$', '')) || 0;
+            const total = subtotal + price;
+            totalElement.textContent = `$${total.toFixed(2)}`;
+        }
+    }
+}
+
+// Función debounce helper
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ============================================
+// MEJORAS DE RESPONSIVIDAD MÓVIL - SIMPLIFICADO
+// ============================================
+
+function initMobileEnhancements() {
+    console.log('🔧 Inicializando mejoras móviles simplificadas...');
+    
+    // Detectar tipo de dispositivo
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+    if (isMobile || isTouchDevice) {
+        document.body.classList.add('touch-device', 'mobile-device');
+        console.log('📱 Dispositivo móvil táctil detectado');
+        
+        // Agregar clase CSS para feedback visual
+        addTouchFeedbackClass();
+        
+        // Mejorar scrolling
+        document.body.style.webkitOverflowScrolling = 'touch';
+        document.body.style.overflowX = 'hidden';
+    } else {
+        document.body.classList.add('non-touch-device');
+        console.log('🖱️ Dispositivo no táctil detectado');
+    }
+    
+    // Manejar orientación
+    handleOrientation();
+    window.addEventListener('orientationchange', handleOrientation);
+    window.addEventListener('resize', handleOrientation);
+    
+    console.log('✅ Mejoras móviles inicializadas correctamente');
+}
+
+// Agregar feedback visual simple con CSS
+function addTouchFeedbackClass() {
+    // Solo agregar clase al body, el CSS hará el resto
+    document.body.classList.add('enable-touch-feedback');
+}
+
+// Manejar orientación del dispositivo
+function handleOrientation() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    document.body.classList.toggle('portrait-mode', isPortrait);
+    document.body.classList.toggle('landscape-mode', !isPortrait);
+}
+
+}
+

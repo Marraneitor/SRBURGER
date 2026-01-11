@@ -1,6 +1,6 @@
 # 🍔 SR & SRA BURGER - Sistema de Pedidos Online
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Marraneitor/Paginav3)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Marraneitor/SRBURGER)
 
 ## 🌟 Características
 
@@ -45,13 +45,41 @@
 
 1. Clona el repositorio:
 ```bash
-git clone https://github.com/Marraneitor/Paginav3.git
-cd Paginav3
+git clone https://github.com/Marraneitor/SRBURGER.git
+cd SRBURGER
 ```
 
-2. Abre con Live Server o cualquier servidor local
+2. Instala dependencias y levanta el server local (recomendado para endpoints `/api`):
+```bash
+npm install
+npm start
+```
 
-3. ¡Listo! El proyecto está configurado con Firebase
+3. Abre `http://localhost:3000`.
+
+> Nota: si abres el HTML con `file://`, el frontend intentará usar `http://localhost:3000` para la API.
+
+## ☁️ Deploy en Vercel
+
+- El frontend se sirve como estático.
+- Las funciones serverless viven en `api/` (Vercel las detecta automáticamente).
+
+### Variables de entorno (Vercel)
+
+**Twilio (enviar pedido por WhatsApp/SMS)**
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_FROM`
+- `OWNER_PHONE`
+- `TWILIO_CHANNEL` (opcional: `whatsapp` o `sms`; default `whatsapp`)
+- `TWILIO_MOCK` (opcional: `true` para no enviar y solo loggear)
+
+**Admin / puntos (marcar pagado y acreditar puntos)**
+- `ADMIN_KEY` (opcional: si se define, requiere header `x-admin-key`)
+- `FIREBASE_SERVICE_ACCOUNT_JSON` (recomendado: JSON completo de la Service Account)
+
+**Opcional**
+- `PUBLIC_BASE_URL` (ej: `https://tu-proyecto.vercel.app` para link de rastreo)
 
 ## 🔥 Firebase Features
 

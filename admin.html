@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="sr-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/sr-ui.css">
     
     <!-- Firebase SDK -->
     <script type="module">
@@ -102,7 +104,7 @@
         window.firebaseApp = app;
     </script>
     <style>
-        body { font-family: 'Poppins', sans-serif; }
+        body { font-family: Inter, 'Poppins', sans-serif; }
         .switch {
             position: relative;
             display: inline-block;
@@ -221,30 +223,21 @@
                     <i class="fas fa-eye-slash mr-3 text-purple-500"></i>Gestión de Productos
                 </h2>
                 <p class="text-gray-600">Oculta productos agotados con un solo click</p>
+                <div class="mt-4">
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <button id="add-product-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md">
+                            <i class="fas fa-plus mr-2"></i>Añadir producto
+                        </button>
+                        <button id="add-category-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md">
+                            <i class="fas fa-layer-group mr-2"></i>Agregar sección
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Category Tabs -->
-            <div class="flex flex-wrap justify-center mb-8 bg-gray-100 rounded-xl p-2">
-                <button class="category-tab active bg-white shadow-md text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all" 
-                        data-category="Hamburguesas">
-                    <i class="fas fa-hamburger mr-2"></i>Hamburguesas
-                </button>
-                <button class="category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all" 
-                        data-category="Hot Dogs">
-                    <i class="fas fa-hotdog mr-2"></i>Hot Dogs
-                </button>
-                <button class="category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all" 
-                        data-category="Combos">
-                    <i class="fas fa-utensils mr-2"></i>Combos
-                </button>
-                <button class="category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all" 
-                        data-category="Extras">
-                    <i class="fas fa-plus-circle mr-2"></i>Extras
-                </button>
-                <button class="category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all" 
-                        data-category="Bebidas">
-                    <i class="fas fa-glass mr-2"></i>Bebidas
-                </button>
+            <div id="category-tabs" class="flex flex-wrap justify-center mb-8 bg-gray-100 rounded-xl p-2">
+                <!-- Tabs se renderizan dinámicamente desde Firebase -->
             </div>
 
             <!-- Products Grid -->
@@ -298,6 +291,70 @@
         <div class="flex items-center space-x-3">
             <i class="fas fa-check-circle text-xl"></i>
             <span id="toast-message" class="font-semibold"></span>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="product-modal-title" class="text-xl font-bold text-gray-800"><i class="fas fa-plus mr-2 text-yellow-500"></i>Nuevo Producto</h3>
+                <button id="close-add-product" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sección</label>
+                    <select id="new-product-category" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400">
+                        <option>Hamburguesas</option>
+                        <option>Hot Dogs</option>
+                        <option>Combos</option>
+                        <option>Extras</option>
+                        <option>Bebidas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input id="new-product-name" type="text" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" placeholder="Nombre del producto">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                    <input id="new-product-price" type="number" min="0" step="1" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" placeholder="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea id="new-product-description" rows="3" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" placeholder="Descripción breve"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Imagen (URL)</label>
+                    <input id="new-product-image" type="url" class="w-full border rounded-lg px-3 py-2 focus:ring-yellow-400 focus:border-yellow-400" placeholder="https://...">
+                    <p class="text-xs text-gray-500 mt-1">Puedes pegar enlaces de Imgur, los convertimos a imagen directa automáticamente.</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancel-add-product" class="px-4 py-2 rounded-lg border">Cancelar</button>
+                <button id="save-add-product" class="px-5 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold">Añadir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="add-category-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-layer-group mr-2 text-indigo-600"></i>Nueva Sección</h3>
+                <button id="close-add-category" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la sección</label>
+                    <input id="new-category-name" type="text" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-400 focus:border-indigo-400" placeholder="Ej: Boneles">
+                    <p class="text-xs text-gray-500 mt-1">La sección aparecerá en el menú público con el mismo diseño.</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancel-add-category" class="px-4 py-2 rounded-lg border">Cancelar</button>
+                <button id="save-add-category" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Agregar</button>
+            </div>
         </div>
     </div>
 
