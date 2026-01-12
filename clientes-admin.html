@@ -267,7 +267,8 @@
               if (!currentManager) return;
               const btnOpen = e.target.closest('button[data-action="open-orders"]');
               const btnReset = e.target.closest('button[data-action="reset-points"]');
-              const btn = btnOpen || btnReset;
+              const btnAdd = e.target.closest('button[data-action="add-points"]');
+              const btn = btnOpen || btnReset || btnAdd;
               if (!btn) return;
               const tr = btn.closest('tr[data-client-id]');
               if (!tr) return;
@@ -279,6 +280,8 @@
                 await openOrdersModal(currentManager, client);
               } else if (btnReset) {
                 await resetClientPointsFromAdmin(currentManager, client);
+              } else if (btnAdd) {
+                await addManualPointsFromAdmin(currentManager, client);
               }
             });
           }
@@ -328,6 +331,9 @@
                 <td class="px-3 py-2 align-top text-right space-x-2">
                   <button class="text-xs px-2 py-1 rounded border border-slate-600 text-slate-100 hover:bg-slate-800" data-action="open-orders">
                     <i class="fas fa-receipt mr-1"></i>Compras
+                  </button>
+                  <button class="text-xs px-2 py-1 rounded border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-white" data-action="add-points">
+                    <i class="fas fa-plus-circle mr-1"></i>Puntos
                   </button>
                   <button class="text-xs px-2 py-1 rounded border border-red-500 text-red-300 hover:bg-red-500 hover:text-white" data-action="reset-points">
                     <i class="fas fa-eraser mr-1"></i>Reset puntos
@@ -474,6 +480,38 @@
           } catch (e) {
             console.error('Error reseteando puntos del cliente:', e);
             alert('No se pudieron resetear los puntos. Revisa la consola para más detalles.');
+          }
+        }
+
+        async function addManualPointsFromAdmin(manager, client) {
+          const label = client.nombre || client.correo || client.telefono || 'este cliente';
+          const input = window.prompt(`¿Cuántos puntos deseas agregar a ${label}? (usa un número entero, por ejemplo 10)`, '10');
+          if (input == null) return; // canceló
+
+          const cleaned = String(input).trim();
+          if (!cleaned) {
+            alert('Escribe un número válido de puntos.');
+            return;
+          }
+
+          const points = Number(cleaned.replace(/,/g, '.'));
+          if (!Number.isFinite(points) || points === 0) {
+            alert('Escribe un número válido distinto de 0.');
+            return;
+          }
+
+          try {
+            if (typeof manager.addManualPoints === 'function') {
+              const res = await manager.addManualPoints(client.id, points);
+              await loadClients(manager);
+              const delta = res && typeof res.pointsDelta === 'number' ? res.pointsDelta : points;
+              alert(`Puntos actualizados. Se ajustaron ${delta > 0 ? '+' : ''}${delta} puntos para ${label}.`);
+            } else {
+              alert('No se encontró la función para ajustar puntos manualmente.');
+            }
+          } catch (e) {
+            console.error('Error ajustando puntos del cliente:', e);
+            alert('No se pudieron ajustar los puntos. Revisa la consola para más detalles.');
           }
         }
       });

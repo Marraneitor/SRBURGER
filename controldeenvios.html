@@ -33,8 +33,8 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
-            color: var(--text-primary);
+            background: radial-gradient(circle at top, #1E293B 0%, #020617 55%, #000000 100%);
+            color: #E5E7EB;
             line-height: 1.6;
         }
 
@@ -43,22 +43,22 @@
         }
 
         .card-modern {
-            background: var(--bg-light);
-            border-radius: var(--border-radius);
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 16px;
             padding: 24px;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid var(--border-light);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(148, 163, 184, 0.3);
             transition: var(--transition);
         }
 
         .card-modern:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
+            box-shadow: 0 22px 55px rgba(15, 23, 42, 0.85);
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%);
-            color: var(--text-primary);
+            color: #0B1120;
             border: none;
             padding: 12px 24px;
             border-radius: 12px;
@@ -107,38 +107,130 @@
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
 
-        .status-badge {
+        /* Controles superiores (modo cocina, pantalla completa, etc.) más compactos */
+        .top-control-btn {
             padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            border-radius: 9999px;
+        }
+        html.kitchen-mode .top-control-btn {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+
+        /* Barra de controles fija a un costado para no estorbar arriba */
+        .kitchen-toolbar {
+            position: fixed;
+            top: 6rem; /* debajo del header */
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.4rem;
+            z-index: 40;
+        }
+
+        @media (max-width: 768px) {
+            .kitchen-toolbar {
+                top: auto;
+                bottom: 1rem;
+                right: 0.75rem;
+                flex-direction: column;
+            }
+        }
+
+        /* Barra lateral de filtros (Todos, Pendientes, etc.) */
+        .kitchen-filter-bar {
+            position: fixed;
+            top: 5.8rem; /* alineado con la parte superior de stats */
+            left: 11.5rem; /* a la derecha de las tarjetas de estado */
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 35;
+        }
+
+        @media (max-width: 1024px) {
+            .kitchen-filter-bar {
+                position: static;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        /* Barra lateral de tarjetas de estado (Pendientes, Preparando, etc.) */
+        .kitchen-stats-bar {
+            position: fixed;
+            top: 5.5rem;
+            left: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 34;
+        }
+
+        .kitchen-stat-card {
+            width: 9rem;
+            padding: 0.75rem 0.6rem;
+            border-radius: 14px;
+        }
+
+        .kitchen-stat-card h3 {
+            font-size: 1.1rem;
+        }
+
+        .kitchen-stat-card p {
+            font-size: 0.78rem;
+        }
+
+        @media (max-width: 1024px) {
+            .kitchen-stats-bar {
+                position: static;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .kitchen-stat-card {
+                width: auto;
+            }
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.12em;
         }
 
         .status-pending {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(252, 211, 77, 0.15);
+            color: #FBBF24;
         }
 
         .status-preparing {
-            background: #dbeafe;
-            color: #1e40af;
+            background: rgba(59, 130, 246, 0.12);
+            color: #60A5FA;
         }
 
         .status-ready {
-            background: #d1fae5;
-            color: #065f46;
+            background: rgba(16, 185, 129, 0.12);
+            color: #6EE7B7;
         }
 
         .status-delivering {
-            background: #e0e7ff;
-            color: #3730a3;
+            background: rgba(129, 140, 248, 0.15);
+            color: #A5B4FC;
         }
 
         .status-delivered {
-            background: #f3f4f6;
-            color: #374151;
+            background: rgba(148, 163, 184, 0.18);
+            color: #CBD5F5;
         }
 
         .order-card {
@@ -148,24 +240,23 @@
             overflow: hidden;
         }
 
-        .order-card:hover {
-            border-left-color: var(--primary-red);
-        }
-
         .order-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 199, 44, 0.1));
-            transition: width 0.3s ease;
-            pointer-events: none; /* No bloquear clics en botones */
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(250, 204, 21, 0.08), transparent 55%);
+            pointer-events: none;
         }
 
-        .order-card:hover::before {
-            width: 100%;
+        /* Semáforo de prioridad temporal (borde superior) */
+        .priority-fresh {
+            box-shadow: 0 -3px 0 #22C55E inset;
+        }
+        .priority-warning {
+            box-shadow: 0 -3px 0 #EAB308 inset;
+        }
+        .priority-urgent {
+            box-shadow: 0 -3px 0 #EF4444 inset;
         }
 
         .notification {
@@ -197,11 +288,11 @@
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: white;
+            background: rgba(15, 23, 42, 0.97);
             padding: 16px;
             border-radius: 16px;
-            box-shadow: var(--shadow-hover);
-            border: 1px solid var(--border-light);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.4);
             min-width: 200px;
         }
 
@@ -219,17 +310,17 @@
         }
 
         .order-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #4B5563;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
         }
 
         .order-item.checked {
-            background: #d1fae5;
+            background: rgba(22, 163, 74, 0.22);
             border-color: #10b981;
-            opacity: 0.8;
+            opacity: 0.9;
             text-decoration: line-through;
         }
 
@@ -245,25 +336,31 @@
 
         .breakdown-item {
             cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            transition: background-color 0.2s, transform 0.1s;
             user-select: none;
+            background-color: #020617;
+            color: #F9FAFB;
+            border: 1px solid #1F2937;
+            font-weight: 600;
         }
 
-        .breakdown-item:hover {
-            background-color: #f3f4f6;
+        .order-products .breakdown .breakdown-item:hover {
+            background-color: #111827;
+            transform: translateY(-1px);
         }
 
-        .breakdown-item.checked {
-            background-color: #d1fae5;
+        .order-products .breakdown .breakdown-item.checked {
+            background-color: #16A34A;
+            border-color: #22C55E;
             text-decoration: line-through;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
-        .breakdown-item.checked::after {
+        .order-products .breakdown .breakdown-item.checked::after {
             content: ' ✓';
-            color: #10b981;
+            color: #ECFEFF;
             font-weight: bold;
         }
 
@@ -285,16 +382,41 @@
     html.kitchen-mode .order-card { border-left-width: 6px; }
 
         .customer-info {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid #f59e0b;
-            pointer-events: none; /* Evita bloquear clics; su contenido no es interactivo */
-            font-size: 1.02rem;
+            background: radial-gradient(circle at left, rgba(253, 224, 71, 0.18), transparent 55%);
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            font-size: 0.98rem;
+        }
+
+        .customer-info .label {
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #FACC15;
+            font-weight: 700;
+        }
+
+        .customer-info .value-muted {
+            color: #E5E7EB;
+        }
+
+        .address-toggle {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #FACC15;
+            border: 1px solid rgba(250, 204, 21, 0.7);
+        }
+
+        .address-toggle:hover {
+            background: rgba(30, 64, 175, 0.9);
         }
 
     /* Productos más grandes y legibles */
-    .order-products .item-title { font-size: 1.25rem; font-weight: 800; color: #111827; }
+    .order-products .item-title { font-size: 1.8rem; font-weight: 900; color: #F9FAFB; }
     .order-products .item-price { font-size: 1.25rem; font-weight: 800; color: #111827; }
     .order-products .breakdown { font-size: 1.12rem; }
         .order-products .breakdown .text-sm,
@@ -302,7 +424,7 @@
         .order-products .breakdown .text-xs span,
         .order-products .breakdown .text-sm span { padding: 4px 10px; border-radius: 9999px; display: inline-block; }
 
-    html.kitchen-mode .order-products .item-title { font-size: 1.9rem; }
+    html.kitchen-mode .order-products .item-title { font-size: 2.4rem; }
     html.kitchen-mode .order-products .item-price { font-size: 1.9rem; }
     html.kitchen-mode .order-products .breakdown { font-size: 1.35rem; }
         html.kitchen-mode .order-products .breakdown .text-sm,
@@ -415,6 +537,79 @@
         .action-button:hover::before {
             left: 100%;
         }
+
+        /* Botonera de acciones optimizada para cocina */
+        .kitchen-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .kitchen-action-btn {
+            border-radius: 9999px;
+            padding-top: 0.7rem;
+            padding-bottom: 0.7rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .kitchen-primary {
+            font-size: 1rem;
+            padding-top: 0.9rem;
+            padding-bottom: 0.9rem;
+            box-shadow: 0 12px 30px rgba(34, 197, 94, 0.55);
+        }
+
+        html.kitchen-mode .kitchen-primary {
+            font-size: 1.1rem;
+        }
+
+        .kitchen-time-box {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+        }
+
+        .kitchen-time-box .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #9CA3AF;
+            letter-spacing: 0.14em;
+        }
+
+        /* Botón de eliminar discreto en esquina */
+        .order-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(239, 68, 68, 0.6);
+            color: #FCA5A5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .order-delete-btn:hover {
+            background: rgba(127, 29, 29, 0.95);
+            color: #FEE2E2;
+        }
+
+        /* Bloque de especificaciones en modo alerta */
+        .spec-warning {
+            background: rgba(248, 113, 113, 0.16);
+            border-radius: 0.75rem;
+            padding: 6px 10px;
+            border: 1px solid rgba(248, 113, 113, 0.7);
+        }
+
+        html.kitchen-mode .spec-warning {
+            font-size: 1.1rem;
+        }
         /* Asegurar clics en zona de acciones */
         .order-card .btn-primary,
         .order-card .btn-success,
@@ -437,18 +632,19 @@
                         <div class="text-xs text-gray-500">Modo Cocina</div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleKitchenMode()" class="btn-primary">Modo Cocina</button>
-                    <button onclick="toggleFullscreen()" class="btn-info">Pantalla Completa</button>
-                    <button onclick="zoomOut()" class="btn-primary" title="Reducir tamaño">A-</button>
-                    <button onclick="zoomIn()" class="btn-primary" title="Aumentar tamaño">A+</button>
-                    <button onclick="refreshOrders()" class="btn-primary">
+                <!-- La barra de controles ahora es lateral fija, no ocupa altura extra arriba -->
+                <div class="flex items-center gap-2 kitchen-toolbar">
+                    <button onclick="toggleKitchenMode()" class="btn-primary top-control-btn">Modo Cocina</button>
+                    <button onclick="toggleFullscreen()" class="btn-info top-control-btn">Pantalla Completa</button>
+                    <button onclick="zoomOut()" class="btn-primary top-control-btn" title="Reducir tamaño">A-</button>
+                    <button onclick="zoomIn()" class="btn-primary top-control-btn" title="Aumentar tamaño">A+</button>
+                    <button onclick="refreshOrders()" class="btn-primary top-control-btn">
                         <i class="fas fa-sync-alt mr-1"></i>Actualizar
                     </button>
-                    <a href="repartidor.html" class="btn-success">
+                    <a href="repartidor.html" class="btn-success top-control-btn">
                         <i class="fas fa-motorcycle mr-1"></i>Repartidor
                     </a>
-                    <a href="paginaburger.html" class="btn-info">
+                    <a href="paginaburger.html" class="btn-info top-control-btn">
                         <i class="fas fa-arrow-left mr-1"></i>Volver al Menú
                     </a>
                 </div>
@@ -459,40 +655,40 @@
     <!-- Main Content -->
     <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="card-modern text-center">
-                <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+        <div class="kitchen-stats-bar mb-8">
+            <div class="card-modern kitchen-stat-card text-center">
+                <div class="w-9 h-9 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <i class="fas fa-clock text-yellow-600 text-lg"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900" id="pending-count">0</h3>
-                <p class="text-gray-600 font-medium">Pendientes</p>
+                <h3 class="font-bold text-gray-100" id="pending-count">0</h3>
+                <p class="text-gray-400 font-medium">Pendientes</p>
             </div>
-            <div class="card-modern text-center">
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-utensils text-blue-600 text-xl"></i>
+            <div class="card-modern kitchen-stat-card text-center">
+                <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <i class="fas fa-utensils text-blue-600 text-lg"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900" id="preparing-count">0</h3>
-                <p class="text-gray-600 font-medium">Preparando</p>
+                <h3 class="font-bold text-gray-100" id="preparing-count">0</h3>
+                <p class="text-gray-400 font-medium">Preparando</p>
             </div>
-            <div class="card-modern text-center">
-                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-truck text-green-600 text-xl"></i>
+            <div class="card-modern kitchen-stat-card text-center">
+                <div class="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <i class="fas fa-truck text-green-600 text-lg"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900" id="delivering-count">0</h3>
-                <p class="text-gray-600 font-medium">En Camino</p>
+                <h3 class="font-bold text-gray-100" id="delivering-count">0</h3>
+                <p class="text-gray-400 font-medium">En Camino</p>
             </div>
-            <div class="card-modern text-center">
-                <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <i class="fas fa-check-circle text-gray-600 text-xl"></i>
+            <div class="card-modern kitchen-stat-card text-center">
+                <div class="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <i class="fas fa-check-circle text-gray-600 text-lg"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900" id="completed-count">0</h3>
-                <p class="text-gray-600 font-medium">Completados</p>
+                <h3 class="font-bold text-gray-100" id="completed-count">0</h3>
+                <p class="text-gray-400 font-medium">Completados</p>
             </div>
         </div>
 
         <!-- Filter Buttons -->
         <div class="mb-8">
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-3 kitchen-filter-bar">
                 <button onclick="filterOrders('all')" class="filter-btn btn-primary active" data-filter="all">
                     <i class="fas fa-list mr-2"></i>Todos
                 </button>
@@ -844,7 +1040,13 @@
             }
             const topMatch = t.match(/\(\+\s*([^\)]+)\)/);
             if (topMatch && topMatch[1]) res.toppings = topMatch[1].split(/\s*,\s*/).filter(Boolean);
-            const friesMatch = t.match(/Papas\s*(?::|\s)\s*([^,]+)/i);
+
+            // Detectar papas "principales" (incluidas o elegidas), pero NO cuando
+            // vienen como extra del menú en formato "1x Papas ...".
+            let friesMatch = null;
+            if (!/\d+\s*x\s+Papas/i.test(t)) {
+                friesMatch = t.match(/Papas\s*(?::|\s)\s*([^,]+)/i);
+            }
             if (friesMatch) res.fries = friesMatch[1].trim();
             const sauceMatch = t.match(/Salsas?\s*:\s*([^,|\)]+)/i);
             if (sauceMatch) res.sauce = sauceMatch[1].trim();
@@ -886,6 +1088,7 @@
                     const tops = p.replace(/^\+\s*/, '').split(/\s*,\s*/).filter(Boolean);
                     res.toppings.push(...tops);
                 } else if (/^Papas\s*(?::|\s)/i.test(p)) {
+                    // Formatos estándar tipo "Papas Gajo Medianas" o "Papas: Gajo Medianas"
                     res.fries = p.replace(/^Papas\s*(?::|\s)\s*/i, '').trim();
                 } else if (/^Salsas?\s*:/i.test(p)) {
                     res.sauce = p.replace(/^Salsas?\s*:\s*/i, '').trim();
@@ -905,6 +1108,16 @@
                         } else {
                             res.extras.push({ quantity: parseInt(m[1], 10), name: extraName });
                         }
+                    }
+                } else if (!res.fries) {
+                    // Fallback: detectar papas aunque no estén al inicio del fragmento,
+                    // siempre que no sea una línea de cantidad ("2x ...").
+                    const friesMatch = p.match(/\bPapas\s*(?::|\s)\s*([^,]+)/i);
+                    if (friesMatch) {
+                        res.fries = friesMatch[1].trim();
+                    } else if (/Coca(?:-Cola)?/i.test(p)) {
+                        // Detectar Coca-Cola en cualquier parte del texto
+                        res.extras.push({ quantity: 1, name: 'Coca-Cola 3L' });
                     }
                 } else if (/Coca(?:-Cola)?/i.test(p)) {
                     // Detectar Coca-Cola en cualquier parte del texto
@@ -1220,42 +1433,50 @@
         function createOrderCard(order) {
             const statusInfo = getStatusInfo(order.status);
             const timeAgo = getTimeAgo(order.timestamp);
+            const priorityClass = getTimePriorityClass(order.timestamp);
             const customer = order && order.customer ? order.customer : {};
             const items = Array.isArray(order.items) ? order.items : [];
 
             return `
-                <div class="order-card card-modern" data-order-id="${order.id}" data-status="${order.status}">
+                <div class="order-card card-modern ${priorityClass}" data-order-id="${order.id}" data-status="${order.status}">
+                    <button class="order-delete-btn" onclick="deleteOrder('${order.id}')" title="Eliminar pedido">
+                        <i class="fas fa-trash"></i>
+                    </button>
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <!-- Order Info -->
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3">
-                                    <h3 class="text-lg font-bold text-gray-900">Pedido #${String(order.id || '').slice(-6)}</h3>
+                                    <h3 class="text-lg font-bold text-gray-100">Pedido #${String(order.id || '').slice(-6)}</h3>
                                     <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
                                 </div>
-                                <div class="text-sm text-gray-500">${timeAgo}</div>
+                                <div class="text-sm text-gray-400">${timeAgo}</div>
                             </div>
 
                             <!-- Customer Info -->
                             <div class="customer-info mb-4">
+                                <div class="label mb-1">Cliente</div>
                                 <div class="flex items-center space-x-3 mb-2">
                                     <i class="fas fa-user text-yellow-600"></i>
-                                    <span class="font-semibold text-gray-900">${escapeHtml(customer.name || '')}</span>
+                                    <span class="font-extrabold text-red-600">${escapeHtml(customer.name || '')}</span>
                                 </div>
                                 <div class="flex items-center space-x-3 mb-2">
                                     <i class="fas fa-phone text-yellow-600"></i>
-                                    <span class="text-gray-700">${escapeHtml(customer.phone || '')}</span>
+                                    <span class="value-muted">${escapeHtml(customer.phone || '')}</span>
                                 </div>
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-map-marker-alt text-yellow-600"></i>
-                                    <span class="text-gray-700">${escapeHtml(customer.address || '')}</span>
+                                    <button type="button" class="address-toggle" onclick="toggleAddressVisibility('${order.id}')">Ver dirección</button>
+                                </div>
+                                <div id="address-${order.id}" class="mt-1 text-xs value-muted hidden">
+                                    ${escapeHtml(customer.address || '')}
                                 </div>
                             </div>
 
                             <!-- Order Items -->
                             <div class="mb-4 order-products">
-                                <h4 class="font-semibold text-gray-900 mb-2">
-                                    <i class="fas fa-shopping-bag text-gray-600 mr-2"></i>
+                                <h4 class="font-semibold text-gray-100 mb-2">
+                                    <i class="fas fa-shopping-bag text-gray-300 mr-2"></i>
                                     Productos (${items.length} items)
                                 </h4>
                                 <div class="space-y-2">
@@ -1265,8 +1486,8 @@
                                                 <div class="min-w-0 flex-1">
                                                     <div class="item-title">${Number(item.quantity || 1)}x ${escapeHtml(item.name || '')}</div>
                                                     <div class="checkmark"><i class="fas fa-check"></i></div>
+                                                    ${item.specifications ? `<div class=\"mt-1 text-sm md:text-base text-red-400 font-extrabold flex items-start gap-1 spec-warning\"><span>⚠️</span><span>ESPECIFICACIONES: ${escapeHtml(item.specifications)}</span></div>` : ''}
                                                     <div class="breakdown" onclick="event.stopPropagation()">${item.customizations ? renderItemBreakdown(item, order.id, itemIndex) : ''}</div>
-                                                    ${item.specifications ? `<div class=\"mt-1 text-xs text-red-700 font-semibold flex items-start gap-1\"><span>📝</span><span>Especificaciones: ${escapeHtml(item.specifications)}</span></div>` : ''}
                                                 </div>
                                                 <div class="text-right whitespace-nowrap">
                                                     <span class="item-price">$${Number(item.price || 0)}</span>
@@ -1275,38 +1496,55 @@
                                         </div>
                                     `).join('')}
                                 </div>
-                                <div class="mt-3 pt-3 border-t border-gray-200">
+                                <div class="mt-3 pt-3 border-t border-gray-700">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-lg font-bold text-gray-900">Total:</span>
-                                        <span class="text-xl font-bold text-yellow-600 amount">$${Number(order.total || 0)}</span>
+                                        <span class="text-lg font-bold text-gray-100">Total:</span>
+                                        <span class="text-xl font-bold text-yellow-300 amount">$${Number(order.total || 0)}</span>
                                     </div>
                                 </div>
                             </div>
 
                             ${order.notes ? `
-                                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <h5 class="font-semibold text-blue-900 mb-1">
-                                        <i class="fas fa-sticky-note text-blue-600 mr-2"></i>
+                                <div class="mb-4 p-3 bg-blue-950 border border-blue-500/40 rounded-lg">
+                                    <h5 class="font-semibold text-blue-100 mb-1">
+                                        <i class="fas fa-sticky-note text-blue-400 mr-2"></i>
                                         Notas especiales:
                                     </h5>
-                                    <p class="text-blue-800">${escapeHtml(order.notes)}</p>
+                                    <p class="text-blue-100">${escapeHtml(order.notes)}</p>
                                 </div>
                             ` : ''}
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="lg:w-64 flex flex-col space-y-3">
+                        <div class="lg:w-72 w-full kitchen-actions">
                             ${getActionButtons(order)}
 
                             <!-- Time Info -->
-                            <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <div class="text-sm text-gray-600">Tiempo estimado</div>
-                                <div class="font-bold text-gray-900">${order.estimatedTime} min</div>
+                            <div class="text-center p-3 kitchen-time-box mt-1">
+                                <div class="label mb-1">Tiempo estimado</div>
+                                <div class="font-bold text-gray-100">${order.estimatedTime} min</div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // Calcular clase de prioridad temporal según minutos transcurridos
+        function getTimePriorityClass(timestamp) {
+            try {
+                const now = new Date();
+                const orderTime = new Date(timestamp);
+                const diffMs = now - orderTime;
+                const diffMins = Math.floor(diffMs / 60000);
+
+                if (!Number.isFinite(diffMins) || diffMins < 0) return 'priority-fresh';
+                if (diffMins < 5) return 'priority-fresh';
+                if (diffMins < 10) return 'priority-warning';
+                return 'priority-urgent';
+            } catch (_) {
+                return 'priority-fresh';
+            }
         }
 
         // Obtener información del estado
@@ -1324,17 +1562,17 @@
             return statusMap[status] || statusMap['pending'];
         }
 
-        // Obtener botones de acción según el estado
+        // Obtener botones de acción según el estado (botonera táctil)
         function getActionButtons(order) {
             const locationButton = `
-                <button onclick="viewLocation('${order.id}')" class="btn-primary w-full action-button">
+                <button onclick="viewLocation('${order.id}')" class="btn-primary w-full action-button kitchen-action-btn">
                     <i class="fas fa-location-dot mr-2"></i>
                     Ver ubicación
                 </button>
             `;
 
             const paidButton = isOrderCanceled(order) ? '' : `
-                <button onclick="markOrderPaid('${order.id}')" class="btn-success w-full ${order.paid ? 'opacity-75 pointer-events-none' : ''}">
+                <button onclick="markOrderPaid('${order.id}')" class="btn-success w-full kitchen-action-btn ${order.paid ? 'opacity-60 pointer-events-none' : ''}">
                     ${order.paid ? '<i class="fas fa-check mr-2"></i>Pagado ✓' : '<i class="fas fa-dollar-sign mr-2"></i>PAGADO'}
                 </button>
             `;
@@ -1342,96 +1580,76 @@
                 case 'pending':
                     return `
                         ${locationButton}
-                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
                         </button>
                         ${paidButton}
-                        <button onclick="confirmOrder('${order.id}')" class="btn-success w-full ${order.confirmed ? 'opacity-75 pointer-events-none' : ''}">
+                        <button onclick="confirmOrder('${order.id}')" class="btn-success w-full kitchen-action-btn ${order.confirmed ? 'opacity-60 pointer-events-none' : ''}">
                             ${order.confirmed ? '<i class="fas fa-check mr-2"></i>Pedido Confirmado ✓' : '<i class="fas fa-clipboard-check mr-2"></i>Confirmar Pedido'}
                         </button>
-                        <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="btn-info w-full">
+                        <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="btn-info w-full kitchen-action-btn kitchen-primary">
                             <i class="fas fa-utensils mr-2"></i>
                             Empezar a Preparar
-                        </button>
-                        <button onclick="deleteOrder('${order.id}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Pedido
                         </button>
                     `;
                 case 'preparing':
                     return `
                         ${locationButton}
-                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
                         </button>
                         ${paidButton}
-                        <button onclick="updateOrderStatus('${order.id}', 'ready')" class="btn-success w-full">
+                        <button onclick="updateOrderStatus('${order.id}', 'ready')" class="btn-success w-full kitchen-action-btn kitchen-primary">
                             <i class="fas fa-check mr-2"></i>
                             Marcar como Listo
-                        </button>
-                        <button onclick="deleteOrder('${order.id}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Pedido
                         </button>
                     `;
                 case 'ready':
                     return `
                         ${locationButton}
-                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
                         </button>
                         ${paidButton}
-                        <button onclick="sendOnWayMessage('${order.id}')" class="btn-info w-full ${order.onWaySent ? 'opacity-75' : ''}">
+                        <button onclick="sendOnWayMessage('${order.id}')" class="btn-info w-full kitchen-action-btn ${order.onWaySent ? 'opacity-75' : ''}">
                             ${order.onWaySent ? '<i class="fas fa-check mr-2"></i>En Camino Enviado ✓' : '<i class="fas fa-truck mr-2"></i>Vamos en Camino'}
                         </button>
-                        <button onclick="updateOrderStatus('${order.id}', 'delivering')" class="btn-success w-full">
+                        <button onclick="updateOrderStatus('${order.id}', 'delivering')" class="btn-success w-full kitchen-action-btn kitchen-primary">
                             <i class="fas fa-motorcycle mr-2"></i>
                             Marcar "Saliendo"
-                        </button>
-                        <button onclick="deleteOrder('${order.id}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Pedido
                         </button>
                     `;
                 case 'delivering':
                     return `
                         ${locationButton}
-                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button">
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
                         </button>
                         ${paidButton}
-                        <button onclick="sendArrivedMessage('${order.id}')" class="btn-success w-full ${order.arrivedSent ? 'opacity-75' : ''}">
+                        <button onclick="sendArrivedMessage('${order.id}')" class="btn-success w-full kitchen-action-btn ${order.arrivedSent ? 'opacity-75' : ''}">
                             ${order.arrivedSent ? '<i class="fas fa-check mr-2"></i>Llegada Notificada ✓' : '<i class="fas fa-home mr-2"></i>Notificar Llegada'}
                         </button>
-                        <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="btn-info w-full">
+                        <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="btn-info w-full kitchen-action-btn kitchen-primary">
                             <i class="fas fa-check-circle mr-2"></i>
                             Marcar como Entregado
-                        </button>
-                        <button onclick="deleteOrder('${order.id}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Pedido
                         </button>
                     `;
                 case 'delivered':
                     return `
                         ${locationButton}
-                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button mb-2">
+                        <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn mb-2">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
                         </button>
                         ${paidButton}
-                        <div class="text-center p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
-                            <i class="fas fa-check-circle text-green-600 text-xl mb-2"></i>
-                            <div class="text-green-800 font-semibold">Pedido Completado</div>
+                        <div class="text-center p-3 bg-green-900/40 border border-green-400/40 rounded-lg mb-3">
+                            <i class="fas fa-check-circle text-green-300 text-xl mb-2"></i>
+                            <div class="text-green-100 font-semibold">Pedido Completado</div>
                         </div>
-                        <button onclick="deleteOrder('${order.id}')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Pedido
-                        </button>
                     `;
                 default:
                     return '';
@@ -1937,6 +2155,14 @@
             
             const diffDays = Math.floor(diffHours / 24);
             return `Hace ${diffDays}d`;
+        }
+
+        // Mostrar/Ocultar dirección completa para liberar espacio visual
+        function toggleAddressVisibility(orderId) {
+            const el = document.getElementById(`address-${orderId}`);
+            if (!el) return;
+            const isHidden = el.classList.contains('hidden');
+            el.classList.toggle('hidden', !isHidden);
         }
 
         // Enviar mensaje de "vamos en camino" (versión anterior - mantenida por compatibilidad)

@@ -1115,6 +1115,35 @@ class FirebaseClientManager {
         return true;
     }
 
+    // Ajustar puntos manualmente (por ejemplo, cortesía o correcciones desde panel ADMIN)
+    async addManualPoints(uid, rawDelta) {
+        if (!uid) throw new Error('Se requiere el ID del cliente para ajustar puntos.');
+
+        const deltaNumber = Number(rawDelta);
+        if (!Number.isFinite(deltaNumber) || deltaNumber === 0) {
+            return { pointsDelta: 0, newPoints: null };
+        }
+
+        const pointsDelta = Math.trunc(deltaNumber);
+        const ref = doc(this.clientsCollection, uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+            throw new Error('No se encontró el perfil del cliente.');
+        }
+
+        const data = snap.data() || {};
+        const currentPointsRaw = Number(data.puntos || 0);
+        const currentPoints = Number.isFinite(currentPointsRaw) ? currentPointsRaw : 0;
+        const newPoints = Math.max(0, currentPoints + pointsDelta);
+
+        await updateDoc(ref, {
+            puntos: newPoints,
+            updatedAt: serverTimestamp()
+        });
+
+        return { pointsDelta, newPoints, previousPoints: currentPoints };
+    }
+
     // Canjear recompensa usando puntos
     async redeemReward(type) {
         const userId = this.auth.currentUser && this.auth.currentUser.uid;

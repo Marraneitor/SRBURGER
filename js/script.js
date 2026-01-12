@@ -734,25 +734,25 @@ if (false) {
 
     // --- PROMOCIONES DIARIAS ---
     const dailyPromotions = {
-        1: { // Lunes
+        2: { // Martes - HOTDOG MANIA (antes lunes)
             type: 'hotdog_discount',
-            discount: 0.25, // 25% descuento
-            description: '25% DESCUENTO EN HOTDOGS',
+            discount: 0.20, // 20% descuento
+            description: '20% DESCUENTO EN HOTDOGS',
             categories: ['Hot Dogs']
         },
-        2: { // Martes
+        3: { // Miércoles - BBQ BEACON CRUNCH a $100 (antes martes)
             type: 'specific_item',
             targetItem: 2, // BBQ BEACON CRUNCH
             specialPrice: 100,
             description: 'BBQ BEACON CRUNCH A $100',
             categories: ['Hamburguesas']
         },
-        3: { // Miércoles
+        4: { // Jueves - Papas gratis complemento (antes miércoles)
             type: 'free_fries',
-            description: 'PAPAS GRATIS CON HAMBURGUESA',
-            categories: ['Hamburguesas']
+            description: 'PAPAS GRATIS CON HAMBURGUESA O HOTDOG',
+            categories: ['Hamburguesas', 'Hot Dogs']
         },
-        4: { // Jueves
+        5: { // Viernes - Carne & tocino 50% (antes jueves)
             type: 'meat_supreme',
             extraMeatDiscount: 20, // Doble carne a 10 en lugar de 30
             description: 'DOBLE CARNE POR SOLO 10',
@@ -792,7 +792,7 @@ if (false) {
                 break;
             
             case 'free_fries':
-                if (category === 'Hamburguesas') {
+                if (category === 'Hamburguesas' || category === 'Hot Dogs') {
                     promotedItem.hasPromotion = true;
                     promotedItem.promotionText = promotion.description;
                     promotedItem.freeFries = true;
@@ -937,8 +937,8 @@ if (false) {
     
     // Enhanced addToCart with better visual feedback
     function addToCart(itemId) {
-        const item = findItemById(itemId);
-        if (!item) return;
+        const originalItem = findItemById(itemId);
+        if (!originalItem) return;
         
         // Add loading state to button with better visual feedback
         const button = document.querySelector(`[data-id="${itemId}"].add-to-cart-btn`);
@@ -952,6 +952,17 @@ if (false) {
             }
             
             setTimeout(() => {
+                // Determinar la categoría del item para aplicar la promoción diaria
+                let category = '';
+                for (const cat in menuData) {
+                    if (menuData[cat].some(i => i.id === itemId)) {
+                        category = cat;
+                        break;
+                    }
+                }
+
+                const item = applyDailyPromotion(originalItem, category);
+
                 const cartItem = {
                     id: Date.now(),
                     baseItem: item,
@@ -960,8 +971,20 @@ if (false) {
                     onionRings: null,
                     menuExtras: [],
                     price: item.price,
-                    quantity: 1
+                    quantity: 1,
+                    hasPromotion: item.hasPromotion || false,
+                    promotionText: item.promotionText || '',
+                    freeFries: item.freeFries || false,
+                    meatSupreme: item.meatSupreme || false
                 };
+
+                // Si la promo de papas aplica y es hamburguesa u hotdog, agregar papas gratis
+                if (item.freeFries && (category === 'Hamburguesas' || category === 'Hot Dogs')) {
+                    cartItem.freeFriesIncluded = {
+                        name: 'Papas Gajo Medianas',
+                        price: 0
+                    };
+                }
                 
                 cart.push(cartItem);
                 updateCart();
@@ -2222,8 +2245,18 @@ if (false) {
                 updateComboModalTotal();
             } else {
                 // Añadir el producto personalizado al carrito
-                const item = findItemById(itemId);
-                if (!item) return;
+                const originalItem = findItemById(itemId);
+                if (!originalItem) return;
+
+                // Determinar categoría y aplicar promoción diaria también al item personalizado
+                let category = '';
+                for (const cat in menuData) {
+                    if (menuData[cat].some(i => i.id === itemId)) {
+                        category = cat;
+                        break;
+                    }
+                }
+                const item = applyDailyPromotion(originalItem, category);
                 
                 const cartItem = {
                     id: Date.now(), // ID único para el carrito
@@ -2233,7 +2266,9 @@ if (false) {
                     onionRings,
                     menuExtras,
                     price: parseFloat(customModalTotal.textContent.replace('$', '')),
-                    quantity: 1
+                    quantity: 1,
+                    hasPromotion: item.hasPromotion || false,
+                    promotionText: item.promotionText || ''
                 };
                 
                 cart.push(cartItem);
@@ -2738,8 +2773,17 @@ if (false) {
             basePrice = burger.price;
         } else if (itemId) {
             // Para ítems individuales, usamos el precio del ítem
-            const item = findItemById(itemId);
-            basePrice = item.price;
+            // aplicando la promoción diaria si corresponde (ej. HOTDOG MANIA)
+            const originalItem = findItemById(itemId);
+            let category = '';
+            for (const cat in menuData) {
+                if (menuData[cat].some(i => i.id === itemId)) {
+                    category = cat;
+                    break;
+                }
+            }
+            const promotedItem = applyDailyPromotion(originalItem, category);
+            basePrice = promotedItem.price;
         }
         
         // Sumar precio de los toppings seleccionados
@@ -3152,8 +3196,8 @@ if (false) {
             meatSupreme: item.meatSupreme || false
         };
         
-        // Si es miércoles y es una hamburguesa, agregar papas gratis
-        if (item.freeFries && category === 'Hamburguesas') {
+        // Si la promo de papas aplica y es hamburguesa u hotdog, agregar papas gratis
+        if (item.freeFries && (category === 'Hamburguesas' || category === 'Hot Dogs')) {
             cartItem.freeFriesIncluded = {
                 name: 'Papas Gajo Medianas',
                 price: 0 // Gratis
@@ -5469,7 +5513,6 @@ function showMobilePromo(category) {
     // Mapear categorías a IDs correctos
     const contentIdMap = {
         'daily': 'mobile-daily-promos',
-        'combos': 'mobile-combos-promos', 
         'weekend': 'mobile-weekend-promos'
     };
     

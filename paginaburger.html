@@ -13,8 +13,8 @@
         (function () {
             const key = 'sr_theme';
             const stored = localStorage.getItem(key);
-            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const useDark = stored ? stored === 'dark' : systemDark;
+            // Por defecto usar siempre oscuro si no hay preferencia guardada
+            const useDark = stored ? stored === 'dark' : true;
             document.documentElement.classList.toggle('dark', useDark);
         })();
     </script>
@@ -1559,23 +1559,17 @@
             transform: translateY(-1px);
         }
 
+        /* Transición suave entre secciones de promociones móviles */
         .mobile-promo-content {
-            animation: fadeInUp 0.4s ease-out;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
         }
 
         .mobile-promo-content.hidden {
             display: none;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            opacity: 0;
+            transform: translateY(12px);
         }
 
         /* Mejorar scrolling horizontal en tabs */
@@ -3035,7 +3029,7 @@
 
     <!-- Modal de promociones - Diseño Premium Competitivo Mundial -->
     <div id="promotions-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-7xl mx-auto flex flex-col relative overflow-hidden" style="max-height: 95vh;">
+        <div class="promotions-modal-panel bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-3xl shadow-2xl w-full max-w-7xl mx-auto flex flex-col relative overflow-hidden" style="max-height: 95vh;">
             <!-- Header Premium con gradiente dinámico -->
             <div class="relative p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white overflow-hidden">
                 <!-- Elementos decorativos animados -->
@@ -3070,13 +3064,10 @@
                     
                     <!-- Mobile: Navegación por tabs / Desktop: Grid completo -->
                     <div class="md:hidden mb-6">
-                        <!-- Tabs para móvil -->
+                        <!-- Tabs para móvil (solo promos diarias y fin de semana) -->
                         <div class="flex space-x-2 overflow-x-auto pb-2 mb-4">
                             <button onclick="showMobilePromo('daily')" class="mobile-promo-tab active flex-shrink-0 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold">
                                 📅 Diarias
-                            </button>
-                            <button onclick="showMobilePromo('combos')" class="mobile-promo-tab flex-shrink-0 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-bold">
-                                🍔 Combos
                             </button>
                             <button onclick="showMobilePromo('weekend')" class="mobile-promo-tab flex-shrink-0 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-bold">
                                 🎉 Fin de Semana
@@ -3104,42 +3095,42 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Lista compacta de promociones diarias (solo lunes-jueves) -->
+                                <!-- Lista compacta de promociones diarias (martes-viernes) -->
                                 <div class="grid grid-cols-1 gap-3">
-                                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
+                                    <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                             <i class="fas fa-hotdog text-blue-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-bold text-gray-900">Lunes Hotdog Mania</h4>
+                                            <h4 class="font-bold text-gray-900">Martes Hotdog Mania</h4>
                                             <p class="text-sm text-gray-600">20% descuento en hotdogs</p>
                                         </div>
-                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">LUNES</span>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">MARTES</span>
                                     </div>
                                     
-                                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
+                                    <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                             <i class="fas fa-hamburger text-green-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-bold text-gray-900">Martes BBQ BEACON CRUNCH</h4>
+                                            <h4 class="font-bold text-gray-900">Miércoles BBQ BEACON CRUNCH</h4>
                                             <p class="text-sm text-gray-600">Precio único $100</p>
                                         </div>
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">MARTES</span>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">MIÉRCOLES</span>
                                     </div>
                                     
-                                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
+                                    <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                             <i class="fas fa-gift text-purple-600"></i>
                                         </div>
                                         <div class="flex-1">
                                             <h4 class="font-bold text-gray-900">Papas Gratis</h4>
-                                            <p class="text-sm text-gray-600">Compra hamburguesa y llévate papas gratis</p>
+                                            <p class="text-sm text-gray-600">Compra hamburguesa o hotdog y llévate papas gratis</p>
                                         </div>
-                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-bold">MIÉRCOLES</span>
+                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-bold">JUEVES</span>
                                     </div>
                                     
-                                    <div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
+                                    <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                                             <i class="fas fa-plus-circle text-red-600"></i>
                                         </div>
@@ -3147,82 +3138,13 @@
                                             <h4 class="font-bold text-gray-900">Carne & Tocino</h4>
                                             <p class="text-sm text-gray-600">50% descuento en carne extra y tocino</p>
                                         </div>
-                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">JUEVES</span>
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">VIERNES</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div id="mobile-combos-promos" class="mobile-promo-content hidden">
-                            <!-- Nota importante sobre promociones -->
-                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas fa-info-circle text-blue-600"></i>
-                                    <p class="text-blue-800 text-sm font-semibold">
-                                        ⚠️ Las promociones diarias NO aplican a combos (ya tienen descuento incluido)
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-gradient-to-r from-pink-400 to-rose-500 rounded-2xl p-4 text-white">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h3 class="text-lg font-black">💕 COMBO PAREJA</h3>
-                                        <span class="bg-yellow-400 text-pink-900 px-2 py-1 rounded-full text-xs font-black">AHORRA $55</span>
-                                    </div>
-                                    <p class="text-pink-100 text-sm mb-2">2 Hamburguesas + Papas + 7 Aros de cebolla</p>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-sm text-pink-200 line-through">$305</span>
-                                        <span class="text-2xl font-black text-yellow-300">$250</span>
-                                    </div>
-                                    <button data-combo-id="6" class="promo-combo-btn w-full bg-white/20 backdrop-blur-sm text-white py-2 rounded-lg text-sm font-bold mt-3 hover:bg-white/30 transition-all">
-                                        Configurar Combo
-                                    </button>
-                                </div>
-                                
-                                <!-- Otros combos en formato compacto -->
-                                <div class="grid grid-cols-1 gap-3">
-                                    <div class="bg-white border-2 border-orange-200 rounded-xl p-3">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-bold text-gray-900">🍟 COMBO FAMILIAR</h4>
-                                                <p class="text-sm text-gray-600">4 Hamburguesas + 2 Papas + Bebidas</p>
-                                                <span class="text-lg font-black text-orange-600">$480</span>
-                                            </div>
-                                            <button data-combo-id="15" class="promo-combo-btn bg-orange-500 text-white px-3 py-2 rounded-lg text-xs font-bold">
-                                                Configurar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-white border-2 border-green-200 rounded-xl p-3">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-bold text-gray-900">🥤 COMBO CLÁSICO</h4>
-                                                <p class="text-sm text-gray-600">1 Hamburguesa + Papas + Bebida</p>
-                                                <span class="text-lg font-black text-green-600">$135</span>
-                                            </div>
-                                            <button data-combo-id="7" class="promo-combo-btn bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-bold">
-                                                Configurar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-white border-2 border-blue-200 rounded-xl p-3">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-bold text-gray-900">🌟 COMBO SUPREMO</h4>
-                                                <p class="text-sm text-gray-600">2 Hamburguesas + Papas + Aros</p>
-                                                <span class="text-lg font-black text-blue-600">$285</span>
-                                            </div>
-                                            <button data-combo-id="14" class="promo-combo-btn bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold">
-                                                Configurar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Sección de combos en móvil eliminada: ahora solo se muestran promos diarias y mensaje de fines de semana -->
                         
                         <div id="mobile-weekend-promos" class="mobile-promo-content hidden">
                             <div class="space-y-4">
@@ -3275,7 +3197,7 @@
                             </div>
                         </div>
 
-                        <!-- LUNES - HOTDOG MANIA -->
+                        <!-- MARTES - HOTDOG MANIA -->
                         <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             <div class="absolute top-4 right-4 bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-xs font-black animate-pulse">
@@ -3286,7 +3208,7 @@
                                     <div class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                                         <i class="fas fa-hotdog text-2xl"></i>
                                     </div>
-                                    <h4 class="text-sm font-bold text-blue-200 mb-1">LUNES</h4>
+                                    <h4 class="text-sm font-bold text-blue-200 mb-1">MARTES</h4>
                                     <h3 class="text-xl font-black mb-2">HOTDOG MANIA</h3>
                                 </div>
                                 <div class="space-y-2 mb-4">
@@ -3294,12 +3216,12 @@
                                     <p class="text-sm text-blue-100">En todos los hotdogs</p>
                                 </div>
                                 <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold">
-                                    Lunes de Hotdogs
+                                    Martes de Hotdogs
                                 </div>
                             </div>
                         </div>
 
-                        <!-- MARTES -->
+                        <!-- MIÉRCOLES -->
                         <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-800 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             <div class="absolute top-4 right-4 bg-yellow-400 text-green-900 px-3 py-1 rounded-full text-xs font-black animate-pulse">
@@ -3310,7 +3232,7 @@
                                     <div class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                                         <i class="fas fa-hamburger text-2xl"></i>
                                     </div>
-                                    <h4 class="text-sm font-bold text-green-200 mb-1">MARTES</h4>
+                                    <h4 class="text-sm font-bold text-green-200 mb-1">MIÉRCOLES</h4>
                                     <h3 class="text-xl font-black mb-2">BBQ BEACON CRUNCH</h3>
                                 </div>
                                 <div class="space-y-2 mb-4">
@@ -3318,12 +3240,12 @@
                                     <p class="text-sm text-green-100">Precio único</p>
                                 </div>
                                 <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold">
-                                    Martes Únicos
+                                    Miércoles Únicos
                                 </div>
                             </div>
                         </div>
 
-                        <!-- MIÉRCOLES -->
+                        <!-- JUEVES -->
                         <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-violet-800 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             <div class="absolute top-4 right-4 bg-yellow-400 text-purple-900 px-3 py-1 rounded-full text-xs font-black animate-pulse">
@@ -3334,20 +3256,20 @@
                                     <div class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                                         <i class="fas fa-gift text-2xl"></i>
                                     </div>
-                                    <h4 class="text-sm font-bold text-purple-200 mb-1">MIÉRCOLES</h4>
+                                    <h4 class="text-sm font-bold text-purple-200 mb-1">JUEVES</h4>
                                     <h3 class="text-lg font-black mb-2">PAPAS GRATIS</h3>
                                 </div>
                                 <div class="space-y-2 mb-4">
                                     <div class="text-xl font-black text-yellow-300">COMPLEMENTO</div>
-                                    <p class="text-sm text-purple-100">Compra una hamburguesa y llévate unas papas complemento gratis</p>
+                                    <p class="text-sm text-purple-100">Compra una hamburguesa o hotdog y llévate unas papas complemento gratis</p>
                                 </div>
                                 <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold">
-                                    Miércoles de Papas
+                                    Jueves de Papas
                                 </div>
                             </div>
                         </div>
 
-                        <!-- JUEVES -->
+                        <!-- VIERNES -->
                         <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             <div class="absolute top-4 right-4 bg-yellow-400 text-red-900 px-3 py-1 rounded-full text-xs font-black animate-pulse">
@@ -3358,7 +3280,7 @@
                                     <div class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                                         <i class="fas fa-plus-circle text-2xl"></i>
                                     </div>
-                                    <h4 class="text-sm font-bold text-red-200 mb-1">JUEVES</h4>
+                                    <h4 class="text-sm font-bold text-red-200 mb-1">VIERNES</h4>
                                     <h3 class="text-lg font-black mb-2">CARNE & TOCINO</h3>
                                 </div>
                                 <div class="space-y-2 mb-4">
@@ -3366,114 +3288,14 @@
                                     <p class="text-sm text-red-100">Carne extra + tocino</p>
                                 </div>
                                 <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold">
-                                    Jueves Carnívoros
+                                    Viernes Carnívoros
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Sección de combos disponibles - Layout tipo McDonald's App -->
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 mb-8">
-                        <div class="text-center mb-8">
-                            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 mb-2">🍔 NUESTROS COMBOS</h2>
-                            <p class="text-gray-600 text-lg">Los mejores combos para compartir y disfrutar</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Combo Pareja -->
-                            <div class="bg-gradient-to-r from-pink-400 to-rose-500 rounded-2xl p-6 text-white relative overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                                <div class="relative z-10">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-xl font-black">💕 COMBO PAREJA</h3>
-                                        <span class="bg-yellow-400 text-pink-900 px-3 py-1 rounded-full text-sm font-black">AHORRA $55</span>
-                                    </div>
-                                    <p class="text-pink-100 mb-4">2 Hamburguesas + Papas + 7 Aros de cebolla</p>
-                                    <div class="flex items-end space-x-3 mb-4">
-                                        <span class="text-2xl text-pink-200 line-through">$305</span>
-                                        <span class="text-4xl font-black text-yellow-300">$250</span>
-                                    </div>
-                                    <button data-combo-id="6" class="promo-combo-btn bg-white text-pink-600 px-6 py-3 rounded-xl font-bold hover:bg-pink-50 transition-colors">
-                                        Configurar Combo
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Combo Dúo -->
-                            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white relative overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                                <div class="relative z-10">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-xl font-black">🤝 COMBO DÚO</h3>
-                                        <span class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-sm font-black">AHORRA $40</span>
-                                    </div>
-                                    <p class="text-blue-100 mb-4">1 Hamburguesa + 1 Hotdog + Papas</p>
-                                    <div class="flex items-end space-x-3 mb-4">
-                                        <span class="text-2xl text-blue-200 line-through">$220</span>
-                                        <span class="text-4xl font-black text-yellow-300">$180</span>
-                                    </div>
-                                    <button data-combo-id="15" class="promo-combo-btn bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors">
-                                        Configurar Combo
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Combo Amigos -->
-                            <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                                <img src="https://i.imgur.com/TvpmXsW.jpg" alt="Combo Amigos" class="absolute inset-0 w-full h-full object-cover opacity-10 sr-img-init" data-sr-img="1" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.style.display='none'">
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                                <div class="relative z-10">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-xl font-black">👥 COMBO AMIGOS</h3>
-                                        <span class="bg-yellow-400 text-green-900 px-3 py-1 rounded-full text-sm font-black">AHORRA $60</span>
-                                    </div>
-                                    <p class="text-green-100 mb-4">3 Hamburguesas + Papas</p>
-                                    <div class="flex items-end space-x-3 mb-4">
-                                        <span class="text-2xl text-green-200 line-through">$400</span>
-                                        <span class="text-4xl font-black text-yellow-300">$360</span>
-                                    </div>
-                                    <button data-combo-id="7" class="promo-combo-btn bg-white text-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-50 transition-colors">
-                                        Configurar Combo
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Combo Familiar -->
-                            <div class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-6 text-white relative overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                                <div class="relative z-10">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-xl font-black">👨‍👩‍👧‍👦 COMBO FAMILIAR</h3>
-                                        <span class="bg-yellow-400 text-red-900 px-3 py-1 rounded-full text-sm font-black">AHORRA $80</span>
-                                    </div>
-                                    <p class="text-orange-100 mb-4">5 Hamburguesas + Papas + Aros + Coca-Cola 3L</p>
-                                    <div class="flex items-end space-x-3 mb-4">
-                                        <span class="text-2xl text-orange-200 line-through">$730</span>
-                                        <span class="text-4xl font-black text-yellow-300">$650</span>
-                                    </div>
-                                    <div class="bg-yellow-400 text-red-900 px-4 py-2 rounded-xl font-black text-sm mb-3 inline-block">
-                                        🚚 ENVÍO GRATIS INCLUIDO
-                                    </div>
-                                    <button data-combo-id="14" class="promo-combo-btn bg-white text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-50 transition-colors w-full">
-                                        Configurar Combo
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Banner promocional de combos -->
-                        <div class="mt-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-center text-white relative overflow-hidden">
-                            <div class="absolute inset-0 bg-black/20"></div>
-                            <div class="relative z-10">
-                                <h3 class="text-2xl font-black mb-2">🎯 ¡PERSONALIZA TU COMBO!</h3>
-                                <p class="text-lg text-purple-100 mb-4">Elige tus hamburguesas favoritas y crea la combinación perfecta</p>
-                                <button id="scroll-to-combos" class="inline-flex items-center bg-yellow-400 text-purple-900 px-6 py-3 rounded-2xl font-black text-lg hover:bg-yellow-300 transition-colors">
-                                    <i class="fas fa-cogs mr-2"></i>
-                                    Ver Todos los Combos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Sección "Nuestros combos" eliminada del modal de promociones para evitar duplicar ofertas.
+                         Los combos siguen estando disponibles en el menú principal. -->
 
                     <!-- Call to Action Final - Diseño Premium -->
                     <div class="bg-gradient-to-r from-gray-900 to-black rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden">
