@@ -134,16 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <br><br>
                     Pronto estaremos de vuelta con deliciosas hamburguesas para ti.
                 </p>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <p class="text-blue-800 text-sm font-semibold">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <p class="text-blue-800 text-sm font-semibold leading-relaxed">
                         <i class="fas fa-clock mr-2"></i>
-                        SERVICIO TODOS LOS DÍAS DE 3 PM A 12 AM
-                    </p>
-                </div>
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                    <p class="text-yellow-800 text-sm">
-                        <i class="fas fa-clock mr-2"></i>
-                        Estaremos disponibles nuevamente muy pronto
+                        HORARIO
+                        <br>
+                        Lunes descansamos
+                        <br>
+                        Entre semana (martes a viernes): 6 PM a 10 PM
+                        <br>
+                        Fines de semana (sábado y domingo): 4 PM a 10 PM
                     </p>
                 </div>
                 <button onclick="window.location.reload()" 
