@@ -1589,6 +1589,13 @@
                 </button>
             `;
 
+            const printButton = `
+                <button onclick="printOrderTicket('${order.id}')" class="btn-info w-full kitchen-action-btn">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir ticket
+                </button>
+            `;
+
             const paidButton = isOrderCanceled(order) ? '' : `
                 <button onclick="markOrderPaid('${order.id}')" class="btn-success w-full kitchen-action-btn ${order.paid ? 'opacity-60 pointer-events-none' : ''}">
                     ${order.paid ? '<i class="fas fa-check mr-2"></i>Pagado ✓' : '<i class="fas fa-dollar-sign mr-2"></i>PAGADO'}
@@ -1598,6 +1605,7 @@
                 case 'pending':
                     return `
                         ${locationButton}
+                        ${printButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1614,6 +1622,7 @@
                 case 'preparing':
                     return `
                         ${locationButton}
+                        ${printButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1627,6 +1636,7 @@
                 case 'ready':
                     return `
                         ${locationButton}
+                        ${printButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1643,6 +1653,7 @@
                 case 'delivering':
                     return `
                         ${locationButton}
+                        ${printButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1659,6 +1670,7 @@
                 case 'delivered':
                     return `
                         ${locationButton}
+                        ${printButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn mb-2">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1671,6 +1683,145 @@
                     `;
                 default:
                     return '';
+            }
+        }
+
+        function normalizeTicketName(s) {
+            try {
+                return String(s || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, '');
+            } catch (_) {
+                return String(s || '').toLowerCase().replace(/\s+/g, '');
+            }
+        }
+
+        function comboExtraTicketLines(item) {
+            const qty = Number(item.quantity || 1) || 1;
+            const name = String(item.name || '');
+            const key = normalizeTicketName(name);
+            const extra = [];
+            if (key.includes('comboduo')) {
+                extra.push(`${qty}x Hot Dog Jumbo`);
+            }
+            if (key.includes('comboboneles')) {
+                extra.push(`${qty > 1 ? qty + 'x ' : ''}Boneles 250g`);
+            }
+            return extra;
+        }
+
+        function buildPrintableTicketHtml(order) {
+            const now = new Date();
+            const fecha = (() => {
+                try {
+                    return new Intl.DateTimeFormat('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                        hour12: false,
+                    }).format(now);
+                } catch (_) {
+                    return now.toISOString();
+                }
+            })();
+
+            const customer = order.customer || order.cliente || {};
+            const items = Array.isArray(order.items) ? order.items : [];
+
+            const lines = [];
+            lines.push('SR Y SRA BURGER');
+            lines.push('TICKET DE COCINA');
+            lines.push('------------------------------');
+            lines.push(`FECHA: ${fecha}`);
+            if (order.id) lines.push(`ORDEN: ${String(order.id).slice(-6)}`);
+            lines.push('------------------------------');
+            if (customer.name) lines.push(`CLIENTE: ${customer.name}`);
+            if (customer.phone) lines.push(`TEL: ${customer.phone}`);
+            if (customer.address) lines.push(`DIR: ${String(customer.address).replace(/\s+/g, ' ')}`);
+            lines.push('------------------------------');
+            lines.push('PEDIDO:');
+
+            if (!items.length) {
+                lines.push('(sin items)');
+            } else {
+                items.forEach((item, idx) => {
+                    const qty = Number(item.quantity || 1) || 1;
+                    const name = String(item.name || 'SIN NOMBRE');
+                    const price = Number(item.price || 0);
+                    lines.push(`${idx + 1}. ${qty} x ${name} $${price}`);
+
+                    const custom = String(item.customizations || '');
+                    const specs = String(item.specifications || '');
+                    const details = [custom, specs]
+                        .filter(Boolean)
+                        .join(' | ')
+                        .split('|')
+                        .map(s => s.trim())
+                        .filter(Boolean);
+
+                    // Agregar líneas de combos (Hotdog / Boneles 250g) si no vienen en el texto
+                    const extra = comboExtraTicketLines(item);
+                    extra.forEach(x => {
+                        const exists = details.some(d => d.toLowerCase().includes(x.toLowerCase()));
+                        if (!exists) details.push(x);
+                    });
+
+                    details.forEach(d => lines.push(`  - ${d}`));
+                });
+            }
+
+            lines.push('------------------------------');
+            lines.push(`TOTAL: $${Number(order.total || 0)}`);
+            lines.push('------------------------------');
+
+            const safe = lines.map(l => escapeHtml(l)).join('\n');
+            return `
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ticket ${escapeHtml(String(order.id || ''))}</title>
+    <style>
+      @page { size: 80mm auto; margin: 6mm; }
+      html, body { background: #fff; color: #000; }
+      body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      pre { font-size: 12px; line-height: 1.25; white-space: pre-wrap; }
+      .hint { font-size: 10px; margin-top: 8px; }
+      @media screen { body { padding: 10px; } }
+    </style>
+  </head>
+  <body>
+    <pre>${safe}</pre>
+    <script>
+      // Auto-print on open
+      window.onload = () => { setTimeout(() => { window.print(); }, 200); };
+    </script>
+  </body>
+</html>`;
+        }
+
+        function printOrderTicket(orderId) {
+            try {
+                const order = (Array.isArray(orders) ? orders : []).find(o => String(o.id) === String(orderId));
+                if (!order) {
+                    showNotification('No se encontró el pedido para imprimir', 'error');
+                    return;
+                }
+                const html = buildPrintableTicketHtml(order);
+                const w = window.open('', '_blank', 'width=420,height=700');
+                if (!w) {
+                    alert('Bloqueador de popups: permite ventanas emergentes para imprimir.');
+                    return;
+                }
+                w.document.open();
+                w.document.write(html);
+                w.document.close();
+            } catch (e) {
+                console.error('Error al imprimir ticket:', e);
+                showNotification('Error al imprimir ticket', 'error');
             }
         }
 
