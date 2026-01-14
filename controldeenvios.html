@@ -946,7 +946,7 @@
                     color: 'amber',
                     items: [
                         { type: 'fries', name: 'Papas Grandes', quantity: 1, icon: '🍟' },
-                        { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' },
+                        { type: 'onion-rings', name: 'Aros XL', quantity: 1, icon: '🧅' },
                         { type: 'drink', name: 'Coca-Cola 3L', quantity: 1, icon: '🥤' }
                     ]
                 },
@@ -985,7 +985,8 @@
                     color: 'green',
                     items: [
                         { type: 'burger', name: 'Hamburguesa', quantity: 3, icon: '🍔' },
-                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
+                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
+                        { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' }
                     ]
                 },
                 'combodoblesdobles': {
@@ -1021,6 +1022,21 @@
             } else {
                 console.log('📋 Usando configuraciones por defecto con todos los combos:', defaultConfigs);
             }
+
+            // Hotfix de combos aunque existan combos guardados antiguos en localStorage
+            // (asegura que Control de Envíos y ticket muestren los aros correctos)
+            (function enforceComboDefaults() {
+                function upsertRings(cfg, desiredName) {
+                    if (!cfg || !Array.isArray(cfg.items)) return;
+                    const idx = cfg.items.findIndex(it => (it && (it.type === 'onion-rings' || /aros/i.test(String(it.name || '')))));
+                    const item = { type: 'onion-rings', name: desiredName, quantity: 1, icon: '🧅' };
+                    if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+                    else cfg.items.push(item);
+                }
+
+                upsertRings(merged['comboamigos'], 'Aros Medianos');
+                upsertRings(merged['combofamiliar'], 'Aros XL');
+            })();
             comboConfigurations = merged;
         }
 
@@ -1165,6 +1181,10 @@
 
             // Detectar si es un combo configurado
             const comboConfig = getComboConfig(item.name);
+            const onionConfigName = comboConfig && Array.isArray(comboConfig.items)
+                ? (comboConfig.items.find(it => it && it.type === 'onion-rings') || {}).name
+                : null;
+            const onionLabel = onionConfigName || 'Aros de Cebolla';
 
             // Si es combo: mantener checklist visual + también mostrar detalles (papas/salsas/etc.)
             const comboChecklistHtml = comboConfig ? (() => {
@@ -1227,7 +1247,7 @@
                                 ${ch.toppings && ch.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(ch.toppings, 'amber', orderId, itemIndex, 'toppings_' + chIdx)}</div>` : ''}
                                 ${ch.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${ch.fries}`], 'blue', orderId, itemIndex, 'fries_' + chIdx)}</div>` : ''}
                                 ${ch.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([ch.sauce], 'pink', orderId, itemIndex, 'sauce_' + chIdx)}</div>` : ''}
-                                ${ch.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges(['Aros de Cebolla'], 'green', orderId, itemIndex, 'onion_' + chIdx)}</div>` : ''}
+                                ${ch.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges([onionLabel], 'green', orderId, itemIndex, 'onion_' + chIdx)}</div>` : ''}
                                 ${ch.extras && ch.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(ch.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras_' + chIdx)}</div>` : ''}
                             </div>
                         `).join('')}
@@ -1241,7 +1261,7 @@
                                 <div class=\"space-y-2\">
                                     ${friesBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🍟 Papas:</span>${renderBadges(friesBadges, 'blue', orderId, itemIndex, 'include_fries')}</div>` : ''}
                                     ${sauceBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🥫 Salsa:</span>${renderBadges([sauceBadges[0]], 'pink', orderId, itemIndex, 'include_sauce')}</div>` : ''}
-                                    ${hasOnion ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🧅 Aros de Cebolla Medianos:</span>${renderBadges(['Listo'], 'green', orderId, itemIndex, 'include_onion')}</div>` : ''}
+                                    ${hasOnion ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🧅 ${escapeHtml(onionLabel)}:</span>${renderBadges(['Listo'], 'green', orderId, itemIndex, 'include_onion')}</div>` : ''}
                                     ${drinkBadges.length ? `<div class=\"flex items-center space-x-2\"><span class=\"text-xs text-gray-600 font-medium\">🥤 Coca-Cola 3L:</span>${renderBadges(['Listo'], 'green', orderId, itemIndex, 'include_drinks')}</div>` : ''}
                                 </div>
                             </div>
@@ -1709,6 +1729,12 @@
             if (key.includes('comboboneles')) {
                 extra.push(`${qty > 1 ? qty + 'x ' : ''}Boneles 250g`);
             }
+            if (key.includes('comboamigos')) {
+                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros Medianos`);
+            }
+            if (key.includes('combofamiliar')) {
+                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros XL`);
+            }
             return extra;
         }
 
@@ -1730,17 +1756,20 @@
             const customer = order.customer || order.cliente || {};
             const items = Array.isArray(order.items) ? order.items : [];
 
+            // Para rollo de 58mm: separador más corto
+            const SEP = '----------------------------';
+
             const lines = [];
             lines.push('SR Y SRA BURGER');
             lines.push('TICKET DE COCINA');
-            lines.push('------------------------------');
+            lines.push(SEP);
             lines.push(`FECHA: ${fecha}`);
             if (order.id) lines.push(`ORDEN: ${String(order.id).slice(-6)}`);
-            lines.push('------------------------------');
+            lines.push(SEP);
             if (customer.name) lines.push(`CLIENTE: ${customer.name}`);
             if (customer.phone) lines.push(`TEL: ${customer.phone}`);
             if (customer.address) lines.push(`DIR: ${String(customer.address).replace(/\s+/g, ' ')}`);
-            lines.push('------------------------------');
+            lines.push(SEP);
             lines.push('PEDIDO:');
 
             if (!items.length) {
@@ -1752,6 +1781,8 @@
                     const price = Number(item.price || 0);
                     lines.push(`${idx + 1}. ${qty} x ${name} $${price}`);
 
+                    const itemKey = normalizeTicketName(name);
+
                     const custom = String(item.customizations || '');
                     const specs = String(item.specifications || '');
                     const details = [custom, specs]
@@ -1760,6 +1791,20 @@
                         .split('|')
                         .map(s => s.trim())
                         .filter(Boolean);
+
+                    // Si el combo trae aros pero vienen con texto antiguo (p.ej. "Aros de Cebolla Medianos"),
+                    // normalizar para que NO se impriman medianos en Combo Familiar.
+                    if (itemKey.includes('combofamiliar')) {
+                        for (let i = details.length - 1; i >= 0; i--) {
+                            if (/aros/i.test(details[i])) details.splice(i, 1);
+                        }
+                        details.push('Aros XL');
+                    } else if (itemKey.includes('comboamigos')) {
+                        for (let i = details.length - 1; i >= 0; i--) {
+                            if (/aros/i.test(details[i])) details.splice(i, 1);
+                        }
+                        details.push('Aros Medianos');
+                    }
 
                     // Agregar líneas de combos (Hotdog / Boneles 250g) si no vienen en el texto
                     const extra = comboExtraTicketLines(item);
@@ -1772,9 +1817,9 @@
                 });
             }
 
-            lines.push('------------------------------');
+            lines.push(SEP);
             lines.push(`TOTAL: $${Number(order.total || 0)}`);
-            lines.push('------------------------------');
+            lines.push(SEP);
 
             const safe = lines.map(l => escapeHtml(l)).join('\n');
             return `
@@ -1785,11 +1830,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Ticket ${escapeHtml(String(order.id || ''))}</title>
     <style>
-      @page { size: 80mm auto; margin: 6mm; }
+            /* 58mm thermal */
+            @page { size: 58mm auto; margin: 4mm; }
       html, body { background: #fff; color: #000; }
+            body { width: 58mm; margin: 0 auto; }
       body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-      pre { font-size: 12px; line-height: 1.25; white-space: pre-wrap; }
-      .hint { font-size: 10px; margin-top: 8px; }
+            pre { font-size: 13px; line-height: 1.25; white-space: pre-wrap; word-break: break-word; }
+        .hint { font-size: 11px; margin-top: 8px; }
       @media screen { body { padding: 10px; } }
     </style>
   </head>
