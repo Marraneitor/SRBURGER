@@ -1795,10 +1795,6 @@
   </head>
   <body>
     <pre>${safe}</pre>
-    <script>
-      // Auto-print on open
-      window.onload = () => { setTimeout(() => { window.print(); }, 200); };
-    </script>
   </body>
 </html>`;
         }
@@ -1811,14 +1807,40 @@
                     return;
                 }
                 const html = buildPrintableTicketHtml(order);
-                const w = window.open('', '_blank', 'width=420,height=700');
-                if (!w) {
-                    alert('Bloqueador de popups: permite ventanas emergentes para imprimir.');
-                    return;
-                }
-                w.document.open();
-                w.document.write(html);
-                w.document.close();
+                                const w = window.open('about:blank', '_blank', 'width=420,height=700');
+                                if (w) {
+                                        w.document.open();
+                                        w.document.write(html);
+                                        w.document.close();
+                                        w.focus();
+                                        setTimeout(() => {
+                                                try { w.print(); } catch (_) {}
+                                        }, 250);
+                                        return;
+                                }
+
+                                // Fallback: imprimir en iframe oculto (cuando popups están bloqueados)
+                                const iframe = document.createElement('iframe');
+                                iframe.style.position = 'fixed';
+                                iframe.style.right = '0';
+                                iframe.style.bottom = '0';
+                                iframe.style.width = '0';
+                                iframe.style.height = '0';
+                                iframe.style.border = '0';
+                                iframe.setAttribute('aria-hidden', 'true');
+                                document.body.appendChild(iframe);
+                                const doc = iframe.contentWindow && iframe.contentWindow.document;
+                                if (!doc) {
+                                        alert('No se pudo abrir impresión. Permite popups o usa otro navegador.');
+                                        return;
+                                }
+                                doc.open();
+                                doc.write(html);
+                                doc.close();
+                                setTimeout(() => {
+                                        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (_) {}
+                                        setTimeout(() => { try { document.body.removeChild(iframe); } catch (_) {} }, 1000);
+                                }, 300);
             } catch (e) {
                 console.error('Error al imprimir ticket:', e);
                 showNotification('Error al imprimir ticket', 'error');
