@@ -20,6 +20,8 @@ Thumbs.db
 js/gmaps-key.local.js
 **/*serviceAccount*.json
 **/*firebase*service*account*.json
+**/*firebase-adminsdk*.json
+sr-sra-burger-*.json
 
 # Backups
 # (ojo) js/script.js.backup se usa en producción como script core

@@ -937,74 +937,91 @@
         // Cargar configuraciones de combos
         function loadComboConfigurations() {
             const savedCombos = localStorage.getItem('burgerCombos');
+
+            // Defaults (incluye combos base + Combo Boneles con gramaje)
+            const defaultConfigs = {
+                'combofamiliar': {
+                    name: 'Combo Familiar',
+                    type: 'familiar',
+                    color: 'amber',
+                    items: [
+                        { type: 'fries', name: 'Papas Grandes', quantity: 1, icon: '🍟' },
+                        { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' },
+                        { type: 'drink', name: 'Coca-Cola 3L', quantity: 1, icon: '🥤' }
+                    ]
+                },
+                'comboduo': {
+                    name: 'Combo Dúo',
+                    type: 'duo',
+                    color: 'purple',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa', quantity: 1, icon: '🍔' },
+                        { type: 'hotdog', name: 'Hot Dog Jumbo', quantity: 1, icon: '🌭' },
+                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
+                    ]
+                },
+                'comboboneles': {
+                    name: 'Combo Boneles',
+                    type: 'boneles',
+                    color: 'red',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa', quantity: 1, icon: '🍔' },
+                        { type: 'boneles', name: 'Boneles 250g', quantity: 1, icon: '🍗' }
+                    ]
+                },
+                'combopareja': {
+                    name: 'Combo Pareja',
+                    type: 'pareja',
+                    color: 'pink',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa', quantity: 2, icon: '🍔' },
+                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
+                        { type: 'onion-rings', name: 'Aros de Cebolla', quantity: 1, icon: '🧅' }
+                    ]
+                },
+                'comboamigos': {
+                    name: 'Combo Amigos',
+                    type: 'amigos',
+                    color: 'green',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa', quantity: 3, icon: '🍔' },
+                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
+                    ]
+                },
+                'combodoblesdobles': {
+                    name: 'DOBLES DOBLES',
+                    type: 'dobles',
+                    color: 'red',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa Doble', quantity: 2, icon: '🍔' }
+                    ]
+                },
+                'combodoblesdoblesbbq': {
+                    name: 'DOBLES DOBLES BBQ',
+                    type: 'bbq',
+                    color: 'orange',
+                    items: [
+                        { type: 'burger', name: 'Hamburguesa BBQ', quantity: 2, icon: '🍔' }
+                    ]
+                }
+            };
+
+            // Merge: defaults + saved combos (saved tiene prioridad)
+            let merged = { ...defaultConfigs };
             if (savedCombos) {
-                const combos = JSON.parse(savedCombos);
-                comboConfigurations = {};
-                combos.forEach(combo => {
-                    comboConfigurations[combo.name.toLowerCase().replace(/\s+/g, '')] = combo;
-                });
-                console.log('📋 Configuraciones de combos cargadas:', comboConfigurations);
+                try {
+                    const combos = JSON.parse(savedCombos);
+                    combos.forEach(combo => {
+                        merged[combo.name.toLowerCase().replace(/\s+/g, '')] = combo;
+                    });
+                    console.log('📋 Configuraciones (defaults + guardadas):', merged);
+                } catch (e) {
+                    console.warn('⚠️ Error leyendo burgerCombos. Usando defaults.', e);
+                }
             } else {
-                // Configuraciones por defecto con todos los combos
-                comboConfigurations = {
-                    'combofamiliar': {
-                        name: 'Combo Familiar',
-                        type: 'familiar',
-                        color: 'amber',
-                        items: [
-                            { type: 'fries', name: 'Papas Grandes', quantity: 1, icon: '🍟' },
-                            { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' },
-                            { type: 'drink', name: 'Coca-Cola 3L', quantity: 1, icon: '🥤' }
-                        ]
-                    },
-                    'comboduo': {
-                        name: 'Combo Dúo',
-                        type: 'duo',
-                        color: 'purple',
-                        items: [
-                            { type: 'burger', name: 'Hamburguesa', quantity: 1, icon: '🍔' },
-                            { type: 'hotdog', name: 'Hot Dog Jumbo', quantity: 1, icon: '🌭' },
-                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
-                        ]
-                    },
-                    'combopareja': {
-                        name: 'Combo Pareja',
-                        type: 'pareja',
-                        color: 'pink',
-                        items: [
-                            { type: 'burger', name: 'Hamburguesa', quantity: 2, icon: '🍔' },
-                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
-                            { type: 'onion-rings', name: 'Aros de Cebolla', quantity: 1, icon: '🧅' }
-                        ]
-                    },
-                    'comboamigos': {
-                        name: 'Combo Amigos',
-                        type: 'amigos',
-                        color: 'green',
-                        items: [
-                            { type: 'burger', name: 'Hamburguesa', quantity: 3, icon: '🍔' },
-                            { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
-                        ]
-                    },
-                    'combodoblesdobles': {
-                        name: 'DOBLES DOBLES',
-                        type: 'dobles',
-                        color: 'red',
-                        items: [
-                            { type: 'burger', name: 'Hamburguesa Doble', quantity: 2, icon: '🍔' }
-                        ]
-                    },
-                    'combodoblesdoblesbbq': {
-                        name: 'DOBLES DOBLES BBQ',
-                        type: 'bbq',
-                        color: 'orange',
-                        items: [
-                            { type: 'burger', name: 'Hamburguesa BBQ', quantity: 2, icon: '🍔' }
-                        ]
-                    }
-                };
-                console.log('📋 Usando configuraciones por defecto con todos los combos:', comboConfigurations);
+                console.log('📋 Usando configuraciones por defecto con todos los combos:', defaultConfigs);
             }
+            comboConfigurations = merged;
         }
 
         // Función para detectar si un item es un combo y obtener su configuración
@@ -1214,6 +1231,7 @@
                                 ${ch.extras && ch.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(ch.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras_' + chIdx)}</div>` : ''}
                             </div>
                         `).join('')}
+                        ${comboChecklistHtml}
                         ${includePieces.length ? `
                             <div class=\"p-3 rounded-lg border-2 border-amber-200 bg-amber-50\">
                                 <div class=\"text-sm text-gray-700 font-semibold mb-2 flex items-center\">
