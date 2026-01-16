@@ -191,13 +191,49 @@ document.addEventListener('DOMContentLoaded', () => {
     function getMenuCategoriesInOrder() {
         const base = Object.keys(menuData);
         const fromFirebase = normalizeCategoriesList(categoriesFromFirebase);
-        if (!fromFirebase.length) return base;
-        const out = [...fromFirebase];
+
+        // Orden fijo deseado para las categorías principales del menú
+        const DESIRED_CATEGORY_ORDER = [
+            'Hamburguesas',
+            'Hot Dogs',
+            'Boneles',
+            'Combos',
+            'Extras',
+            'Bebidas'
+        ];
+
+        // Punto de partida: si hay configuración en Firebase, usarla; si no, usar las claves base
+        const initial = fromFirebase.length ? fromFirebase : base;
+
         // Asegurar que las categorías base sigan visibles aunque no estén en settings
+        const withBase = [...initial];
         base.forEach((c) => {
-            if (!out.some((x) => String(x).toLowerCase() === String(c).toLowerCase())) out.push(c);
+            if (!withBase.some((x) => String(x).toLowerCase() === String(c).toLowerCase())) {
+                withBase.push(c);
+            }
         });
-        return out;
+
+        // Aplicar el orden deseado, respetando solo las categorías realmente presentes
+        const lowerPresent = new Set(withBase.map((c) => String(c).toLowerCase()));
+        const ordered = [];
+
+        // 1) Agregar en el orden fijo deseado
+        DESIRED_CATEGORY_ORDER.forEach((cat) => {
+            const key = String(cat).toLowerCase();
+            if (lowerPresent.has(key)) {
+                const found = withBase.find((c) => String(c).toLowerCase() === key);
+                if (found && !ordered.includes(found)) {
+                    ordered.push(found);
+                }
+            }
+        });
+
+        // 2) Agregar cualquier categoría adicional que no esté en el orden fijo
+        withBase.forEach((c) => {
+            if (!ordered.includes(c)) ordered.push(c);
+        });
+
+        return ordered;
     }
 
     // Load custom products and merge into menuData
@@ -1524,6 +1560,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    function getCategoryForItemId(itemId) {
+        const found = findItemByIdWithCategory(itemId);
+        return found ? String(found.category || '') : '';
+    }
+
+    function isFreeFriesPromotionActiveForCategory(category) {
+        const promotion = getCurrentDayPromotion();
+        if (!promotion || promotion.type !== 'free_fries') return false;
+        return category === 'Hamburguesas' || category === 'Hot Dogs';
+    }
+
+    function getFreeFriesDisplayNameByType(friesType) {
+        const normalized = String(friesType || '').toLowerCase();
+        if (normalized.includes('frances')) return 'Papas Francesas Medianas';
+        return 'Papas Gajo Medianas';
+    }
+
     function openBonelesOptionsModal(itemId, buttonEl) {
         const found = findItemByIdWithCategory(itemId);
         if (!found || !found.item) return;
@@ -1853,7 +1906,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         ` : ''}
                         
-                        ${(item.customizations && item.customizations.length > 0) || item.fries || item.onionRings || (item.menuExtras && item.menuExtras.length > 0) ? `
+                        ${(item.customizations && item.customizations.length > 0) || item.fries || item.onionRings || (item.menuExtras && item.menuExtras.length > 0) || item.freeFriesIncluded ? `
                             <div class="text-sm text-gray-600 bg-green-50 p-2 rounded mb-2">
                                 <strong class="text-green-800">Personalizaciones:</strong>
                                 <ul class="mt-1 space-y-1">
@@ -1881,6 +1934,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span class="font-semibold text-green-700">+$${(extra.price * extra.quantity)}</span>
                                         </li>
                                     `).join('') : ''}
+                                    ${item.freeFriesIncluded ? `
+                                        <li class="flex justify-between text-xs">
+                                            <span>• ${item.freeFriesIncluded.name}</span>
+                                            <span class="font-semibold text-green-700">GRATIS</span>
+                                        </li>
+                                    ` : ''}
                                 </ul>
                             </div>
                         ` : ''}
@@ -3094,14 +3153,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // Recopilar acompañamientos
+            const friesRequested = Boolean(addFriesCheckbox.checked);
+            const selectedFriesType = friesRequested
+                ? document.querySelector('input[name="fries-type"]:checked')?.value
+                : null;
+
             let fries = null;
-            if (addFriesCheckbox.checked) {
-                const friesType = document.querySelector('input[name="fries-type"]:checked').value;
-                fries = {
-                    type: friesType,
-                    price: FRIES_PRICE
-                };
-            }
+            let freeFriesIncluded = null;
             
             let onionRings = null;
             if (document.getElementById('add-onion-rings-checkbox').checked) {
@@ -3127,6 +3185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const specifications = customNotesInput ? customNotesInput.value.trim() : '';
             
             if (isCombo) {
+                fries = friesRequested ? { type: selectedFriesType, price: FRIES_PRICE } : null;
                 if (isHotdog) {
                     // Actualizar configuración del hotdog en el combo
                     tempComboConfig.hotdogs[hotdogIndex].customizations = customizations;
@@ -3204,14 +3263,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!originalItem) return;
 
                 // Determinar la categoría y aplicar también la promoción diaria al producto personalizado
-                let category = '';
-                for (const cat in menuData) {
-                    if (menuData[cat].some(i => i.id === itemId)) {
-                        category = cat;
-                        break;
+                const category = getCategoryForItemId(itemId);
+                const item = applyDailyPromotion(originalItem, category);
+
+                if (friesRequested) {
+                    const isFreeFriesEligible = Boolean(item.freeFries) && isFreeFriesPromotionActiveForCategory(category);
+                    if (isFreeFriesEligible) {
+                        freeFriesIncluded = {
+                            name: getFreeFriesDisplayNameByType(selectedFriesType),
+                            price: 0
+                        };
+                        fries = null;
+                    } else {
+                        fries = {
+                            type: selectedFriesType,
+                            price: FRIES_PRICE
+                        };
                     }
                 }
-                const item = applyDailyPromotion(originalItem, category);
                 
                 const cartItem = {
                     id: Date.now(), // ID único para el carrito
@@ -3220,11 +3289,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     fries,
                     onionRings,
                     menuExtras,
+                    freeFriesIncluded,
                     specifications: specifications || '',
                     price: parseFloat(customModalTotal.textContent.replace('$', '')),
                     quantity: 1,
                     hasPromotion: item.hasPromotion || false,
-                    promotionText: item.promotionText || ''
+                    promotionText: item.promotionText || '',
+                    freeFries: item.freeFries || false
                 };
                 
                 cart.push(cartItem);
@@ -3477,24 +3548,32 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                         if (item.fries) details.push(`Papas ${item.fries.type}`);
+                        if (!item.fries && item.freeFriesIncluded && item.freeFriesIncluded.name) {
+                            details.push(`${item.freeFriesIncluded.name} (GRATIS)`);
+                        }
                         if (item.onionRings) details.push('Aros de Cebolla');
                         if (item.menuExtras && item.menuExtras.length > 0) {
                             item.menuExtras.forEach(extra => details.push(`${extra.quantity}x ${extra.name}`));
                         }
                         customizations = details.join(', ');
 
-                        // Especificaciones para productos individuales
-                        if (item.specifications) {
-                            specificationsText = item.specifications;
-                        }
-                    }
-                    return {
-                        name: item.baseItem.name,
-                        quantity: item.quantity,
-                        price: parseFloat((item.price * item.quantity).toFixed(2)),
-                        customizations: customizations || '',
-                        specifications: specificationsText || ''
-                    };
+                                // Especificaciones para productos individuales
+                                if (item.specifications) {
+                                    specificationsText = item.specifications;
+                                }
+                            }
+                            const baseId = Number(item.baseItem && item.baseItem.id);
+                            const unitPrice = Number(item.price || 0);
+                            return {
+                            id: baseId,
+                            productId: baseId,
+                            name: item.baseItem.name,
+                            quantity: item.quantity,
+                            unitPrice: parseFloat(unitPrice.toFixed(2)),
+                            price: parseFloat((unitPrice * item.quantity).toFixed(2)),
+                            customizations: customizations || '',
+                            specifications: specificationsText || ''
+                        };
                 });
 
                 const pricing = computeCheckoutPricing(deliveryTypeValue);
@@ -3531,6 +3610,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const orderData = {
                     customer: { name: customerName, phone: customerPhone, address, coordinates: deliveryCoords },
                     items: orderItems,
+                    // Totales y desglose
+                    subtotal: parseFloat(pricing.subtotal.toFixed(2)),
+                    subtotalAfterDiscount: parseFloat(pricing.subtotalAfterDiscount.toFixed(2)),
+                    deliveryFee: parseFloat(pricing.deliveryFee.toFixed(2)),
                     total: parseFloat(total.toFixed(2)),
                     notes: notes || '',
                     deliveryType: deliveryTypeValue,
@@ -3697,6 +3780,18 @@ document.addEventListener('DOMContentLoaded', () => {
             currentMenuExtras = [];
             currentSpecifications = '';
             customModalTitle.textContent = `Personaliza tu ${item.name}`;
+
+            // Ajustar el pill de papas según promo del día (jueves: papas gratis)
+            const friesPill = document.getElementById('fries-price-pill');
+            if (friesPill) {
+                const category = getCategoryForItemId(context.itemId);
+                const isFreeFries = isFreeFriesPromotionActiveForCategory(category);
+                friesPill.textContent = isFreeFries ? 'GRATIS' : `+${FRIES_PRICE.toFixed(0)}`;
+                friesPill.classList.toggle('bg-green-100', isFreeFries);
+                friesPill.classList.toggle('text-green-700', isFreeFries);
+                friesPill.classList.toggle('bg-yellow-100', !isFreeFries);
+                friesPill.classList.toggle('text-yellow-800', !isFreeFries);
+            }
         }
 
         // Guardar el contexto desde el inicio (esto se lee en updateCustomModalPrice y al confirmar)
@@ -4055,6 +4150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { isCombo, itemId, choiceIndex, isHotdog, hotdogIndex } = context;
         
         let basePrice = 0;
+        let isFreeFriesEligible = false;
         
         if (isCombo) {
             if (isHotdog) {
@@ -4069,15 +4165,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Para ítems individuales, usamos el precio del ítem
             // aplicando la promoción diaria si corresponde (ej. HOTDOG MANIA)
             const originalItem = findItemById(itemId);
-            let category = '';
-            for (const cat in menuData) {
-                if (menuData[cat].some(i => i.id === itemId)) {
-                    category = cat;
-                    break;
-                }
-            }
+            const category = getCategoryForItemId(itemId);
             const promotedItem = applyDailyPromotion(originalItem, category);
             basePrice = promotedItem.price;
+            isFreeFriesEligible = Boolean(promotedItem.freeFries) && isFreeFriesPromotionActiveForCategory(category);
         }
         
         // Sumar precio de los toppings seleccionados
@@ -4089,7 +4180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Sumar precio de papas si están seleccionadas
         if (addFriesCheckbox.checked) {
-            total += FRIES_PRICE;
+            total += isFreeFriesEligible ? 0 : FRIES_PRICE;
         }
         
         // Sumar precio de aros de cebolla si están seleccionados
@@ -4524,8 +4615,8 @@ document.addEventListener('DOMContentLoaded', () => {
             meatSupreme: item.meatSupreme || false
         };
         
-        // Si es miércoles y es una hamburguesa, agregar papas gratis
-        if (item.freeFries && category === 'Hamburguesas') {
+        // Si la promo del día incluye papas gratis, agregarlas al carrito
+        if (item.freeFries && (category === 'Hamburguesas' || category === 'Hot Dogs')) {
             cartItem.freeFriesIncluded = {
                 name: 'Papas Gajo Medianas',
                 price: 0 // Gratis
@@ -7637,6 +7728,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (item.fries) {
                         details.push(`Papas ${item.fries.type}`);
                     }
+                    if (!item.fries && item.freeFriesIncluded && item.freeFriesIncluded.name) {
+                        details.push(`${item.freeFriesIncluded.name} (GRATIS)`);
+                    }
                     if (item.onionRings) {
                         details.push('Aros de Cebolla');
                     }
@@ -7648,10 +7742,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     customizations = details.join(', ');
                 }
                 
+                const baseId = Number(item.baseItem && item.baseItem.id);
+                const unitPrice = Number(item.price || 0);
                 return {
+                    id: baseId,
+                    productId: baseId,
                     name: itemName,
                     quantity: item.quantity,
-                    price: parseFloat((item.price * item.quantity).toFixed(2)),
+                    unitPrice: parseFloat(unitPrice.toFixed(2)),
+                    price: parseFloat((unitPrice * item.quantity).toFixed(2)),
                     customizations: customizations || ''
                 };
             });
@@ -7692,11 +7791,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     address: address
                 },
                 items: orderItems,
+                // Totales y desglose (flujo secundario sin recompensas)
+                subtotal: parseFloat(subtotal.toFixed(2)),
+                subtotalAfterDiscount: parseFloat(subtotal.toFixed(2)),
+                deliveryFee: parseFloat(deliveryCost.toFixed(2)),
                 total: parseFloat(total.toFixed(2)),
                 notes: notes || '',
                 deliveryType: deliveryTypeValue,
                 paymentMethod: paymentMethod,
-                clienteId: clienteId || undefined
+                clienteId: clienteId || undefined,
+                discountAmount: 0
             };
             
             console.log('📝 Enviando pedido a Firebase...', orderData);

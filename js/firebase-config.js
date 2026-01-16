@@ -330,6 +330,51 @@ class FirebaseOrderManager {
         const timePerItem = 5;
         return baseTime + (items.length * timePerItem);
     }
+
+    // Rellenar metadatos (productId, unitPrice) en órdenes antiguas
+    async backfillOrderItemsMetadata() {
+        try {
+            const q = query(this.ordersCollection);
+            const snapshot = await getDocs(q);
+
+            for (const docSnap of snapshot.docs) {
+                const data = docSnap.data() || {};
+                const items = Array.isArray(data.items) ? data.items : [];
+                if (!items.length) continue;
+
+                let changed = false;
+                const nextItems = items.map((it) => {
+                    if (!it || typeof it !== 'object') return it;
+                    const copy = { ...it };
+
+                    const baseId = Number(copy.productId || copy.id || copy.baseItemId || copy.itemId);
+                    if (Number.isFinite(baseId) && copy.productId == null) {
+                        copy.productId = baseId;
+                        changed = true;
+                    }
+
+                    const qtyRaw = Number(copy.quantity || 1);
+                    const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
+                    if (copy.unitPrice == null) {
+                        const lineTotal = Number(copy.price || 0);
+                        if (Number.isFinite(lineTotal) && qty > 0) {
+                            copy.unitPrice = lineTotal / qty;
+                            changed = true;
+                        }
+                    }
+
+                    return copy;
+                });
+
+                if (!changed) continue;
+
+                const ref = doc(db, 'orders', docSnap.id);
+                await updateDoc(ref, { items: nextItems });
+            }
+        } catch (error) {
+            console.error('Error haciendo backfill de metadatos de órdenes:', error);
+        }
+    }
 }
 
 // Clase para manejar configuraciones de administración

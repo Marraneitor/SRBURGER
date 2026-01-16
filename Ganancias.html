@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ganancias - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 grid place-items-center">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-emerald-300 tracking-wide">SR &amp; SRA BURGER</div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Resumen de ganancias</h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Ventas, costos y margen aproximado por día.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="admin.html" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-100 border border-slate-700">
+          <i class="fas fa-arrow-left"></i>
+          Volver al admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+    <div id="status" class="text-xs text-slate-300"></div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700">
+        <i class="fas fa-calendar-day text-emerald-300 text-xs"></i>
+        <div class="flex flex-col">
+          <span class="text-[11px] font-semibold text-slate-200 leading-tight">Día</span>
+          <input id="date-filter" type="date" class="mt-1 text-xs bg-transparent border-0 focus:ring-0 p-0 text-slate-100" />
+        </div>
+      </div>
+      <button id="today-btn" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 flex items-center gap-1">
+        <i class="fas fa-bolt"></i>
+        Hoy
+      </button>
+      <button id="yesterday-btn" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-100 flex items-center gap-1 border border-slate-700">
+        <i class="fas fa-clock-rotate-left"></i>
+        Ayer
+      </button>
+      <button id="clear-date-btn" class="px-3 py-2 rounded-xl bg-transparent hover:bg-slate-900 text-xs font-semibold text-slate-300 flex items-center gap-1">
+        <i class="fas fa-ban"></i>
+        Limpiar
+      </button>
+    </div>
+
+    <section id="summary" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Ventas</div>
+        <div class="mt-1 text-2xl font-extrabold text-emerald-400" id="sum-total">$0</div>
+        <div class="mt-1 text-xs text-slate-400" id="sum-orders">0 pedidos</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Costos producción</div>
+        <div class="mt-1 text-2xl font-extrabold text-sky-300" id="sum-cost">$0</div>
+        <div class="mt-1 text-xs text-slate-400" id="sum-delivery">Envíos: $0</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Utilidad aprox.</div>
+        <div class="mt-1 text-2xl font-extrabold" id="sum-margin">$0</div>
+        <div class="mt-1 text-xs text-slate-400" id="sum-discount">Descuentos: $0</div>
+      </div>
+    </section>
+
+    <section id="list-wrapper" class="hidden">
+      <h2 class="text-sm font-extrabold text-slate-200 mb-2">Pedidos del día</h2>
+      <div id="orders-list" class="space-y-3"></div>
+    </section>
+
+    <div id="empty" class="hidden text-center py-16 text-slate-400 text-sm">
+      No hay pedidos entregados para ese día.
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script>
+    (function() {
+      let allHistoryOrders = [];
+      let productionCosts = {};
+
+      function setStatus(msg, type) {
+        const el = document.getElementById('status');
+        if (!el) return;
+        const base = 'text-xs';
+        const color = type === 'error' ? 'text-rose-300' : type === 'success' ? 'text-emerald-300' : 'text-slate-300';
+        el.className = base + ' ' + color;
+        el.textContent = msg || '';
+      }
+
+      function tsToDate(ts) {
+        try {
+          if (!ts) return null;
+          if (typeof ts === 'string') {
+            const d = new Date(ts);
+            return isNaN(d.getTime()) ? null : d;
+          }
+          if (typeof ts === 'object' && typeof ts.toDate === 'function') {
+            return ts.toDate();
+          }
+          return null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function sameDay(d, base) {
+        return d.getFullYear() === base.getFullYear() && d.getMonth() === base.getMonth() && d.getDate() === base.getDate();
+      }
+
+      function computeOrderCost(order) {
+        try {
+          if (!order || !Array.isArray(order.items) || !productionCosts) return null;
+          let totalCost = 0;
+          let hasCost = false;
+          order.items.forEach((it) => {
+            if (!it) return;
+            const pid = Number(it.id || it.productId || it.baseItemId || it.itemId);
+            if (!Number.isFinite(pid)) return;
+            const unitCost = Number(productionCosts[pid]);
+            if (!Number.isFinite(unitCost) || unitCost < 0) return;
+            const qty = Number(it.quantity || 1);
+            if (!Number.isFinite(qty) || qty <= 0) return;
+            totalCost += unitCost * qty;
+            hasCost = true;
+          });
+          return hasCost ? totalCost : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function formatMoney(n) {
+        const v = Number(n || 0);
+        if (!isFinite(v)) return '$0';
+        return '$' + v.toFixed(0);
+      }
+
+      function filterOrdersByDate(baseDate) {
+        if (!(baseDate instanceof Date)) return [];
+        return (allHistoryOrders || []).filter((o) => {
+          const d = tsToDate(o.deliveredAt || o.archivedAt || o.timestamp);
+          if (!d) return false;
+          return sameDay(d, baseDate);
+        });
+      }
+
+      function renderForDate(baseDate) {
+        const summary = document.getElementById('summary');
+        const listWrapper = document.getElementById('list-wrapper');
+        const listEl = document.getElementById('orders-list');
+        const empty = document.getElementById('empty');
+        if (!summary || !listWrapper || !listEl || !empty) return;
+
+        const orders = filterOrdersByDate(baseDate);
+
+        if (!orders.length) {
+          summary.classList.add('hidden');
+          listWrapper.classList.add('hidden');
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        empty.classList.add('hidden');
+        summary.classList.remove('hidden');
+        listWrapper.classList.remove('hidden');
+
+        let sumTotal = 0;
+        let sumCost = 0;
+        let sumDelivery = 0;
+        let sumDiscount = 0;
+
+        const cards = orders.map((o) => {
+          const total = Number(o.total || 0);
+          const discount = Number(o.discountAmount || 0);
+          const deliveryFee = Number(o.deliveryFee || 0);
+          const productosNetos = total - (Number.isFinite(deliveryFee) ? deliveryFee : 0);
+          const costApprox = computeOrderCost(o);
+          const marginApprox = costApprox != null ? Math.max(0, productosNetos - costApprox) : null;
+
+          sumTotal += total;
+          sumDelivery += Number.isFinite(deliveryFee) ? deliveryFee : 0;
+          sumDiscount += discount > 0 ? discount : 0;
+          if (costApprox != null) sumCost += costApprox;
+
+          const when = tsToDate(o.deliveredAt || o.archivedAt || o.timestamp);
+          const timeLabel = when ? when.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '';
+          const orderNumber = (o.orderNumber || '').toString();
+
+          return `
+            <article class="rounded-2xl bg-slate-900/80 border border-slate-800 px-4 py-3 flex flex-wrap items-start justify-between gap-3 text-xs">
+              <div>
+                <div class="font-semibold text-slate-100">${orderNumber ? '#' + orderNumber : 'Pedido'}</div>
+                <div class="text-slate-400">${timeLabel}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-extrabold text-emerald-400">${formatMoney(total)}</div>
+                <div class="text-slate-400">Prod.: ${formatMoney(productosNetos)} · Env.: ${formatMoney(deliveryFee)}</div>
+                ${costApprox != null ? `<div class="text-slate-400">Costo: ${formatMoney(costApprox)}</div>` : ''}
+                ${marginApprox != null ? `<div class="text-emerald-300 font-semibold">Margen: ${formatMoney(marginApprox)}</div>` : ''}
+                ${discount > 0 ? `<div class="text-rose-300 mt-0.5">Desc.: -${formatMoney(discount)}</div>` : ''}
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        listEl.innerHTML = cards;
+
+        document.getElementById('sum-total').textContent = formatMoney(sumTotal);
+        document.getElementById('sum-orders').textContent = `${orders.length} pedidos`;
+        document.getElementById('sum-cost').textContent = formatMoney(sumCost);
+        document.getElementById('sum-delivery').textContent = `Envíos: ${formatMoney(sumDelivery)}`;
+        document.getElementById('sum-margin').textContent = formatMoney(Math.max(0, sumTotal - sumDelivery - sumCost));
+        document.getElementById('sum-discount').textContent = `Descuentos: ${formatMoney(sumDiscount)}`;
+      }
+
+      function setDateInput(date) {
+        const input = document.getElementById('date-filter');
+        if (!input || !(date instanceof Date)) return;
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        input.value = `${yyyy}-${mm}-${dd}`;
+      }
+
+      async function init() {
+        setStatus('Cargando datos de Firebase...', 'info');
+
+        try {
+          // Esperar Firebase
+          const waitStart = Date.now();
+          while ((!window.firebaseManager || !window.firebaseOrderManager) && Date.now() - waitStart < 8000) {
+            await new Promise(r => setTimeout(r, 100));
+          }
+
+          if (!window.firebaseManager || !window.firebaseOrderManager) {
+            setStatus('Firebase no está disponible. No se pueden calcular las ganancias.', 'error');
+            return;
+          }
+
+          // Cargar costos de producción
+          try {
+            const settings = await window.firebaseManager.getSettings();
+            productionCosts = (settings && settings.productionCosts) || {};
+          } catch (e) {
+            console.warn('No se pudieron cargar productionCosts:', e);
+            productionCosts = {};
+          }
+
+          // Backfill de metadatos en órdenes antiguas (productId, unitPrice)
+          try {
+            if (window.firebaseOrderManager && typeof window.firebaseOrderManager.backfillOrderItemsMetadata === 'function') {
+              await window.firebaseOrderManager.backfillOrderItemsMetadata();
+            }
+          } catch (e) {
+            console.warn('No se pudo actualizar metadatos de órdenes antiguas:', e);
+          }
+
+          // Cargar pedidos entregados desde la colección principal
+          const rawOrders = await window.firebaseOrderManager.getOrders();
+          allHistoryOrders = (rawOrders || []).filter((o) => String(o.status || '').toLowerCase() === 'delivered');
+
+          setStatus('Datos listos. Elige un día para ver el resumen.', 'success');
+
+          const today = new Date();
+          setDateInput(today);
+          renderForDate(today);
+
+          // Listeners de UI
+          const input = document.getElementById('date-filter');
+          const todayBtn = document.getElementById('today-btn');
+          const yesterdayBtn = document.getElementById('yesterday-btn');
+          const clearBtn = document.getElementById('clear-date-btn');
+
+          if (input) {
+            input.addEventListener('change', () => {
+              const v = input.value;
+              if (!v) return;
+              const [y, m, d] = v.split('-').map(Number);
+              if (!y || !m || !d) return;
+              const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
+              renderForDate(dt);
+            });
+          }
+
+          if (todayBtn) {
+            todayBtn.addEventListener('click', () => {
+              const d = new Date();
+              setDateInput(d);
+              renderForDate(d);
+            });
+          }
+
+          if (yesterdayBtn) {
+            yesterdayBtn.addEventListener('click', () => {
+              const d = new Date();
+              d.setDate(d.getDate() - 1);
+              setDateInput(d);
+              renderForDate(d);
+            });
+          }
+
+          if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+              const inputEl = document.getElementById('date-filter');
+              if (inputEl) inputEl.value = '';
+              document.getElementById('summary').classList.add('hidden');
+              document.getElementById('list-wrapper').classList.add('hidden');
+              document.getElementById('empty').classList.remove('hidden');
+            });
+          }
+        } catch (e) {
+          console.error('Error inicializando Ganancias:', e);
+          setStatus('Ocurrió un error al cargar las ganancias.', 'error');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
+</body>
+</html>

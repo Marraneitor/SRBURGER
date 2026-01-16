@@ -34,12 +34,27 @@
   <main class="max-w-6xl mx-auto px-4 py-6">
     <div id="status-banner" class="hidden mb-4 p-4 rounded-2xl border"></div>
 
-    <div class="mb-4 flex flex-wrap items-center gap-2">
-      <div class="text-sm font-extrabold text-slate-700 mr-2">Mostrar:</div>
-      <button id="filter-all" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('all')">Todos</button>
-      <button id="filter-day" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('day')">Día</button>
-      <button id="filter-week" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('week')">Semana</button>
-      <button id="filter-month" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('month')">Mes</button>
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="text-sm font-extrabold text-slate-700 mr-1">Mostrar:</div>
+        <button id="filter-all" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('all')">Todos</button>
+        <button id="filter-day" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('day')">Día</button>
+        <button id="filter-week" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('week')">Semana</button>
+        <button id="filter-month" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold hover:bg-slate-50" onclick="setTimeFilter('month')">Mes</button>
+      </div>
+
+      <div class="flex items-center gap-2 ml-auto">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white shadow-sm">
+          <i class="fas fa-calendar-day text-slate-500 text-sm"></i>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-semibold text-slate-500 leading-tight">Filtrar por fecha</span>
+            <input id="date-filter" type="date" class="mt-1 text-xs border-0 focus:ring-0 p-0 bg-transparent text-slate-800" onchange="onDateFilterChange(this.value)" />
+          </div>
+        </div>
+        <button type="button" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent" onclick="clearDateFilter()">
+          Limpiar fecha
+        </button>
+      </div>
     </div>
 
     <div id="empty" class="hidden text-center py-16">
@@ -60,6 +75,8 @@
     let unsubscribe = null;
     let allDeliveredOrders = [];
     let currentTimeFilter = 'all';
+    let selectedDate = null; // Date (solo día), para filtrar por fecha exacta
+    let productionCosts = {}; // id -> costo unitario aproximado
 
     function safeText(v) {
       return (v == null) ? '' : String(v);
@@ -106,6 +123,8 @@
     }
 
     function applyTimeFilter(orders) {
+      const base = Array.isArray(orders) ? [...orders] : [];
+
       const now = new Date();
       const fromDay = startOfToday(now);
       const fromWeek = startOfWeekMonday(now);
@@ -116,12 +135,24 @@
         : currentTimeFilter === 'month' ? fromMonth
         : null;
 
-      const filtered = (orders || []).filter(o => {
+      let filtered = base.filter(o => {
         if (!from) return true;
         const d = getOrderDate(o);
         if (!d) return false;
         return d >= from;
       });
+
+      // Si hay una fecha seleccionada, quedarnos solo con los pedidos de ese día (ignorando hora)
+      if (selectedDate instanceof Date) {
+        const y = selectedDate.getFullYear();
+        const m = selectedDate.getMonth();
+        const d0 = selectedDate.getDate();
+        filtered = filtered.filter(o => {
+          const d = getOrderDate(o);
+          if (!d) return false;
+          return d.getFullYear() === y && d.getMonth() === m && d.getDate() === d0;
+        });
+      }
 
       // Ordenar más recientes primero
       filtered.sort((a, b) => {
@@ -133,6 +164,49 @@
       });
 
       return filtered;
+    }
+
+    function onDateFilterChange(value) {
+      if (!value) {
+        selectedDate = null;
+      } else {
+        const parts = String(value).split('-').map(Number);
+        if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+          selectedDate = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+        } else {
+          selectedDate = null;
+        }
+      }
+      render(applyTimeFilter(allDeliveredOrders));
+    }
+
+    function clearDateFilter() {
+      selectedDate = null;
+      const input = document.getElementById('date-filter');
+      if (input) input.value = '';
+      render(applyTimeFilter(allDeliveredOrders));
+    }
+
+    function computeOrderCost(order) {
+      try {
+        if (!order || !Array.isArray(order.items) || !productionCosts) return null;
+        let totalCost = 0;
+        let hasCost = false;
+        order.items.forEach((it) => {
+          if (!it) return;
+          const pid = Number(it.id || it.productId || it.baseItemId || it.itemId);
+          if (!Number.isFinite(pid)) return;
+          const unitCost = Number(productionCosts[pid]);
+          if (!Number.isFinite(unitCost) || unitCost < 0) return;
+          const qty = Number(it.quantity || 1);
+          if (!Number.isFinite(qty) || qty <= 0) return;
+          totalCost += unitCost * qty;
+          hasCost = true;
+        });
+        return hasCost ? totalCost : null;
+      } catch (_) {
+        return null;
+      }
     }
 
     function updateFilterButtons() {
@@ -173,6 +247,38 @@
         : 'bg-emerald-50 border-emerald-200 text-emerald-800');
     }
 
+    async function deleteHistoryOrder(orderId) {
+      if (!orderId) return;
+
+      const confirmed = window.confirm('¿Eliminar este pedido del historial? Esta acción no se puede deshacer.');
+      if (!confirmed) return;
+
+      try {
+        // Si tenemos Firebase, usamos la API para borrar el pedido
+        if (window.firebaseOrderManager && typeof window.firebaseOrderManager.deleteOrder === 'function') {
+          await window.firebaseOrderManager.deleteOrder(orderId);
+        } else {
+          // Fallback local: borrar del localStorage "orders"
+          try {
+            const raw = localStorage.getItem('orders');
+            const current = raw ? JSON.parse(raw) : [];
+            const next = (current || []).filter(o => String(o.id || '') !== String(orderId));
+            localStorage.setItem('orders', JSON.stringify(next));
+          } catch (e) {
+            console.error('Error eliminando pedido en modo local:', e);
+          }
+        }
+
+        // Actualizar lista en memoria y volver a renderizar
+        allDeliveredOrders = (allDeliveredOrders || []).filter(o => String(o.id || '') !== String(orderId));
+        render(applyTimeFilter(allDeliveredOrders));
+        showBanner('Pedido eliminado del historial.', 'success');
+      } catch (err) {
+        console.error('Error eliminando pedido del historial:', err);
+        showBanner('No se pudo eliminar el pedido. Revisa la consola.', 'error');
+      }
+    }
+
     function render(orders) {
       const list = document.getElementById('list');
       const empty = document.getElementById('empty');
@@ -187,6 +293,7 @@
       empty.classList.add('hidden');
 
       list.innerHTML = orders.map(o => {
+        const orderId = safeText(o.id || '').trim();
         const orderNumber = safeText(o.orderNumber || '').trim();
         const idShort = safeText(o.id || '').slice(-6);
         const title = orderNumber ? `#${orderNumber}` : `Pedido #${idShort || '—'}`;
@@ -203,6 +310,9 @@
           const name = safeText(it.name || 'Producto');
           const custom = safeText(it.customizations || '').trim();
           const spec = safeText(it.specifications || '').trim();
+          const rawId = it.productId != null ? it.productId : (it.id != null ? it.id : (it.baseItemId != null ? it.baseItemId : it.itemId));
+          const idStr = rawId != null ? String(rawId).trim() : '';
+          const idLabel = idStr ? `ID: ${idStr}` : '';
           return `
             <div class="py-2 border-t border-slate-100">
               <div class="flex items-start justify-between gap-3">
@@ -211,25 +321,47 @@
                   ${custom ? `<div class="text-xs text-slate-600 mt-0.5">${custom}</div>` : ''}
                   ${spec ? `<div class="text-xs text-red-700 font-semibold mt-0.5">📝 ${spec}</div>` : ''}
                 </div>
-                <div class="text-sm font-bold text-slate-700">$${Number(it.price || 0).toFixed(0)}</div>
+                <div class="text-right whitespace-nowrap">
+                  <div class="text-sm font-bold text-slate-700">$${Number(it.price || 0).toFixed(0)}</div>
+                  <div class="mt-1 text-lg font-extrabold ${idLabel ? 'text-indigo-700' : 'text-rose-700'}">
+                    ${idLabel || 'SIN ID'}
+                  </div>
+                </div>
               </div>
             </div>
           `;
         }).join('');
 
         const total = Number(o.total || 0);
+        const discount = Number(o.discountAmount || 0);
+        const rewardLabel = safeText(o.reward && o.reward.label || '').trim();
+        const costApprox = computeOrderCost(o);
+        const deliveryFee = Number(o.deliveryFee || 0);
+        const productosNetos = total - (Number.isFinite(deliveryFee) ? deliveryFee : 0);
+        const marginApprox = costApprox != null ? Math.max(0, productosNetos - costApprox) : null;
 
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5" data-order-id="${orderId}" data-order-total="${total}">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div class="text-xs font-bold text-slate-500">Entregado</div>
                 <div class="text-xl font-extrabold">${title}</div>
                 <div class="text-sm text-slate-600 mt-1">🕒 ${when}</div>
               </div>
-              <div class="text-right">
-                <div class="text-sm text-slate-600">Total</div>
-                <div class="text-2xl font-extrabold text-emerald-700">$${total.toFixed(0)}</div>
+              <div class="flex flex-col items-end gap-1">
+                <div class="text-right">
+                  <div class="text-sm text-slate-600">Total</div>
+                  <div class="text-2xl font-extrabold text-emerald-700">$${total.toFixed(0)}</div>
+                  <div class="mt-1 text-xs text-slate-700">Productos: $${productosNetos.toFixed(0)}</div>
+                  <div class="text-xs text-slate-700">Envío: $${(Number.isFinite(deliveryFee) ? deliveryFee : 0).toFixed(0)}</div>
+                  ${discount > 0 ? `<div class="mt-1 text-xs text-rose-600 font-semibold">Descuento: -$${discount.toFixed(0)}${rewardLabel ? ` (${rewardLabel})` : ''}</div>` : ''}
+                  ${costApprox != null ? `<div class="mt-1 text-xs text-slate-500">Costo producción: $${costApprox.toFixed(0)}</div>` : ''}
+                  ${marginApprox != null ? `<div class="mt-1 text-xs text-emerald-700 font-semibold">Utilidad aprox.: $${marginApprox.toFixed(0)}</div>` : ''}
+                </div>
+                <button class="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 hover:text-red-800 mt-1" type="button" data-action="delete-order">
+                  <i class="fas fa-trash-alt"></i>
+                  <span>Eliminar</span>
+                </button>
               </div>
             </div>
 
@@ -254,12 +386,41 @@
           </div>
         `;
       }).join('');
+
+      // Manejar clicks en los botones de eliminar
+      list.onclick = async function(e) {
+        const btn = e.target.closest('button[data-action="delete-order"]');
+        if (!btn) return;
+        const card = btn.closest('[data-order-id]');
+        if (!card) return;
+        const orderId = card.getAttribute('data-order-id');
+        if (!orderId) return;
+        await deleteHistoryOrder(orderId);
+      };
     }
 
     async function init() {
       updateFilterButtons();
       // Esperar que firebase-config se inicialice
       setTimeout(async () => {
+        // Cargar costos de producción aproximados desde Firebase o localStorage
+        try {
+          if (window.firebaseManager && typeof window.firebaseManager.getSettings === 'function') {
+            const settings = await window.firebaseManager.getSettings();
+            if (settings && settings.productionCosts && typeof settings.productionCosts === 'object') {
+              productionCosts = settings.productionCosts;
+            } else {
+              productionCosts = {};
+            }
+          } else {
+            const raw = localStorage.getItem('productionCosts');
+            productionCosts = raw ? JSON.parse(raw) : {};
+          }
+        } catch (e) {
+          console.warn('No se pudieron cargar costos de producción para historial:', e);
+          productionCosts = {};
+        }
+
         if (window.firebaseOrderManager && typeof window.firebaseOrderManager.onOrdersChange === 'function') {
           showBanner('Conectado. Historial en tiempo real.', 'success');
           unsubscribe = window.firebaseOrderManager.onOrdersChange((orders) => {

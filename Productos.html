@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos y costos - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-50">
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-slate-900 grid place-items-center">
+          <i class="fas fa-burger"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-amber-300 tracking-wide">SR &amp; SRA BURGER</div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Productos y costos de producción</h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Vista rápida de todos tus productos con su costo interno.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="admin.html" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-100 border border-slate-700">
+          <i class="fas fa-arrow-left"></i>
+          Volver al admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <div id="status" class="mb-4 text-sm text-slate-300"></div>
+
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700">
+        <i class="fas fa-filter text-amber-300 text-xs"></i>
+        <div class="flex flex-col">
+          <span class="text-[11px] font-semibold text-slate-300 leading-tight">Filtrar por sección</span>
+          <select id="category-filter" class="mt-1 text-xs bg-transparent border-0 text-slate-100 focus:ring-0 p-0">
+            <option value="all">Todas las secciones</option>
+          </select>
+        </div>
+      </div>
+      <p class="text-xs text-slate-400">Tip: usa esta vista para definir tus costos internos sin que el cliente los vea.</p>
+    </div>
+
+    <div id="productos-container" class="space-y-6"></div>
+  </main>
+
+  <!-- Firebase base (trae FirebaseAdminManager como window.firebaseManager) -->
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script>
+    (function() {
+      const menuData = {
+        "Hamburguesas": [
+          { id: 1, name: "Cl\u00e1sica PREMIUM", price: 100, description: "Pan XL, carne 80/20 arrachera, queso Gouda, queso americano, cebolla caramelizada, lechuga, tomate y tocino.", image: "", customizable: true },
+          { id: 2, name: "BBQ BEACON CRUNCH", price: 110, description: "Pan XL, carne 80/20 arrachera, queso americano, cebolla caramelizada, aros de cebolla, tocino y BBQ.", image: "", customizable: true },
+          { id: 11, name: "Alohawai Burger", price: 120, description: "Pan XL, carne 80/20 arrachera, queso Gouda, queso americano, cebolla caramelizada, lechuga, tomate, tocino y pi\u00f1a.", image: "", customizable: true },
+          { id: 12, name: "Chistorraburger", price: 120, description: "Pan XL, carne 80/20 arrachera, queso Gouda, cebolla caramelizada, chistorra y tocino.", image: "", customizable: true },
+          { id: 13, name: "Choriargentina Burger", price: 120, description: "Pan XL, carne 80/20 arrachera, queso Gouda, cebolla caramelizada, chorizo argentino y tocino.", image: "", customizable: true },
+          { id: 30, name: "Salchiburger", price: 120, description: "Pan XL, carne 80/20 arrachera, queso Gouda, queso americano, cebolla caramelizada, lechuga, tomate, tocino y salchicha.", image: "", customizable: true }
+        ],
+        "Hot Dogs": [
+          { id: 5, name: "Hotdog Jumbo", price: 60, description: "Salchicha jumbo jugosa en pan artesanal tostado, tocino crujiente, tomate fresco, cebolla y aderezos especiales.", image: "", customizable: true },
+          { id: 27, name: "Jalape\u00f1o Dog", price: 60, description: "Salchicha roja premium con queso manchego derretido, tocino crujiente, cebolla caramelizada y jalape\u00f1os frescos.", image: "", customizable: true }
+        ],
+        "Combos": [
+          { id: 26, name: "DOBLES DOBLES", price: 220, originalPrice: 300, description: "2 hamburguesas a tu elecci\u00f3n a precio especial.", image: "", isCombo: true },
+          { id: 6, name: "Combo Pareja", price: 250, originalPrice: 305, description: "2 hamburguesas a elecci\u00f3n, papas medianas y aros.", image: "", isCombo: true },
+          { id: 15, name: "Combo D\u00fao", price: 180, originalPrice: 220, description: "1 hamburguesa, 1 hotdog y papas medianas.", image: "", isCombo: true },
+          { id: 7, name: "Combo Amigos", price: 360, originalPrice: 400, description: "3 hamburguesas y papas medianas.", image: "", isCombo: true },
+          { id: 14, name: "Combo Familiar", price: 650, originalPrice: 730, description: "5 hamburguesas, papas XL, aros y refresco 3L.", image: "", isCombo: true }
+        ],
+        "Extras": [
+          { id: 8, name: "Papas Gajo Medianas", price: 60, description: "Papas gajo doradas y crujientes.", image: "" },
+          { id: 28, name: "Papas Francesas Medianas", price: 60, description: "Papas francesas cl\u00e1sicas y crujientes.", image: "" },
+          { id: 17, name: "Salchipapas Medianas", price: 80, description: "Papas doradas con trozos de salchicha premium.", image: "" },
+          { id: 19, name: "Aros de Cebolla (8 pz)", price: 45, description: "Aros de cebolla empanizados y fritos.", image: "" }
+        ],
+        "Bebidas": [
+          { id: 21, name: "Coca-Cola 600ml", price: 30, description: "Coca-Cola helada y refrescante.", image: "" },
+          { id: 22, name: "Coca-Cola 1.75L", price: 40, description: "Coca-Cola familiar para compartir.", image: "" },
+          { id: 23, name: "Coca-Cola 3L", price: 60, description: "Coca-Cola grande para toda la familia.", image: "" },
+          { id: 24, name: "Agua Natural 600ml", price: 20, description: "Agua natural pura y refrescante.", image: "" }
+        ]
+      };
+
+      let firebaseSettings = null;
+      let productionCosts = {};
+
+      function setStatus(msg, type) {
+        const el = document.getElementById('status');
+        if (!el) return;
+        const base = 'text-sm';
+        const color = type === 'error' ? 'text-rose-300' : type === 'success' ? 'text-emerald-300' : 'text-slate-300';
+        el.className = base + ' ' + color;
+        el.textContent = msg || '';
+      }
+
+      function buildProductsList(filterCategory) {
+        const all = [];
+        const settings = firebaseSettings || {};
+        const customProducts = settings.customProducts || {};
+        const priceOverrides = settings.priceOverrides || {};
+        const infoOverrides = settings.productInfoOverrides || {};
+
+        const categories = new Set([
+          ...Object.keys(menuData || {}),
+          ...Object.keys(customProducts || {})
+        ]);
+
+        Array.from(categories).forEach((cat) => {
+          if (!cat) return;
+          if (filterCategory && filterCategory !== 'all' && filterCategory !== cat) return;
+          const base = Array.isArray(menuData[cat]) ? menuData[cat] : [];
+          const extras = Array.isArray(customProducts[cat]) ? customProducts[cat] : [];
+          const merged = [...base, ...extras];
+
+          merged.forEach((p) => {
+            const id = Number(p.id);
+            if (!Number.isFinite(id)) return;
+
+            const infoOvr = infoOverrides[id] || {};
+            const priceOvr = priceOverrides[id] || {};
+            const effectiveName = (infoOvr.name || p.name || '').toString();
+            const effectiveDesc = (infoOvr.description || p.description || '').toString();
+            const effectivePrice = Number((priceOvr.price != null ? priceOvr.price : p.price) || 0);
+            const cost = Number(productionCosts[id] != null ? productionCosts[id] : NaN);
+
+            all.push({
+              category: cat,
+              id,
+              name: effectiveName,
+              description: effectiveDesc,
+              price: effectivePrice,
+              cost: Number.isFinite(cost) ? cost : null
+            });
+          });
+        });
+
+        // Order by category then name
+        all.sort((a, b) => {
+          if (a.category === b.category) return a.name.localeCompare(b.name, 'es');
+          return a.category.localeCompare(b.category, 'es');
+        });
+
+        return all;
+      }
+
+      function render(filterCategory) {
+        const container = document.getElementById('productos-container');
+        const select = document.getElementById('category-filter');
+        if (!container || !select) return;
+
+        const all = buildProductsList(filterCategory);
+        if (!all.length) {
+          container.innerHTML = '<div class="text-center py-12 text-slate-400">No se encontraron productos. Revisa tu panel de admin.</div>';
+          return;
+        }
+
+        // Rellenar opciones de filtro una sola vez
+        if (select.options.length <= 1) {
+          const cats = Array.from(new Set(all.map(p => p.category)));
+          cats.forEach((cat) => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
+          });
+        }
+
+        // Agrupar por categoría
+        const byCat = new Map();
+        all.forEach((p) => {
+          if (!byCat.has(p.category)) byCat.set(p.category, []);
+          byCat.get(p.category).push(p);
+        });
+
+        const sections = [];
+        byCat.forEach((items, cat) => {
+          const rows = items.map((p) => {
+            const price = Number.isFinite(p.price) ? p.price : 0;
+            const cost = p.cost != null ? p.cost : '';
+            const margin = p.cost != null ? Math.max(0, price - p.cost) : null;
+            const marginText = margin != null ? `$${margin.toFixed(0)}` : '—';
+
+            return `
+              <tr class="border-b border-slate-800/60">
+                <td class="px-3 py-2 align-top">
+                  <div class="text-sm font-semibold text-slate-100">${p.name}</div>
+                  <div class="text-[11px] text-slate-400">ID: ${p.id}</div>
+                  <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">${p.description || ''}</div>
+                </td>
+                <td class="px-3 py-2 align-top text-sm text-amber-300 font-semibold whitespace-nowrap">$${price.toFixed(0)}</td>
+                <td class="px-3 py-2 align-top">
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-400 text-xs">$</span>
+                    <input type="number" min="0" step="1" value="${cost !== '' ? cost : ''}" data-product-id="${p.id}" class="cost-input w-24 bg-slate-900/60 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:ring-amber-400 focus:border-amber-400" placeholder="0" />
+                    <button type="button" data-action="save-cost" data-product-id="${p.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[11px] font-semibold text-slate-950">
+                      <i class="fas fa-save"></i>
+                      Guardar
+                    </button>
+                  </div>
+                </td>
+                <td class="px-3 py-2 align-top text-xs text-emerald-300 font-semibold whitespace-nowrap">${marginText}</td>
+              </tr>
+            `;
+          }).join('');
+
+          sections.push(`
+            <section class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+              <div class="px-4 py-3 flex items-center justify-between bg-slate-900/90 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/10 text-amber-300">
+                    <i class="fas fa-layer-group text-xs"></i>
+                  </span>
+                  <h2 class="text-sm font-extrabold tracking-wide text-slate-100 uppercase">${cat}</h2>
+                </div>
+                <span class="text-[11px] text-slate-400">${items.length} productos</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-xs">
+                  <thead class="bg-slate-900/90 text-slate-400">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-semibold">Producto</th>
+                      <th class="px-3 py-2 text-left font-semibold">Precio venta</th>
+                      <th class="px-3 py-2 text-left font-semibold">Costo producción</th>
+                      <th class="px-3 py-2 text-left font-semibold">Utilidad aprox.</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800/60">
+                    ${rows}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          `);
+        });
+
+        container.innerHTML = sections.join('');
+
+        container.onclick = async (ev) => {
+          const btn = ev.target.closest('[data-action="save-cost"]');
+          if (!btn) return;
+          const pid = Number(btn.getAttribute('data-product-id'));
+          const input = container.querySelector(`input.cost-input[data-product-id="${pid}"]`);
+          if (!Number.isFinite(pid) || !input) return;
+
+          const raw = (input.value || '').trim();
+          let val = Number(raw);
+          if (!raw) {
+            delete productionCosts[pid];
+          } else if (!Number.isFinite(val) || val < 0) {
+            alert('Escribe un costo válido mayor o igual a 0.');
+            return;
+          } else {
+            productionCosts[pid] = val;
+          }
+
+          try {
+            const settings = firebaseSettings || {};
+            settings.productionCosts = productionCosts;
+            if (window.firebaseManager && typeof window.firebaseManager.saveSettings === 'function') {
+              await window.firebaseManager.saveSettings(settings);
+            }
+            firebaseSettings = settings;
+            setStatus('Costos actualizados correctamente.', 'success');
+          } catch (e) {
+            console.error('Error guardando costos:', e);
+            setStatus('No se pudieron guardar los costos. Revisa la consola.', 'error');
+          }
+        };
+      }
+
+      function waitForFirebaseAndInit() {
+        if (!window.firebaseManager) {
+          setTimeout(waitForFirebaseAndInit, 80);
+          return;
+        }
+        init();
+      }
+
+      async function init() {
+        try {
+          setStatus('Cargando productos y configuraciones...', 'info');
+          if (!window.firebaseManager || typeof window.firebaseManager.getSettings !== 'function') {
+            setStatus('Firebase no está disponible. No se pueden leer los productos del admin.', 'error');
+            return;
+          }
+          const settings = await window.firebaseManager.getSettings();
+          firebaseSettings = settings || {};
+          productionCosts = (firebaseSettings && firebaseSettings.productionCosts) || {};
+          setStatus('Productos listos. Edita los costos de producción y guarda.', 'success');
+          render('all');
+
+          const select = document.getElementById('category-filter');
+          if (select) {
+            select.addEventListener('change', () => {
+              const value = select.value || 'all';
+              render(value);
+            });
+          }
+        } catch (e) {
+          console.error('Error inicializando Productos:', e);
+          setStatus('Ocurrió un error al cargar los productos.', 'error');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', waitForFirebaseAndInit);
+    })();
+  </script>
+</body>
+</html>

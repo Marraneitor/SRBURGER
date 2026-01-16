@@ -1113,6 +1113,28 @@
                 .replace(/'/g, '&#39;');
         }
 
+        // Mostrar solo el texto que escribe el cliente (sin prefijos tipo "PREMIUM:" o "Alohawai Burger:")
+        function stripSpecificationPrefixOne(text) {
+            let t = String(text == null ? '' : text).trim();
+            if (!t) return '';
+            t = t.replace(/^ESPECIFICACIONES\s*:\s*/i, '').trim();
+            const idx = t.indexOf(':');
+            if (idx > -1) {
+                const after = t.slice(idx + 1).trim();
+                return after || t;
+            }
+            return t;
+        }
+        function formatSpecificationsForDisplay(specifications) {
+            const raw = String(specifications == null ? '' : specifications).trim();
+            if (!raw) return '';
+            return raw
+                .split('|')
+                .map(s => stripSpecificationPrefixOne(s))
+                .filter(Boolean)
+                .join(' | ');
+        }
+
         function parseSingleDetails(text) {
             const res = { toppings: [], fries: null, sauce: null, onionRings: false, extras: [], hotdog: false };
             const parts = String(text || '').split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
@@ -1179,6 +1201,13 @@
             const c = String(item.customizations || '').trim();
             if (!c) return '';
 
+            function shouldInlineComboSpecifications() {
+                const specs = String(item && item.specifications || '').trim();
+                if (!specs) return false;
+                // Solo tiene sentido repartirlas cuando es un combo con múltiples partes
+                return splitComboChoices(c).length > 1;
+            }
+
             // Detectar si es un combo configurado
             const comboConfig = getComboConfig(item.name);
             const onionConfigName = comboConfig && Array.isArray(comboConfig.items)
@@ -1222,10 +1251,17 @@
             
             let detailsHtml = '';
 
-            if (c.includes(' | ')) {
+            if (splitComboChoices(c).length > 1) {
                 const choices = splitComboChoices(c).map(parseChoiceText);
                 const includePieces = choices.filter(ch => ch.includeLine || /^Incluye/i.test(ch.name));
                 const normalChoices = choices.filter(ch => !(ch.includeLine || /^Incluye/i.test(ch.name)));
+
+                // Repartir especificaciones por elección (Hamburguesa 1, 2, etc.)
+                const rawSpecs = String(item && item.specifications || '').trim();
+                const specsParts = rawSpecs
+                    ? rawSpecs.split('|').map(s => stripSpecificationPrefixOne(s)).filter(Boolean)
+                    : [];
+                const choiceSpecs = normalChoices.map((_, idx) => specsParts[idx] || '');
 
                 // Aggregate included details
                 const friesBadges = [];
@@ -1244,6 +1280,7 @@
                         ${normalChoices.map((ch, chIdx) => `
                             <div class="p-2 rounded-lg border border-gray-200 bg-white">
                                 <div class="text-sm font-semibold text-gray-800">${ch.qty}x ${escapeHtml(ch.name)}</div>
+                                ${(shouldInlineComboSpecifications() && choiceSpecs[chIdx]) ? `<div class=\"mt-1 text-xs md:text-sm text-red-600 font-extrabold\">${escapeHtml(choiceSpecs[chIdx])}</div>` : ''}
                                 ${ch.toppings && ch.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(ch.toppings, 'amber', orderId, itemIndex, 'toppings_' + chIdx)}</div>` : ''}
                                 ${ch.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${ch.fries}`], 'blue', orderId, itemIndex, 'fries_' + chIdx)}</div>` : ''}
                                 ${ch.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([ch.sauce], 'pink', orderId, itemIndex, 'sauce_' + chIdx)}</div>` : ''}
@@ -1518,21 +1555,28 @@
                                     Productos (${items.length} items)
                                 </h4>
                                 <div class="space-y-2">
-                                    ${items.map((item, itemIndex) => `
+                                    ${items.map((item, itemIndex) => {
+                                        const rawId = item.productId != null ? item.productId : (item.id != null ? item.id : (item.baseItemId != null ? item.baseItemId : item.itemId));
+                                        const idStr = rawId != null ? String(rawId).trim() : '';
+                                        const idLabel = idStr ? `ID: ${idStr}` : '';
+                                        const shouldInlineSpecs = Boolean(item && item.specifications && splitComboChoices(String(item.customizations || '')).length > 1);
+                                        return `
                                         <div class="order-item ${isItemChecked(order.id, itemIndex) ? 'checked' : ''}" onclick="toggleItemChecked('${order.id}', ${itemIndex})">
                                             <div class="flex justify-between items-start gap-3">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="item-title">${Number(item.quantity || 1)}x ${escapeHtml(item.name || '')}</div>
                                                     <div class="checkmark"><i class="fas fa-check"></i></div>
-                                                    ${item.specifications ? `<div class=\"mt-1 text-sm md:text-base text-red-400 font-extrabold flex items-start gap-1 spec-warning\"><span>⚠️</span><span>ESPECIFICACIONES: ${escapeHtml(item.specifications)}</span></div>` : ''}
+                                                    ${(item.specifications && !shouldInlineSpecs) ? `<div class=\"mt-1 text-sm md:text-base text-red-400 font-extrabold spec-warning\">${escapeHtml(formatSpecificationsForDisplay(item.specifications))}</div>` : ''}
                                                     <div class="breakdown" onclick="event.stopPropagation()">${item.customizations ? renderItemBreakdown(item, order.id, itemIndex) : ''}</div>
                                                 </div>
                                                 <div class="text-right whitespace-nowrap">
-                                                    <span class="item-price">$${Number(item.price || 0)}</span>
+                                                    <div class="item-price font-bold">$${Number(item.price || 0)}</div>
+                                                    <div class=\"mt-1 text-lg font-extrabold ${idLabel ? 'text-emerald-300' : 'text-rose-300'}\">${idLabel || 'SIN ID'}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                                 <div class="mt-3 pt-3 border-t border-gray-700">
                                     <div class="flex justify-between items-center">
@@ -1616,6 +1660,13 @@
                 </button>
             `;
 
+            const kitchenTicketButton = `
+                <button onclick="printKitchenTicket('${order.id}')" class="btn-info w-full kitchen-action-btn">
+                    <i class="fas fa-receipt mr-2"></i>
+                    Ticket de cocina
+                </button>
+            `;
+
             const paidButton = isOrderCanceled(order) ? '' : `
                 <button onclick="markOrderPaid('${order.id}')" class="btn-success w-full kitchen-action-btn ${order.paid ? 'opacity-60 pointer-events-none' : ''}">
                     ${order.paid ? '<i class="fas fa-check mr-2"></i>Pagado ✓' : '<i class="fas fa-dollar-sign mr-2"></i>PAGADO'}
@@ -1626,6 +1677,7 @@
                     return `
                         ${locationButton}
                         ${printButton}
+                        ${kitchenTicketButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1643,6 +1695,7 @@
                     return `
                         ${locationButton}
                         ${printButton}
+                        ${kitchenTicketButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1657,6 +1710,7 @@
                     return `
                         ${locationButton}
                         ${printButton}
+                        ${kitchenTicketButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1674,6 +1728,7 @@
                     return `
                         ${locationButton}
                         ${printButton}
+                        ${kitchenTicketButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1691,6 +1746,7 @@
                     return `
                         ${locationButton}
                         ${printButton}
+                        ${kitchenTicketButton}
                         <button onclick="contactCustomer('${order.id}')" class="btn-info w-full action-button kitchen-action-btn mb-2">
                             <i class="fab fa-whatsapp mr-2"></i>
                             Contactar cliente
@@ -1738,51 +1794,252 @@
             return extra;
         }
 
-        function buildPrintableTicketHtml(order) {
+        function buildPrintableTicketHtml(order, qrOverrideSrc, mode = 'customer') {
             const now = new Date();
-            const fecha = (() => {
+            const fechaCompacta = (() => {
                 try {
-                    return new Intl.DateTimeFormat('es-MX', {
+                    const dia = now.toLocaleDateString('es-MX', {
                         timeZone: 'America/Mexico_City',
-                        dateStyle: 'short',
-                        timeStyle: 'short',
+                        day: '2-digit',
+                        month: '2-digit',
+                    });
+                    const hora = now.toLocaleTimeString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        hour: '2-digit',
+                        minute: '2-digit',
                         hour12: false,
-                    }).format(now);
+                    });
+                    return `${dia} ${hora}`; // ej. 15/01 21:08
                 } catch (_) {
-                    return now.toISOString();
+                    return now.toISOString().slice(0, 16).replace('T', ' ');
                 }
             })();
 
             const customer = order.customer || order.cliente || {};
             const items = Array.isArray(order.items) ? order.items : [];
 
-            // Para rollo de 58mm: separador más corto
-            const SEP = '----------------------------';
+            const PAPER_CHARS = 32; // ancho aprox. en monospace para 58mm (área imprimible ~48mm)
+            const SEP = '-'.repeat(PAPER_CHARS);
+            const padRight = (s, n) => {
+                const str = String(s ?? '');
+                if (str.length >= n) return str.slice(0, n);
+                return str + ' '.repeat(n - str.length);
+            };
+            const center = (s) => {
+                const str = String(s ?? '').trim();
+                if (!str) return '';
+                if (str.length >= PAPER_CHARS) return str.slice(0, PAPER_CHARS);
+                const left = Math.floor((PAPER_CHARS - str.length) / 2);
+                const right = PAPER_CHARS - str.length - left;
+                return ' '.repeat(left) + str + ' '.repeat(right);
+            };
+            const lr = (left, right) => {
+                const L = String(left ?? '');
+                const R = String(right ?? '');
+                const gap = Math.max(1, PAPER_CHARS - L.length - R.length);
+                const line = (L + ' '.repeat(gap) + R);
+                return line.length > PAPER_CHARS ? line.slice(0, PAPER_CHARS) : line;
+            };
+            const wrap = (text, width) => {
+                const t = String(text ?? '').replace(/\s+/g, ' ').trim();
+                if (!t) return [];
+                const lines = [];
+                let rest = t;
+                while (rest.length > width) {
+                    let cut = rest.lastIndexOf(' ', width);
+                    if (cut < 10) cut = width;
+                    lines.push(rest.slice(0, cut).trim());
+                    rest = rest.slice(cut).trim();
+                }
+                if (rest) lines.push(rest);
+                return lines;
+            };
+            const money = (v) => {
+                const n = Number(v || 0);
+                if (!isFinite(n)) return '0';
+                const hasCents = Math.abs(n % 1) > 0.001;
+                return hasCents ? n.toFixed(2) : String(Math.round(n));
+            };
+
+            const totalNumber = Number(order.total || 0);
+            const pointsGained = (() => {
+                const n = Number(totalNumber || 0);
+                if (!isFinite(n) || n <= 0) return 0;
+                // Consistente con el sistema actual: 1 punto cada $10 gastados (~10% del total)
+                return Math.floor(n / 10);
+            })();
+
+            const baseHref = (() => {
+                try {
+                    return new URL('.', location.href).href;
+                } catch (_) {
+                    return '';
+                }
+            })();
+
+            const qrSrc = (() => {
+                if (qrOverrideSrc) return String(qrOverrideSrc);
+                try {
+                    return new URL('url_qrcodecreator.com_23_28_43.png', baseHref || location.href).href;
+                } catch (_) {
+                    return 'url_qrcodecreator.com_23_28_43.png';
+                }
+            })();
 
             const lines = [];
-            lines.push('SR Y SRA BURGER');
-            lines.push('TICKET DE COCINA');
+
             lines.push(SEP);
-            lines.push(`FECHA: ${fecha}`);
-            if (order.id) lines.push(`ORDEN: ${String(order.id).slice(-6)}`);
+            lines.push(center(mode === 'kitchen' ? 'TICKET COCINA' : 'RECIBO DE COMPRA'));
             lines.push(SEP);
-            if (customer.name) lines.push(`CLIENTE: ${customer.name}`);
-            if (customer.phone) lines.push(`TEL: ${customer.phone}`);
-            if (customer.address) lines.push(`DIR: ${String(customer.address).replace(/\s+/g, ' ')}`);
+
+            if (mode !== 'kitchen') {
+                const orderShort = (() => {
+                    const num = (order.orderNumber || '').toString().trim();
+                    if (num) return `#${num}`;
+                    if (order.id) return `#${String(order.id).slice(-6)}`;
+                    return '';
+                })();
+
+                if (orderShort) {
+                    lines.push(lr(fechaCompacta, orderShort));
+                } else {
+                    lines.push(center(fechaCompacta));
+                }
+                lines.push(SEP);
+
+                if (customer.name) lines.push(`CLIENTE: ${String(customer.name).trim()}`);
+                if (customer.phone) lines.push(`TEL: ${String(customer.phone).trim()}`);
+                if (customer.address) {
+                    const addr = String(customer.address).replace(/\s+/g, ' ').trim();
+                    const addrLines = wrap(`DIR: ${addr}`, PAPER_CHARS);
+                    addrLines.forEach(a => lines.push(a));
+                }
+            } else {
+                if (customer.name) lines.push(`CLIENTE: ${String(customer.name).trim()}`);
+            }
+
             lines.push(SEP);
-            lines.push('PEDIDO:');
+            lines.push('PRODUCTOS');
+            lines.push(SEP);
 
             if (!items.length) {
-                lines.push('(sin items)');
+                lines.push('(sin productos)');
             } else {
-                items.forEach((item, idx) => {
+                items.forEach((item) => {
                     const qty = Number(item.quantity || 1) || 1;
-                    const name = String(item.name || 'SIN NOMBRE');
-                    const price = Number(item.price || 0);
-                    lines.push(`${idx + 1}. ${qty} x ${name} $${price}`);
+                    const name = String(item.name || 'SIN NOMBRE').trim();
+
+                    // Modo cocina: enfocado en preparación (burgers + especificaciones + elementos del combo)
+                    if (mode === 'kitchen') {
+                        const leftBaseKitchen = `${qty}x ${name}`;
+                        const nameLinesKitchen = wrap(leftBaseKitchen, PAPER_CHARS);
+                        if (nameLinesKitchen.length) {
+                            lines.push(nameLinesKitchen[0]);
+                            for (let i = 1; i < nameLinesKitchen.length; i++) {
+                                lines.push('  ' + nameLinesKitchen[i]);
+                            }
+                        } else {
+                            lines.push(leftBaseKitchen);
+                        }
+
+                        const c = String(item.customizations || '').trim();
+                        const isComboChoices = splitComboChoices(c).length > 1;
+
+                        if (isComboChoices) {
+                            const comboConfig = getComboConfig(name);
+                            const onionConfigName = comboConfig && Array.isArray(comboConfig.items)
+                                ? (comboConfig.items.find(it => it && it.type === 'onion-rings') || {}).name
+                                : null;
+                            const onionLabel = onionConfigName || 'Aros de Cebolla';
+
+                            const choices = splitComboChoices(c).map(parseChoiceText);
+                            const includePieces = choices.filter(ch => ch.includeLine || /^Incluye/i.test(ch.name));
+                            const normalChoices = choices.filter(ch => !(ch.includeLine || /^Incluye/i.test(ch.name)));
+
+                            const rawSpecs = String(item.specifications || '').trim();
+                            const specsParts = rawSpecs
+                                ? rawSpecs.split('|').map(s => stripSpecificationPrefixOne(s)).filter(Boolean)
+                                : [];
+
+                            normalChoices.forEach((ch, idx) => {
+                                const spec = specsParts[idx] || '';
+                                const choiceLabel = `${ch.qty}x ${ch.name}`;
+                                const choiceLines = wrap(choiceLabel, PAPER_CHARS - 2);
+                                choiceLines.forEach((cl) => lines.push('  ' + cl));
+                                if (spec) {
+                                    const specLines = wrap(spec, PAPER_CHARS - 4);
+                                    specLines.forEach(sl => lines.push('    ' + sl));
+                                }
+                            });
+
+                            const friesBadges = [];
+                            const sauceBadges = [];
+                            const drinkBadges = [];
+                            let hasOnion = false;
+                            includePieces.forEach(ch => {
+                                if (ch.fries) friesBadges.push(`Tipo ${ch.fries}`);
+                                if (ch.sauce) sauceBadges.push(ch.sauce);
+                                if (ch.drinks && ch.drinks.length) drinkBadges.push(...ch.drinks);
+                                if (ch.onionRings) hasOnion = true;
+                            });
+
+                            if (friesBadges.length || sauceBadges.length || hasOnion || drinkBadges.length) {
+                                lines.push('');
+                                lines.push('  ELEMENTOS DEL COMBO:');
+                                if (friesBadges.length) {
+                                    const friesText = 'Papas: ' + friesBadges.join(', ');
+                                    wrap(friesText, PAPER_CHARS - 4).forEach(fl => lines.push('    ' + fl));
+                                }
+                                if (sauceBadges.length) {
+                                    const sauceText = 'Salsas: ' + sauceBadges.join(', ');
+                                    wrap(sauceText, PAPER_CHARS - 4).forEach(sl => lines.push('    ' + sl));
+                                }
+                                if (hasOnion) {
+                                    const onionText = 'Aros: ' + onionLabel;
+                                    wrap(onionText, PAPER_CHARS - 4).forEach(ol => lines.push('    ' + ol));
+                                }
+                                if (drinkBadges.length) {
+                                    const drinkText = 'Bebida: ' + Array.from(new Set(drinkBadges)).join(', ');
+                                    wrap(drinkText, PAPER_CHARS - 4).forEach(dl => lines.push('    ' + dl));
+                                }
+                            }
+                        } else {
+                            const custom = String(item.customizations || '');
+                            const specsFormatted = formatSpecificationsForDisplay(item.specifications || '');
+                            const detailsKitchen = [custom, specsFormatted]
+                                .filter(Boolean)
+                                .join(' | ')
+                                .split('|')
+                                .map(s => s.trim())
+                                .filter(Boolean);
+
+                            detailsKitchen.forEach(d => {
+                                const detailLines = wrap(d, PAPER_CHARS - 2);
+                                detailLines.forEach(dl => lines.push('  - ' + dl));
+                            });
+                        }
+
+                        return; // no continuar con el formato estándar de cliente
+                    }
+
+                    // Ticket estándar (cliente): incluye precios y totales
+                    const unitPrice = Number(item.price || 0);
+                    const lineTotal = (isFinite(unitPrice) ? unitPrice : 0) * qty;
+                    const right = '$' + money(lineTotal);
+
+                    const leftBase = `${qty}x ${name}`;
+                    const maxLeft = Math.max(8, PAPER_CHARS - right.length - 1);
+                    const nameLines = wrap(leftBase, maxLeft);
+                    if (nameLines.length) {
+                        lines.push(lr(nameLines[0], right));
+                        for (let i = 1; i < nameLines.length; i++) {
+                            lines.push('  ' + nameLines[i]);
+                        }
+                    } else {
+                        lines.push(lr(`${qty}x`, right));
+                    }
 
                     const itemKey = normalizeTicketName(name);
-
                     const custom = String(item.customizations || '');
                     const specs = String(item.specifications || '');
                     const details = [custom, specs]
@@ -1792,8 +2049,7 @@
                         .map(s => s.trim())
                         .filter(Boolean);
 
-                    // Si el combo trae aros pero vienen con texto antiguo (p.ej. "Aros de Cebolla Medianos"),
-                    // normalizar para que NO se impriman medianos en Combo Familiar.
+                    // Normalizar aros en combos
                     if (itemKey.includes('combofamiliar')) {
                         for (let i = details.length - 1; i >= 0; i--) {
                             if (/aros/i.test(details[i])) details.splice(i, 1);
@@ -1806,20 +2062,25 @@
                         details.push('Aros Medianos');
                     }
 
-                    // Agregar líneas de combos (Hotdog / Boneles 250g) si no vienen en el texto
+                    // Extras de combos
                     const extra = comboExtraTicketLines(item);
                     extra.forEach(x => {
-                        const exists = details.some(d => d.toLowerCase().includes(x.toLowerCase()));
+                        const exists = details.some(d => d.toLowerCase().includes(String(x).toLowerCase()));
                         if (!exists) details.push(x);
                     });
 
-                    details.forEach(d => lines.push(`  - ${d}`));
+                    details.forEach(d => {
+                        const detailLines = wrap(`- ${d}`, PAPER_CHARS - 2);
+                        detailLines.forEach(dl => lines.push('  ' + dl));
+                    });
                 });
             }
 
-            lines.push(SEP);
-            lines.push(`TOTAL: $${Number(order.total || 0)}`);
-            lines.push(SEP);
+            if (mode !== 'kitchen') {
+                lines.push(SEP);
+                lines.push(lr('TOTAL', '$' + money(totalNumber)));
+                lines.push(SEP);
+            }
 
             const safe = lines.map(l => escapeHtml(l)).join('\n');
             return `
@@ -1828,66 +2089,224 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+        ${baseHref ? `<base href="${escapeHtml(baseHref)}">` : ''}
     <title>Ticket ${escapeHtml(String(order.id || ''))}</title>
     <style>
-            /* 58mm thermal */
-            @page { size: 58mm auto; margin: 4mm; }
+      /* Ticket 58mm (área útil ~48mm). Diseñado para no cortarse. */
+            /* Algunos drivers (ej. XP-58) fallan con 'auto' en el alto */
+            @page { size: 58mm 200mm; margin: 0; }
       html, body { background: #fff; color: #000; }
-            body { width: 58mm; margin: 0 auto; }
-      body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-            pre { font-size: 13px; line-height: 1.25; white-space: pre-wrap; word-break: break-word; }
-        .hint { font-size: 11px; margin-top: 8px; }
-      @media screen { body { padding: 10px; } }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      .paper {
+        width: 58mm;
+        margin: 0 auto;
+        padding: 4mm 3.5mm;
+        box-sizing: border-box;
+      }
+      .brand {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+                font-weight: 700;
+                font-size: 18px;
+                letter-spacing: 0.15px;
+        text-align: center;
+        margin: 0 0 2mm 0;
+      }
+      .sub {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 11px;
+        text-align: center;
+        margin: 0;
+        line-height: 1.25;
+      }
+      pre {
+        margin: 3mm 0 0 0;
+        font-size: 12.5px;
+        line-height: 1.22;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+            img.qr {
+                display: block;
+                margin: 2.5mm auto 0 auto;
+                width: 28mm;
+                height: 28mm;
+                background: #fff;
+                filter: contrast(200%);
+                image-rendering: crisp-edges;
+                image-rendering: pixelated;
+            }
+      @media screen {
+        body { padding: 10px; }
+        .paper { box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+      }
     </style>
   </head>
   <body>
-    <pre>${safe}</pre>
+        <div class="paper">
+            ${mode === 'kitchen' ? '' : `<div class="brand">SR. &amp; SRA. BURGER</div>
+            <p class="sub">Minatitl\u00e1n, Veracruz</p>
+                        <p class="sub">Tel: 922-159-36-88</p>`}
+            <pre>${safe}</pre>
+            ${mode === 'kitchen' ? '' : `<p class="sub" style="margin-top: 2mm; font-weight: 600;">Siguenos en Facebook</p>
+                <img class="qr" alt="QR redes sociales" src="${escapeHtml(qrSrc)}" />
+                <p class="sub" style="margin-top: 1.5mm; font-weight: 600;">Gracias por su compra</p>`}
+        </div>
   </body>
 </html>`;
         }
 
         function printOrderTicket(orderId) {
+            return printOrderTicketInternal(orderId, 'customer');
+        }
+
+        function printKitchenTicket(orderId) {
+            return printOrderTicketInternal(orderId, 'kitchen');
+        }
+
+        function printOrderTicketInternal(orderId, mode) {
             try {
                 const order = (Array.isArray(orders) ? orders : []).find(o => String(o.id) === String(orderId));
                 if (!order) {
                     showNotification('No se encontró el pedido para imprimir', 'error');
                     return;
                 }
-                const html = buildPrintableTicketHtml(order);
-                                const w = window.open('about:blank', '_blank', 'width=420,height=700');
-                                if (w) {
-                                        w.document.open();
-                                        w.document.write(html);
-                                        w.document.close();
-                                        w.focus();
-                                        setTimeout(() => {
-                                                try { w.print(); } catch (_) {}
-                                        }, 250);
-                                        return;
-                                }
 
-                                // Fallback: imprimir en iframe oculto (cuando popups están bloqueados)
-                                const iframe = document.createElement('iframe');
-                                iframe.style.position = 'fixed';
-                                iframe.style.right = '0';
-                                iframe.style.bottom = '0';
-                                iframe.style.width = '0';
-                                iframe.style.height = '0';
-                                iframe.style.border = '0';
-                                iframe.setAttribute('aria-hidden', 'true');
-                                document.body.appendChild(iframe);
-                                const doc = iframe.contentWindow && iframe.contentWindow.document;
-                                if (!doc) {
-                                        alert('No se pudo abrir impresión. Permite popups o usa otro navegador.');
-                                        return;
-                                }
-                                doc.open();
-                                doc.write(html);
-                                doc.close();
-                                setTimeout(() => {
-                                        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (_) {}
-                                        setTimeout(() => { try { document.body.removeChild(iframe); } catch (_) {} }, 1000);
-                                }, 300);
+                const PRINT_DELAY_MS = 650; // ayuda a que el driver/spooler tenga tiempo de renderizar
+
+                const getQrDataUrl = async () => {
+                    try {
+                        const qrUrl = new URL('url_qrcodecreator.com_23_28_43.png', location.href).href;
+                        const ac = new AbortController();
+                        const t = setTimeout(() => ac.abort(), 2000);
+                        const res = await fetch(qrUrl, { cache: 'no-store', signal: ac.signal });
+                        clearTimeout(t);
+                        if (!res.ok) return '';
+
+                        const blob = await res.blob();
+                        const objUrl = URL.createObjectURL(blob);
+                        const img = new Image();
+                        img.decoding = 'sync';
+                        const loaded = await new Promise((resolve) => {
+                            img.onload = () => resolve(true);
+                            img.onerror = () => resolve(false);
+                            img.src = objUrl;
+                        });
+                        if (!loaded) {
+                            try { URL.revokeObjectURL(objUrl); } catch (_) {}
+                            return '';
+                        }
+
+                        const target = 256; // 256x256 suficiente para lectura y liviano
+                        const canvas = document.createElement('canvas');
+                        canvas.width = target;
+                        canvas.height = target;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                            try { URL.revokeObjectURL(objUrl); } catch (_) {}
+                            return '';
+                        }
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, target, target);
+                        ctx.drawImage(img, 0, 0, target, target);
+                        const dataUrl = canvas.toDataURL('image/png');
+                        try { URL.revokeObjectURL(objUrl); } catch (_) {}
+                        return String(dataUrl || '');
+                    } catch (_) {
+                        return '';
+                    }
+                };
+
+                const qrPromise = (async () => {
+                    try { return await getQrDataUrl(); } catch (_) { return ''; }
+                })();
+
+                const openWindowAndPrint = async () => {
+                    const qrDataUrl = await qrPromise;
+                    const html = buildPrintableTicketHtml(order, qrDataUrl || undefined, mode);
+                    const w = window.open('about:blank', '_blank', 'width=420,height=700');
+                    if (!w) return false;
+                    w.document.open();
+                    w.document.write(html);
+                    w.document.close();
+
+                    const doPrint = () => {
+                        try { w.focus(); } catch (_) {}
+                        setTimeout(() => {
+                            try { w.print(); } catch (_) {}
+                        }, PRINT_DELAY_MS);
+                    };
+
+                    w.onload = () => {
+                        try {
+                            const img = w.document.querySelector('img.qr');
+                            if (img) {
+                                if (img.complete) return doPrint();
+                                let done = false;
+                                const finish = () => { if (done) return; done = true; doPrint(); };
+                                img.onload = finish;
+                                img.onerror = finish;
+                                setTimeout(finish, 1600);
+                                return;
+                            }
+                        } catch (_) {}
+                        doPrint();
+                    };
+
+                    return true;
+                };
+
+                const openIframeAndPrint = async () => {
+                    const qrDataUrl = await qrPromise;
+                    const html = buildPrintableTicketHtml(order, qrDataUrl || undefined, mode);
+
+                    const iframe = document.createElement('iframe');
+                    iframe.style.position = 'fixed';
+                    iframe.style.right = '0';
+                    iframe.style.bottom = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = '0';
+                    iframe.setAttribute('aria-hidden', 'true');
+                    document.body.appendChild(iframe);
+                    const doc = iframe.contentWindow && iframe.contentWindow.document;
+                    if (!doc) {
+                        alert('No se pudo abrir impresión. Permite popups o usa otro navegador.');
+                        return;
+                    }
+                    doc.open();
+                    doc.write(html);
+                    doc.close();
+
+                    const doIframePrint = () => {
+                        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (_) {}
+                        setTimeout(() => { try { document.body.removeChild(iframe); } catch (_) {} }, 1400);
+                    };
+
+                    setTimeout(() => {
+                        try {
+                            const img = doc.querySelector('img.qr');
+                            if (img) {
+                                if (img.complete) return doIframePrint();
+                                let done = false;
+                                const finish = () => { if (done) return; done = true; doIframePrint(); };
+                                img.onload = finish;
+                                img.onerror = finish;
+                                setTimeout(finish, 1600);
+                                return;
+                            }
+                        } catch (_) {}
+                        doIframePrint();
+                    }, PRINT_DELAY_MS);
+                };
+
+                openWindowAndPrint().then((ok) => {
+                    if (!ok) openIframeAndPrint();
+                });
             } catch (e) {
                 console.error('Error al imprimir ticket:', e);
                 showNotification('Error al imprimir ticket', 'error');

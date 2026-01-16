@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Overrides para mostrar/ocultar el botón "Personalizar" por producto
         customizeButtonOverrides: {},
         // Overrides para permitir o no campo de "Especificaciones" por producto
-        specificationsOverrides: {}
+        specificationsOverrides: {},
+        // Costos de producción por producto (id -> número)
+        productionCosts: {}
     };
 
     const normalizeCategories = (list) => {
@@ -385,7 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
             productOrder: mapProductOrder(settings.productOrder),
             productInfoOverrides: mapProductInfoOverrides(settings.productInfoOverrides),
                     customizeButtonOverrides: mapCustomizeButtonOverrides(settings.customizeButtonOverrides),
-                    specificationsOverrides: mapSpecificationsOverrides(settings.specificationsOverrides)
+                    specificationsOverrides: mapSpecificationsOverrides(settings.specificationsOverrides),
+                    productionCosts: settings.productionCosts || {}
                 };
                 
                 // Update UI
@@ -410,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedSpecificationsOverrides = localStorage.getItem('specificationsOverrides');
             const savedProductOrder = localStorage.getItem('productOrder');
             const savedCategories = localStorage.getItem('categories');
+            const savedProductionCosts = localStorage.getItem('productionCosts');
 
     adminSettings.serviceActive = serviceActive !== null ? serviceActive === 'true' : true;
     adminSettings.hiddenProducts = normalizeHiddenProducts(hiddenProducts ? JSON.parse(hiddenProducts) : []);
@@ -418,6 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     adminSettings.customProducts = mapCustomProducts(savedCustomProducts ? JSON.parse(savedCustomProducts) : {});
     adminSettings.categories = normalizeCategories(savedCategories ? JSON.parse(savedCategories) : DEFAULT_CATEGORIES);
     adminSettings.productOrder = mapProductOrder(savedProductOrder ? JSON.parse(savedProductOrder) : {});
+    adminSettings.productionCosts = savedProductionCosts ? JSON.parse(savedProductionCosts) : {};
     adminSettings.productInfoOverrides = mapProductInfoOverrides(savedProductInfoOverrides ? JSON.parse(savedProductInfoOverrides) : {});
         adminSettings.customizeButtonOverrides = mapCustomizeButtonOverrides(savedCustomizeButtonOverrides ? JSON.parse(savedCustomizeButtonOverrides) : {});
         adminSettings.specificationsOverrides = mapSpecificationsOverrides(savedSpecificationsOverrides ? JSON.parse(savedSpecificationsOverrides) : {});
@@ -468,7 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 productOrder: sanitizeProductOrderForAllCategories(adminSettings.productOrder || {}),
                 productInfoOverrides: adminSettings.productInfoOverrides || {},
                 customizeButtonOverrides: adminSettings.customizeButtonOverrides || {},
-                specificationsOverrides: adminSettings.specificationsOverrides || {}
+                specificationsOverrides: adminSettings.specificationsOverrides || {},
+                productionCosts: adminSettings.productionCosts || {}
             });
 
             console.log('📡 Guardando en Firebase...', payload);
@@ -486,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('productInfoOverrides', JSON.stringify(adminSettings.productInfoOverrides || {}));
             localStorage.setItem('customizeButtonOverrides', JSON.stringify(adminSettings.customizeButtonOverrides || {}));
             localStorage.setItem('specificationsOverrides', JSON.stringify(adminSettings.specificationsOverrides || {}));
+            localStorage.setItem('productionCosts', JSON.stringify(adminSettings.productionCosts || {}));
             
             showToast('Configuración sincronizada exitosamente', 'success');
         } catch (error) {
@@ -513,17 +520,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const oldServiceActive = adminSettings.serviceActive;
                     
             adminSettings = {
-            serviceActive: newSettings.serviceActive !== undefined ? newSettings.serviceActive : true,
-            hiddenProducts: normalizeHiddenProducts(newSettings.hiddenProducts),
-            priceOverrides: mapPriceOverrides(newSettings.priceOverrides),
-            imageOverrides: mapImageOverrides(newSettings.imageOverrides),
-            customProducts: mapCustomProducts(newSettings.customProducts),
-            categories: normalizeCategories(newSettings.categories),
-            productOrder: mapProductOrder(newSettings.productOrder),
-            productInfoOverrides: mapProductInfoOverrides(newSettings.productInfoOverrides),
-                            customizeButtonOverrides: mapCustomizeButtonOverrides(newSettings.customizeButtonOverrides),
-                            specificationsOverrides: mapSpecificationsOverrides(newSettings.specificationsOverrides)
-                        };
+                serviceActive: newSettings.serviceActive !== undefined ? newSettings.serviceActive : true,
+                hiddenProducts: normalizeHiddenProducts(newSettings.hiddenProducts),
+                priceOverrides: mapPriceOverrides(newSettings.priceOverrides),
+                imageOverrides: mapImageOverrides(newSettings.imageOverrides),
+                customProducts: mapCustomProducts(newSettings.customProducts),
+                categories: normalizeCategories(newSettings.categories),
+                productOrder: mapProductOrder(newSettings.productOrder),
+                productInfoOverrides: mapProductInfoOverrides(newSettings.productInfoOverrides),
+                customizeButtonOverrides: mapCustomizeButtonOverrides(newSettings.customizeButtonOverrides),
+                specificationsOverrides: mapSpecificationsOverrides(newSettings.specificationsOverrides),
+                // IMPORTANT: mantener también los costos de producción que ya existan en Firebase
+                productionCosts: newSettings.productionCosts || {}
+            };
                     
                     // Update UI
                     document.getElementById('service-toggle').checked = adminSettings.serviceActive;
