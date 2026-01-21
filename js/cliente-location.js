@@ -10,6 +10,8 @@
   let map = null;
   let marker = null;
 
+  let reverseGeocodeSeq = 0;
+
   let currentSelection = null; // { lat, lng, formattedAddress, sourceQuery }
   let currentClientUid = null;
 
@@ -46,7 +48,6 @@
   function updateSaveButtonState() {
     const btn = $('client-save-btn');
     const addBtn = $('client-add-address-btn');
-    if (!btn) return;
     const hasSelection = !!(
       currentSelection &&
       isFinite(Number(currentSelection.lat)) &&
@@ -57,8 +58,9 @@
       typeof window.firebaseClientManager.getCurrentUser === 'function' &&
       window.firebaseClientManager.getCurrentUser()
     );
-    btn.disabled = !(hasSelection && hasAuth);
-    if (addBtn) addBtn.disabled = !(hasSelection && hasAuth);
+    const disabled = !(hasSelection && hasAuth);
+    if (btn) btn.disabled = disabled;
+    if (addBtn) addBtn.disabled = disabled;
   }
 
   function haversineKm(lat1, lng1, lat2, lng2) {
@@ -181,6 +183,38 @@
     });
   }
 
+  async function reverseGeocodeWithGoogle(lat, lng) {
+    return new Promise((resolve, reject) => {
+      if (!geocoder) return reject(new Error('Geocoder no disponible'));
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status !== 'OK' || !results || !results[0]) {
+          reject(new Error(`Reverse geocoder status: ${status}`));
+          return;
+        }
+        resolve({ formattedAddress: results[0].formatted_address || '' });
+      });
+    });
+  }
+
+  async function reverseGeocodeWithServer(lat, lng) {
+    const url = `/api/reverse-geocode?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+    const r = await fetch(url);
+    const json = await r.json().catch(() => null);
+    if (!r.ok || !json || !json.ok) {
+      throw new Error((json && json.error) || `Reverse geocode HTTP ${r.status}`);
+    }
+    const data = json.data || {};
+    return { formattedAddress: data.display_name || '' };
+  }
+
+  async function reverseGeocodeLatLng(lat, lng) {
+    const latN = Number(lat);
+    const lngN = Number(lng);
+    if (!isFinite(latN) || !isFinite(lngN)) throw new Error('Coords inválidas');
+    if (mapsReady && geocoder) return reverseGeocodeWithGoogle(latN, lngN);
+    return reverseGeocodeWithServer(latN, lngN);
+  }
+
   async function geocodeWithServer(query) {
     const url = `/api/geocode?q=${encodeURIComponent(query)}`;
     const r = await fetch(url);
@@ -223,7 +257,7 @@
 
       map.addListener('click', (e) => {
         if (!e || !e.latLng) return;
-        setMarkerPosition(e.latLng);
+        setMarkerPosition(e.latLng, { updateAddressFromPin: true });
       });
     }
 
@@ -239,7 +273,7 @@
 
       marker.addListener('dragend', () => {
         const pos = marker.getPosition();
-        if (pos) setMarkerPosition(pos);
+        if (pos) setMarkerPosition(pos, { updateAddressFromPin: true });
       });
     }
 
@@ -278,19 +312,62 @@
     );
   }
 
-  function setMarkerPosition(latLng) {
+  function setMarkerPosition(latLng, opts) {
     if (!marker || !map) return;
+    opts = opts || {};
     marker.setPosition(latLng);
     map.panTo(latLng);
+
+    const lat = latLng.lat();
+    const lng = latLng.lng();
+
     currentSelection = {
-      lat: latLng.lat(),
-      lng: latLng.lng(),
+      lat,
+      lng,
       formattedAddress:
-        ($('client-selected-address') && $('client-selected-address').textContent) || null,
-      sourceQuery: ($('client-address-input') && $('client-address-input').value) || null,
+        (currentSelection && currentSelection.formattedAddress) ||
+        (($('client-selected-address') && $('client-selected-address').textContent) || null),
+      sourceQuery:
+        (currentSelection && currentSelection.sourceQuery) ||
+        (($('client-address-input') && $('client-address-input').value) || null),
     };
     updateSaveButtonState();
-    renderDistanceAndCost(latLng.lat(), latLng.lng());
+    renderDistanceAndCost(lat, lng);
+
+    // Si el usuario movió el pin, actualizamos la dirección para que coincida con el pin.
+    if (opts.updateAddressFromPin) {
+      const seq = ++reverseGeocodeSeq;
+      const note = $('client-selected-address');
+      if (note) note.textContent = 'Detectando dirección…';
+
+      (async () => {
+        try {
+          const res = await reverseGeocodeLatLng(lat, lng);
+          if (seq !== reverseGeocodeSeq) return;
+          const formatted = (res && res.formattedAddress ? String(res.formattedAddress) : '').trim();
+          if (!formatted) return;
+
+          const input = $('client-address-input');
+          if (input) input.value = formatted;
+          if (note) note.textContent = formatted;
+
+          currentSelection = {
+            lat,
+            lng,
+            formattedAddress: formatted,
+            sourceQuery: formatted,
+          };
+          updateSaveButtonState();
+        } catch (e) {
+          console.warn('[cliente-location] reverse geocode falló:', e);
+          // No bloquear al usuario: deja la coordenada seleccionada aunque no se pueda resolver la dirección.
+          const note2 = $('client-selected-address');
+          if (note2 && (!note2.textContent || note2.textContent === 'Detectando dirección…')) {
+            note2.textContent = 'Ubicación ajustada (sin dirección exacta)';
+          }
+        }
+      })();
+    }
   }
 
   async function handleVerify() {
@@ -480,7 +557,8 @@
     const addBtn = $('client-add-address-btn');
     if (btn) btn.addEventListener('click', handleVerify);
     if (saveBtn) saveBtn.addEventListener('click', handleSaveLocation);
-    if (addBtn) addBtn.addEventListener('click', handleAddAddress);
+    // Solo un botón: "Agregar dirección" se comporta como "Aceptar y guardar".
+    if (addBtn) addBtn.addEventListener('click', handleSaveLocation);
     if (input) {
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {

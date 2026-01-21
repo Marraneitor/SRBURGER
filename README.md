@@ -66,13 +66,9 @@ npm start
 
 ### Variables de entorno (Vercel)
 
-**Twilio (enviar pedido por WhatsApp/SMS)**
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_FROM`
-- `OWNER_PHONE`
-- `TWILIO_CHANNEL` (opcional: `whatsapp` o `sms`; default `whatsapp`)
-- `TWILIO_MOCK` (opcional: `true` para no enviar y solo loggear)
+**Pedidos (backend)**
+- El endpoint `/api/send-order` se mantiene para compatibilidad con el frontend.
+- Twilio fue removido del proyecto.
 
 **Admin / puntos (marcar pagado y acreditar puntos)**
 - `ADMIN_KEY` (opcional: si se define, requiere header `x-admin-key`)
@@ -80,6 +76,17 @@ npm start
 
 **Opcional**
 - `PUBLIC_BASE_URL` (ej: `https://tu-proyecto.vercel.app` para link de rastreo)
+
+### Mercado Pago (pago en línea)
+
+Este proyecto crea una preferencia de pago desde el backend (server / endpoints `/api`).
+
+- **Servidor (secreto):** define `MP_ACCESS_TOKEN` (o `MERCADOPAGO_ACCESS_TOKEN`).
+	- Nunca lo pongas en el frontend ni lo subas al repo.
+- **Frontend (público, opcional):** si en el futuro usas Bricks/SDK en el navegador, define `MP_PUBLIC_KEY` (o `MERCADOPAGO_PUBLIC_KEY`).
+- **Verificación rápida:** abre `http://localhost:3000/api/mp-config-check` y confirma que `mpReady` sea `true`.
+
+Tip: hay un archivo de ejemplo [.env.example](.env.example) para configuración local.
 
 ## 🔥 Firebase Features
 

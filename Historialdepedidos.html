@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 to-white text-slate-900">
   <header class="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-slate-200">
@@ -187,6 +188,60 @@
       render(applyTimeFilter(allDeliveredOrders));
     }
 
+    function normText(s) {
+      return String(s || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // Mapa mínimo para resolver extras por nombre cuando NO vienen como item separado.
+    // (IDs igual que en Productos.html / menú)
+    const EXTRA_NAME_TO_ID = (() => {
+      const pairs = [
+        ['Papas Gajo Medianas', 8],
+        ['Papas Gajo Grandes', 16],
+        ['Papas Francesas Medianas', 28],
+        ['Papas Francesas Grandes', 29],
+        ['Salchipapas Medianas', 17],
+        ['Salchipapas Grandes', 18],
+        ['Aros de Cebolla (8 pz)', 19],
+        ['Aros de Cebolla Grande (15 pz)', 20],
+        // Variantes comunes sin paréntesis
+        ['Aros de Cebolla', 19],
+        ['Aros de Cebolla Grandes', 20],
+        ['Aros de Cebolla Grande', 20],
+      ];
+      const map = {};
+      pairs.forEach(([name, id]) => { map[normText(name)] = id; });
+      return map;
+    })();
+
+    function resolveExtraProductIdByName(name) {
+      const n = normText(name);
+      if (!n) return null;
+      if (EXTRA_NAME_TO_ID[n] != null) return EXTRA_NAME_TO_ID[n];
+
+      // Detección flexible (por si el texto viene como "Papas: Francesas" o similar)
+      const hasGrande = /\b(grande|grandes|xl)\b/i.test(String(name || ''));
+      if (n.includes('papas') && n.includes('frances')) return hasGrande ? 29 : 28;
+      if (n.includes('papas') && n.includes('gajo')) return hasGrande ? 16 : 8;
+      if (n.includes('salchipapas')) return hasGrande ? 18 : 17;
+      if (n.includes('aros') && n.includes('cebolla')) return hasGrande ? 20 : 19;
+      return null;
+    }
+
+    function addCostByProductId(pid, qty) {
+      const unitCost = Number(productionCosts && productionCosts[pid]);
+      if (!Number.isFinite(unitCost) || unitCost < 0) return 0;
+      const q = Number(qty);
+      if (!Number.isFinite(q) || q <= 0) return 0;
+      return unitCost * q;
+    }
+
     function computeOrderCost(order) {
       try {
         if (!order || !Array.isArray(order.items) || !productionCosts) return null;
@@ -196,12 +251,82 @@
           if (!it) return;
           const pid = Number(it.id || it.productId || it.baseItemId || it.itemId);
           if (!Number.isFinite(pid)) return;
-          const unitCost = Number(productionCosts[pid]);
-          if (!Number.isFinite(unitCost) || unitCost < 0) return;
           const qty = Number(it.quantity || 1);
           if (!Number.isFinite(qty) || qty <= 0) return;
-          totalCost += unitCost * qty;
-          hasCost = true;
+
+          // 1) Costo del producto base (hamburguesa / hotdog / combo como ítem)
+          const baseCost = addCostByProductId(pid, qty);
+          if (baseCost > 0) {
+            totalCost += baseCost;
+            hasCost = true;
+          }
+
+          // 2) Extras estructurados (si existen)
+          // menuExtras: [{id?, name?, quantity?}, ...]
+          if (Array.isArray(it.menuExtras)) {
+            it.menuExtras.forEach((ex) => {
+              if (!ex) return;
+              const exQty = Number(ex.quantity || 1);
+              const exPid = Number(ex.id || ex.productId || ex.baseItemId || ex.itemId);
+              const resolvedPid = Number.isFinite(exPid) ? exPid : resolveExtraProductIdByName(ex.name);
+              if (!resolvedPid) return;
+              const c = addCostByProductId(resolvedPid, exQty * qty);
+              if (c > 0) {
+                totalCost += c;
+                hasCost = true;
+              }
+            });
+          }
+
+          // fries: {type?, id?, price?} -> siempre suma costo aunque sea gratis
+          if (it.fries) {
+            const fPidNum = Number(it.fries.id || it.fries.productId || it.fries.baseItemId || it.fries.itemId);
+            const fPid = Number.isFinite(fPidNum) ? fPidNum : resolveExtraProductIdByName(`Papas ${it.fries.type || ''}`);
+            if (fPid) {
+              const c = addCostByProductId(fPid, 1 * qty);
+              if (c > 0) {
+                totalCost += c;
+                hasCost = true;
+              }
+            }
+          }
+
+          // onionRings: boolean (suele ser el extra de aros)
+          if (it.onionRings) {
+            const c = addCostByProductId(19, 1 * qty);
+            if (c > 0) {
+              totalCost += c;
+              hasCost = true;
+            }
+          }
+
+          // 3) Extras embebidos en el string de customizations (caso más común en historial)
+          const cust = String(it.customizations || '').trim();
+          if (cust) {
+            cust.split(',').map(s => s.trim()).filter(Boolean).forEach((part) => {
+              // Soportar: "1x Papas Francesas Medianas", "Papas: Francesas", "Aros de Cebolla"
+              let partQty = 1;
+              let partName = part;
+
+              const m = part.match(/^(\d+)\s*x\s*(.+)$/i);
+              if (m) {
+                partQty = Number(m[1] || 1);
+                partName = String(m[2] || '').trim();
+              }
+
+              // Normalizar variantes de "Papas: Francesas" -> "Papas Francesas"
+              partName = partName.replace(/^Papas\s*:\s*/i, 'Papas ');
+
+              const extraPid = resolveExtraProductIdByName(partName);
+              if (!extraPid) return;
+
+              const c = addCostByProductId(extraPid, partQty * qty);
+              if (c > 0) {
+                totalCost += c;
+                hasCost = true;
+              }
+            });
+          }
         });
         return hasCost ? totalCost : null;
       } catch (_) {

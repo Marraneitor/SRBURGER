@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Items vendidos - SR & SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
+  <style>
+    body { font-family: Inter, Poppins, system-ui, -apple-system, Segoe UI, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-rose-100">
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500 text-slate-950 grid place-items-center">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-rose-200">SR &amp; SRA BURGER</div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Items vendidos</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="controldeenvios.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-rose-100 font-bold border border-slate-700">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+    <div id="status-banner" class="hidden p-4 rounded-2xl border"></div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="text-sm font-extrabold text-rose-200 mr-1">Mostrar:</div>
+        <button id="filter-all" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-rose-100">Todos</button>
+        <button id="filter-day" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-rose-100">Día</button>
+        <button id="filter-week" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-rose-100">Semana</button>
+        <button id="filter-month" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-rose-100">Mes</button>
+      </div>
+
+      <div class="flex items-center gap-2 ml-auto">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900/80 shadow-sm">
+          <i class="fas fa-calendar-day text-rose-300 text-sm"></i>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-semibold text-rose-200 leading-tight">Filtrar por fecha</span>
+            <input id="date-filter" type="date" class="mt-1 text-xs border-0 focus:ring-0 p-0 bg-transparent text-rose-100" />
+          </div>
+        </div>
+        <button id="clear-date" type="button" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-200 hover:text-rose-100 hover:bg-slate-900 border border-transparent">Limpiar fecha</button>
+      </div>
+    </div>
+
+    <section id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Pedidos</div>
+        <div id="sum-orders" class="mt-1 text-2xl font-extrabold text-rose-100">0</div>
+        <div class="mt-1 text-xs text-rose-200/80">Entregados</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Hamburguesas</div>
+        <div id="sum-burgers" class="mt-1 text-2xl font-extrabold text-rose-300">0</div>
+        <div class="mt-1 text-xs text-rose-200/80">Por tipo abajo</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Boneless</div>
+        <div id="sum-boneless" class="mt-1 text-2xl font-extrabold text-rose-300">0</div>
+        <div class="mt-1 text-xs text-rose-200/80">Por tamaño abajo</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Combos</div>
+        <div id="sum-combos" class="mt-1 text-2xl font-extrabold text-rose-300">0</div>
+        <div class="mt-1 text-xs text-rose-200/80">Por tipo abajo</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Hamburguesas por tipo</h2>
+          <span id="burgers-count" class="text-xs font-semibold text-rose-200">0 tipos</span>
+        </div>
+        <div id="burgers-table" class="text-sm text-rose-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Boneless por tamaño</h2>
+          <span id="boneless-count" class="text-xs font-semibold text-rose-200">0 tamaños</span>
+        </div>
+        <div id="boneless-table" class="text-sm text-rose-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Combos vendidos</h2>
+          <span id="combos-count" class="text-xs font-semibold text-rose-200">0 tipos</span>
+        </div>
+        <div id="combos-table" class="text-sm text-rose-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Papas por tamaño</h2>
+          <span id="fries-count" class="text-xs font-semibold text-rose-200">0 tamaños</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800">
+            <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Complemento</div>
+            <div id="fries-complemento" class="mt-1 text-xl font-extrabold text-rose-100">0</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800">
+            <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Medianas</div>
+            <div id="fries-medianas" class="mt-1 text-xl font-extrabold text-rose-100">0</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800">
+            <div class="text-[11px] font-semibold text-rose-200 uppercase tracking-wide">Extragrandes</div>
+            <div id="fries-extragrandes" class="mt-1 text-xl font-extrabold text-rose-100">0</div>
+          </div>
+        </div>
+        <div id="fries-table" class="text-sm text-rose-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Productos vendidos (desglose)</h2>
+          <span id="products-count" class="text-xs font-semibold text-rose-200">0 productos</span>
+        </div>
+        <div class="text-xs text-rose-200/80 mb-2">Incluye lo que va dentro de combos (hamburguesas/hotdogs/papas) y papas agregadas.</div>
+        <div id="products-table" class="text-sm text-rose-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-rose-100">Insumos (extras)</h2>
+          <span id="insumos-count" class="text-xs font-semibold text-rose-200">0 insumos</span>
+        </div>
+        <div class="text-xs text-rose-200/80 mb-2">Suma extras del menú (ej: Carne extra) en base a lo guardado en el pedido.</div>
+        <div id="insumos-table" class="text-sm text-rose-100"></div>
+      </div>
+    </section>
+
+    <div id="empty" class="hidden text-center py-16">
+      <div class="w-24 h-24 bg-slate-900/70 border border-slate-800 rounded-2xl grid place-items-center mx-auto mb-6">
+        <i class="fas fa-inbox text-rose-300 text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-extrabold text-rose-100">Sin datos</h3>
+      <p class="text-rose-200/80 mt-2">No hay pedidos entregados en ese rango.</p>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script>
+    let unsubscribeOrders = null;
+    let unsubscribeHistory = null;
+    let allHistoryOrders = [];
+    let currentTimeFilter = 'all';
+    let selectedDate = null;
+
+    // ------------------------
+    // Helpers de tiempo
+    // ------------------------
+    function tsToDate(ts) {
+      try {
+        if (!ts) return null;
+        if (typeof ts === 'string') {
+          const d = new Date(ts);
+          return isNaN(d.getTime()) ? null : d;
+        }
+        if (typeof ts === 'object' && typeof ts.toDate === 'function') {
+          return ts.toDate();
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function getOrderDate(order) {
+      return tsToDate(order?.deliveredAt || order?.archivedAt || order?.timestamp);
+    }
+
+    function startOfToday(d) {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    function startOfWeekMonday(d) {
+      const x = startOfToday(d);
+      const day = x.getDay();
+      const diff = (day === 0) ? 6 : (day - 1);
+      x.setDate(x.getDate() - diff);
+      return x;
+    }
+
+    function startOfMonth(d) {
+      const x = startOfToday(d);
+      x.setDate(1);
+      return x;
+    }
+
+    function sameDay(a, b) {
+      return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    // ------------------------
+    // Helpers de texto / parsing
+    // ------------------------
+    function safeText(v) {
+      return (v == null) ? '' : String(v);
+    }
+
+    function normText(v) {
+      return safeText(v)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s:\/\-\.\+\(\)\$]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function extractAllTextFromItem(item) {
+      const chunks = [];
+      const maybePush = (x) => {
+        if (x == null) return;
+        if (typeof x === 'string') {
+          if (x.trim()) chunks.push(x);
+          return;
+        }
+        if (Array.isArray(x)) {
+          x.forEach(maybePush);
+          return;
+        }
+        if (typeof x === 'object') {
+          // Evitar stringify gigantes: tomar campos típicos
+          ['name', 'type', 'size', 'label', 'title', 'text'].forEach((k) => {
+            if (x[k]) chunks.push(String(x[k]));
+          });
+          return;
+        }
+        chunks.push(String(x));
+      };
+
+      maybePush(item?.name);
+      maybePush(item?.productName);
+      maybePush(item?.title);
+      maybePush(item?.customizations);
+      maybePush(item?.details);
+      maybePush(item?.notes);
+      maybePush(item?.fries);
+      maybePush(item?.menuExtras);
+      maybePush(item?.onionRings);
+      return chunks.join('\n');
+    }
+
+    function parsePortionGrams(text) {
+      const t = normText(text);
+      const m1 = t.match(/porcion\s*:\s*(\d{2,4})\s*g/);
+      if (m1) return Number(m1[1]);
+      const m2 = t.match(/(\d{2,4})\s*g/);
+      if (m2) return Number(m2[1]);
+      return null;
+    }
+
+    function classifyFriesSize(text) {
+      const t = normText(text);
+      if (!t) return null;
+      if (t.includes('extragrande') || t.includes('extra grande') || t.includes('xl') || t.includes('xxl')) return 'Extragrandes';
+      if (t.includes('mediana') || t.includes('medianas')) return 'Medianas';
+      if (t.includes('complemento')) return 'Complemento';
+      if (t.includes('grande') || t.includes('grandes')) return 'Extragrandes'; // legacy
+      return null;
+    }
+
+    function isFriesItem(itemName) {
+      const t = normText(itemName);
+      return t.includes('papas');
+    }
+
+    function isBonelessItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      return t.includes('boneless') || t.includes('boneles') || t.includes('boneles');
+    }
+
+    function isComboItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      return t.includes('combo');
+    }
+
+    function isBurgerItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      if (!t) return false;
+      if (t.includes('combo')) return false;
+      if (t.includes('boneless') || t.includes('boneles')) return false;
+      if (t.includes('papas')) return false;
+      if (t.includes('hot dog') || t.includes('hotdog')) return false;
+      return t.includes('burger') || t.includes('hamburguesa');
+    }
+
+    function isHotdogItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      if (!t) return false;
+      if (t.includes('combo')) return false;
+      return t.includes('hot dog') || t.includes('hotdog');
+    }
+
+    function parseBurgersFromCustomizations(text) {
+      const lines = safeText(text)
+        .split(/\r?\n|\|/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const burgers = [];
+      for (const ln of lines) {
+        const n = normText(ln);
+        if (n.startsWith('incluye:') || n.startsWith('incluye ')) continue;
+        if (n.includes('incluye:')) {
+          // Evitar que se cuele el resumen del combo
+          const left = ln.split(/incluye\s*:/i)[0].trim();
+          if (left) {
+            // Re-procesar el lado izquierdo
+            const sub = parseBurgersFromCustomizations(left);
+            sub.forEach(x => burgers.push(x));
+          }
+          continue;
+        }
+        // Ej: "Hamburguesa 1: Chistorraburger"
+        let m = ln.match(/hamburguesa\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          burgers.push(m[1].trim());
+          continue;
+        }
+        m = ln.match(/burger\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          burgers.push(m[1].trim());
+          continue;
+        }
+        // A veces viene "Hamburguesa: X"
+        if ((n.includes('hamburguesa') || n.includes('burger')) && ln.includes(':')) {
+          const parts = ln.split(':');
+          const rhs = parts.slice(1).join(':').trim();
+          if (rhs) burgers.push(rhs);
+        }
+      }
+      return burgers;
+    }
+
+    function cleanBurgerName(name) {
+      let s = safeText(name).trim();
+      if (!s) return '';
+      // cortar cualquier "Incluye: ..." o similares
+      s = s.split(/incluye\s*:/i)[0].trim();
+      // si viene pegado con "|" tomar el primer chunk útil
+      if (s.includes('|')) s = s.split('|')[0].trim();
+      // quitar prefijos comunes
+      s = s.replace(/^hamburguesa\s*\d*\s*:\s*/i, '').trim();
+      s = s.replace(/^burger\s*\d*\s*:\s*/i, '').trim();
+      // compactar espacios
+      s = s.replace(/\s+/g, ' ').trim();
+      return s;
+    }
+
+    function parseHotdogsFromCustomizations(text) {
+      const lines = safeText(text).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const hotdogs = [];
+      for (const ln of lines) {
+        const n = normText(ln);
+        let m = ln.match(/hot\s*dog\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          hotdogs.push(m[1].trim());
+          continue;
+        }
+        m = ln.match(/hotdog\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          hotdogs.push(m[1].trim());
+          continue;
+        }
+        if ((n.includes('hotdog') || n.includes('hot dog')) && ln.includes(':')) {
+          const parts = ln.split(':');
+          const rhs = parts.slice(1).join(':').trim();
+          if (rhs) hotdogs.push(rhs);
+        }
+      }
+      return hotdogs;
+    }
+
+    function addCount(map, key, qty) {
+      const k = (key || 'Sin especificar').trim();
+      const q = Number(qty || 0);
+      if (!Number.isFinite(q) || q <= 0) return;
+      map[k] = (map[k] || 0) + q;
+    }
+
+    function normalizeFriesDisplayName(v) {
+      const t = safeText(v).trim();
+      if (!t) return null;
+      // Mantener el tipo (Gajo/Francesas) si viene en el texto.
+      const lower = normText(t);
+      const type = lower.includes('gajo') ? 'Gajo' : (lower.includes('francesa') ? 'Francesas' : null);
+      const s = classifyFriesSize(t);
+      if (type && s) return `Papas ${type} ${s}`;
+      if (type && !s) return `Papas ${type}`;
+      if (s === 'Complemento') return 'Papas Complemento';
+      if (s === 'Medianas') return 'Papas Medianas';
+      if (s === 'Extragrandes') return 'Papas Extragrandes';
+      return t;
+    }
+
+    function friesNameFromFriesObject(friesObj) {
+      if (!friesObj) return null;
+      const name = safeText(friesObj.name || '').trim();
+      if (name) return normalizeFriesDisplayName(name);
+      const type = safeText(friesObj.type || '').trim();
+      const size = safeText(friesObj.size || friesObj.tamano || '').trim();
+      if (type && size) return normalizeFriesDisplayName(`Papas ${type} ${size}`);
+      if (type) return normalizeFriesDisplayName('Papas ' + type);
+      return null;
+    }
+
+    function friesDisplayFromIncludedFries(includedFries) {
+      if (!includedFries) return null;
+      const rawType = safeText(includedFries.type || '').trim();
+      const rawSize = safeText(includedFries.size || '').trim();
+      if (!rawType && !rawSize) return friesNameFromFriesObject(includedFries);
+
+      const t = normText(rawType);
+      const type = t.includes('gajo') ? 'Gajo' : (t.includes('francesa') ? 'Francesas' : (rawType || null));
+
+      const s = classifyFriesSize(rawSize) || classifyFriesSize(rawType) || (/grande|grandes|xl/i.test(rawSize) ? 'Extragrandes' : null);
+      if (type && s) return `Papas ${type} ${s}`;
+      if (type) return `Papas ${type}`;
+      if (s) return `Papas ${s}`;
+      return null;
+    }
+
+    function parseIncludedFriesFromText(text) {
+      const raw = safeText(text);
+      if (!raw.trim()) return null;
+
+      const lines = raw
+        .split(/\r?\n|\|/)
+        .map(s => String(s || '').trim())
+        .filter(Boolean);
+
+      for (const ln of lines) {
+        // Evitar extras del menú: "1x Papas ..."
+        if (/^\d+\s*x\s*papas/i.test(ln)) continue;
+
+        // Formatos comunes: "Papas: Gajo Medianas" | "Papas Francesas Medianas"
+        if (/papas/i.test(ln)) {
+          const fixed = ln.replace(/^Papas\s*:\s*/i, 'Papas ').trim();
+          const guess = normalizeFriesDisplayName(fixed);
+          if (guess) return guess;
+
+          const m = ln.match(/papas\s*(?::|\s)\s*([^,]+)/i);
+          if (m && m[1]) {
+            const guess2 = normalizeFriesDisplayName('Papas ' + String(m[1]).trim());
+            if (guess2) return guess2;
+          }
+        }
+      }
+      return null;
+    }
+
+    function pickIncludedFriesFromChoices(choices) {
+      const arr = Array.isArray(choices) ? choices : [];
+      const values = arr
+        .map(ch => friesNameFromFriesObject(ch?.fries))
+        .filter(Boolean);
+      if (!values.length) return null;
+
+      const uniq = new Map();
+      values.forEach(v => {
+        const k = normText(v);
+        if (!uniq.has(k)) uniq.set(k, v);
+      });
+
+      // Solo si hay una selección única (típico del combo)
+      if (uniq.size === 1) return Array.from(uniq.values())[0];
+      return null;
+    }
+
+    function addMenuExtrasCounts(insumosMap, menuExtras, multiplierQty) {
+      if (!Array.isArray(menuExtras) || !menuExtras.length) return;
+      const mult = Number(multiplierQty || 1);
+      menuExtras.forEach((ex) => {
+        if (!ex) return;
+        const name = safeText(ex.name || ex.title || ex.productName || '').trim();
+        if (!name) return;
+        const q = Number(ex.quantity || 1);
+        const qty = (Number.isFinite(q) && q > 0) ? q : 1;
+        addCount(insumosMap, name, qty * mult);
+      });
+    }
+
+    function addExtrasFromText(insumosMap, text, multiplierQty) {
+      const mult = Number(multiplierQty || 1);
+      if (!Number.isFinite(mult) || mult <= 0) return;
+      const raw = safeText(text);
+      if (!raw.trim()) return;
+      const t = normText(raw);
+      if (!t) return;
+
+      // Formatos esperados:
+      // - "Carne extra"
+      // - "Doble carne"
+      // - "2x Carne extra"
+      // - "Carne extra x2"
+      const patterns = [
+        { re: /(^|\s)(\d+)\s*x\s*(carne\s*extra|doble\s*carne)(\s|$)/g, name: 'Carne extra', qtyFrom: 2 },
+        { re: /(^|\s)(carne\s*extra|doble\s*carne)\s*x\s*(\d+)(\s|$)/g, name: 'Carne extra', qtyFrom: 3 },
+        { re: /(^|\s)(carne\s*extra|doble\s*carne)(\s|$)/g, name: 'Carne extra', qtyFrom: null }
+      ];
+
+      let added = 0;
+      for (const p of patterns) {
+        p.re.lastIndex = 0;
+        let m;
+        while ((m = p.re.exec(t)) !== null) {
+          const qRaw = p.qtyFrom != null ? Number(m[p.qtyFrom]) : 1;
+          const q = (Number.isFinite(qRaw) && qRaw > 0) ? qRaw : 1;
+          addCount(insumosMap, p.name, q * mult);
+          added += 1;
+        }
+      }
+
+      // Si no hubo match por regex pero el texto menciona "carne extra" en líneas (por seguridad)
+      if (!added && t.includes('carne extra')) {
+        addCount(insumosMap, 'Carne extra', 1 * mult);
+      }
+    }
+
+    function addInsumosFromItem(insumosMap, item, multiplierQty) {
+      // Preferir estructura explícita si existe
+      if (Array.isArray(item?.menuExtras) && item.menuExtras.length) {
+        addMenuExtrasCounts(insumosMap, item.menuExtras, multiplierQty);
+        return;
+      }
+      // Fallback: extraer de texto guardado
+      addExtrasFromText(insumosMap, extractAllTextFromItem(item), multiplierQty);
+    }
+
+    // ------------------------
+    // Config de combos (misma idea que controldeenvios)
+    // ------------------------
+    let comboConfigurations = {};
+
+    function loadComboConfigurations() {
+      const savedCombos = localStorage.getItem('burgerCombos');
+
+      const defaultConfigs = {
+        'combofamiliar': {
+          name: 'Combo Familiar',
+          items: [
+            { type: 'fries', name: 'Papas Extragrandes', quantity: 1 },
+            { type: 'onion-rings', name: 'Aros de Cebolla Extragrandes', quantity: 1 },
+            { type: 'drink', name: 'Coca-Cola 3L', quantity: 1 }
+          ]
+        },
+        // Combo Dúo: 1 hamburguesa + 1 hotdog jumbo + papas medianas
+        'comboduo': { name: 'Combo Dúo', productIds: ['p_1762250461918_yr88'], items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'hotdog', name: 'Hotdog Jumbo', quantity: 1 } ] },
+        // Triple DOG: 3 hotdogs + papas medianas (gajo/francesas a elección)
+        'tripledog': { name: 'Triple DOG', productIds: ['p_1762250304793_2l0s'], items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'hotdog', name: 'Hotdog Jumbo', quantity: 3 } ] },
+        'combopareja': { name: 'Combo Pareja', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1 } ] },
+        'comboamigos': { name: 'Combo Amigos', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1 } ] },
+        'comboboneles': { name: 'Combo Boneles', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] },
+        'combodoblesdobles': { name: 'Combo Dobles Dobles', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] },
+        'combodoblesdoblesbbq': { name: 'Combo Dobles Dobles BBQ', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] }
+      };
+
+      let merged = { ...defaultConfigs };
+      if (savedCombos) {
+        try {
+          const combos = JSON.parse(savedCombos);
+          if (Array.isArray(combos)) {
+            combos.forEach((combo) => {
+              if (!combo || !combo.name) return;
+              const key = normText(combo.name).replace(/\s+/g, '');
+              // Normalizar IDs para poder detectar por item.id/productId
+              const pid = combo.id || combo.productId;
+              const cfg = { ...combo };
+              if (pid && !cfg.productIds) cfg.productIds = [String(pid)];
+              if (Array.isArray(cfg.productIds)) cfg.productIds = cfg.productIds.map(String);
+              merged[key] = cfg;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ Error leyendo burgerCombos. Usando defaults.', e);
+        }
+      }
+
+      // Hotfix: forzar reglas actuales (papas medianas excepto familiar; aros tamaños correctos)
+      (function enforceComboDefaults() {
+        function upsertFries(cfg, desiredName) {
+          if (!cfg || !Array.isArray(cfg.items)) return;
+          const idx = cfg.items.findIndex(it => (it && (it.type === 'fries' || /papas/i.test(String(it.name || '')))));
+          const item = { type: 'fries', name: desiredName, quantity: 1 };
+          if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+          else cfg.items.push(item);
+        }
+        function upsertRings(cfg, desiredName) {
+          if (!cfg || !Array.isArray(cfg.items)) return;
+          const idx = cfg.items.findIndex(it => (it && (it.type === 'onion-rings' || /aros/i.test(String(it.name || '')))));
+          const item = { type: 'onion-rings', name: desiredName, quantity: 1 };
+          if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+          else cfg.items.push(item);
+        }
+        upsertFries(merged['comboduo'], 'Papas Medianas');
+        upsertFries(merged['combopareja'], 'Papas Medianas');
+        upsertFries(merged['comboamigos'], 'Papas Medianas');
+        upsertFries(merged['comboboneles'], 'Papas Medianas');
+        upsertFries(merged['combodoblesdobles'], 'Papas Medianas');
+        upsertFries(merged['combodoblesdoblesbbq'], 'Papas Medianas');
+        upsertFries(merged['combofamiliar'], 'Papas Extragrandes');
+
+        upsertRings(merged['combopareja'], 'Aros de Cebolla Medianas');
+        upsertRings(merged['comboamigos'], 'Aros de Cebolla Medianas');
+        upsertRings(merged['combofamiliar'], 'Aros de Cebolla Extragrandes');
+      })();
+
+      comboConfigurations = merged;
+    }
+
+    function getComboConfig(itemName) {
+      if (!comboConfigurations) return null;
+      const key = normText(itemName).replace(/\s+/g, '');
+      if (comboConfigurations[key]) return comboConfigurations[key];
+
+      // fallback: buscar por includes
+      const t = normText(itemName);
+      for (const k of Object.keys(comboConfigurations)) {
+        const cfg = comboConfigurations[k];
+        const name = normText(cfg?.name || '');
+        if (name && t.includes(name)) return cfg;
+      }
+      return null;
+    }
+
+    function getItemProductId(item) {
+      try {
+        const v = item?.id ?? item?.productId ?? item?.baseItemId ?? item?.itemId ?? item?.baseItem?.id ?? item?.baseItem?.productId;
+        if (v == null) return null;
+        const s = String(v).trim();
+        return s ? s : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function getComboConfigByProductId(productId) {
+      if (!comboConfigurations || !productId) return null;
+      const pid = String(productId).trim();
+      if (!pid) return null;
+      for (const k of Object.keys(comboConfigurations)) {
+        const cfg = comboConfigurations[k];
+        const ids = Array.isArray(cfg?.productIds) ? cfg.productIds : (cfg?.id ? [String(cfg.id)] : null);
+        if (Array.isArray(ids) && ids.map(String).includes(pid)) return cfg;
+      }
+      return null;
+    }
+
+    function isComboStructured(item) {
+      try {
+        const tipo = normText(item?.tipo || item?.type || '');
+        const clas = normText(item?.clasificacion || item?.classification || '');
+        if (tipo === 'combo' || clas === 'combo') return true;
+        if (item?.comboConfig && typeof item.comboConfig === 'object') return true;
+        // Muchos combos traen baseItem con tipo/clasificación
+        const bt = normText(item?.baseItem?.tipo || item?.baseItem?.type || '');
+        const bc = normText(item?.baseItem?.clasificacion || item?.baseItem?.classification || '');
+        if (bt === 'combo' || bc === 'combo') return true;
+        return false;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function getComboConfigForItem(item) {
+      const pid = getItemProductId(item);
+      const byId = getComboConfigByProductId(pid);
+      if (byId) return byId;
+
+      const nameCandidate = safeText(item?.name || item?.productName || item?.title || item?.baseItem?.name || '');
+      const byName = getComboConfig(nameCandidate);
+      if (byName) return byName;
+
+      // Alias: algunos pedidos guardan el combo como "DUO" (sin "Combo")
+      const key = normText(nameCandidate).replace(/\s+/g, '');
+      if (key === 'duo' || key === 'combo_duo' || key === 'comboduo') return comboConfigurations?.['comboduo'] || null;
+      if (key === 'tripledog' || (key.includes('triple') && key.includes('dog'))) return comboConfigurations?.['tripledog'] || null;
+
+      // Si viene marcado como combo pero sin nombre reconocible, no adivinar.
+      return null;
+    }
+
+    // ------------------------
+    // Agregación
+    // ------------------------
+    function filterOrders(orders) {
+      const now = new Date();
+      const todayStart = startOfToday(now);
+      const weekStart = startOfWeekMonday(now);
+      const monthStart = startOfMonth(now);
+
+      return (orders || []).filter((o) => {
+        const d = getOrderDate(o);
+        if (!d) return false;
+
+        if (selectedDate) {
+          return sameDay(d, selectedDate);
+        }
+
+        if (currentTimeFilter === 'day') return d >= todayStart;
+        if (currentTimeFilter === 'week') return d >= weekStart;
+        if (currentTimeFilter === 'month') return d >= monthStart;
+        return true;
+      });
+    }
+
+    function aggregate(orders) {
+      const burgersByType = {};
+      const bonelessBySize = {};
+      const combosByType = {};
+      const friesBySize = {};
+
+      const productsSold = {};
+      const insumosUsed = {};
+
+      let totalOrders = 0;
+      let totalBurgers = 0;
+      let totalBoneless = 0;
+      let totalCombos = 0;
+
+      for (const order of orders || []) {
+        totalOrders += 1;
+        const items = Array.isArray(order?.items) ? order.items : [];
+
+        for (const item of items) {
+          if (!item || typeof item !== 'object') continue;
+          const qtyRaw = Number(item.quantity || 1);
+          const qty = (Number.isFinite(qtyRaw) && qtyRaw > 0) ? qtyRaw : 1;
+
+          const itemName = safeText(item.name || item.productName || item.title || '');
+          const itemText = extractAllTextFromItem(item);
+
+          // Insumos/extras del item principal
+          addInsumosFromItem(insumosUsed, item, qty);
+
+          // 1) Combos
+          const comboCfg = getComboConfigForItem(item);
+          if (comboCfg) {
+            addCount(combosByType, comboCfg.name || itemName || 'Combo', qty);
+            totalCombos += qty;
+
+            const comboName = comboCfg.name || itemName || 'Combo';
+
+            const choices = Array.isArray(item.choices) ? item.choices : [];
+
+            // A) Papas incluidas (preferir estructura real del pedido)
+            let friesDisplay = friesDisplayFromIncludedFries(item.includedFries) || friesNameFromFriesObject(item.includedFries);
+            if (!friesDisplay) friesDisplay = friesNameFromFriesObject(item.fries);
+            if (!friesDisplay) friesDisplay = pickIncludedFriesFromChoices(choices);
+            if (!friesDisplay) friesDisplay = parseIncludedFriesFromText(itemText);
+            if (!friesDisplay) {
+              const cfgItems = Array.isArray(comboCfg.items) ? comboCfg.items : [];
+              const friesCfg = cfgItems.find(it => it && (it.type === 'fries' || /papas/i.test(String(it.name || ''))));
+              friesDisplay = normalizeFriesDisplayName(safeText(friesCfg?.name))
+                || (normText(comboCfg?.name).includes('familiar') ? 'Papas Extragrandes' : 'Papas Medianas');
+            }
+            const friesSize = classifyFriesSize(friesDisplay) || 'Medianas';
+            addCount(friesBySize, friesSize, qty);
+            addCount(productsSold, friesDisplay || 'Papas', qty);
+
+            // B) Otros ítems incluidos por config (aros, bebida, hotdog, etc.)
+            const cfgItems = Array.isArray(comboCfg.items) ? comboCfg.items : [];
+            for (const inc of cfgItems) {
+              if (!inc || !inc.name) continue;
+              const incType = String(inc.type || '').toLowerCase();
+              if (incType === 'fries' || /papas/i.test(String(inc.name))) continue; // ya contamos papas arriba
+              // Si el pedido ya trae hotdog(s) explícitos, no contar el hotdog de config.
+              if (incType === 'hotdog' && Array.isArray(item.hotdogs) && item.hotdogs.length) continue;
+              const incQtyRaw = Number(inc.quantity || 1);
+              const incQty = (Number.isFinite(incQtyRaw) && incQtyRaw > 0) ? incQtyRaw : 1;
+              addCount(productsSold, safeText(inc.name), incQty * qty);
+            }
+
+            // C) Hamburguesas dentro del combo (usar estructura real si existe)
+            if (choices.length) {
+              for (const ch of choices) {
+                const burgerName = cleanBurgerName(ch?.burger?.name || ch?.burger?.title || ch?.name || '');
+                if (burgerName) {
+                  addCount(burgersByType, burgerName, qty);
+                  totalBurgers += qty;
+                  addCount(productsSold, burgerName, qty);
+                }
+                addInsumosFromItem(insumosUsed, ch, qty);
+                const extraFries = friesNameFromFriesObject(ch?.fries);
+                if (extraFries) {
+                  // Si las papas del choice son las mismas que las incluidas del combo, evitar doble conteo.
+                  if (!(friesDisplay && normText(extraFries) === normText(friesDisplay))) {
+                    addCount(productsSold, extraFries, qty);
+                    addCount(friesBySize, classifyFriesSize(extraFries) || 'Complemento', qty);
+                  }
+                }
+              }
+            } else {
+              const burgersInCombo = parseBurgersFromCustomizations(itemText);
+              if (burgersInCombo.length) {
+                for (const b of burgersInCombo) {
+                  const burgerName = cleanBurgerName(b);
+                  if (!burgerName) continue;
+                  addCount(burgersByType, burgerName, qty);
+                  totalBurgers += qty;
+                  addCount(productsSold, burgerName, qty);
+                }
+              }
+            }
+
+            // D) Hotdogs dentro del combo
+            const hotdogs = Array.isArray(item.hotdogs) ? item.hotdogs : [];
+            if (hotdogs.length) {
+              for (const hd of hotdogs) {
+                const hotdogName = safeText(hd?.hotdog?.name || hd?.hotdog?.title || hd?.name || '').trim();
+                if (hotdogName) {
+                  addCount(productsSold, hotdogName, qty);
+                }
+                addInsumosFromItem(insumosUsed, hd, qty);
+                const extraFries = friesNameFromFriesObject(hd?.fries);
+                if (extraFries) {
+                  addCount(productsSold, extraFries, qty);
+                  addCount(friesBySize, classifyFriesSize(extraFries) || 'Complemento', qty);
+                }
+              }
+            } else {
+              const hotdogsInCombo = parseHotdogsFromCustomizations(itemText);
+              if (hotdogsInCombo.length) {
+                for (const h of hotdogsInCombo) {
+                  addCount(productsSold, h, qty);
+                }
+              }
+            }
+
+            continue; // no seguir contando otras reglas del mismo item para evitar doble conteo
+          }
+
+          // 2) Boneless
+          if (isBonelessItem(itemName) || isBonelessItem(itemText)) {
+            const grams = parsePortionGrams(itemText) || parsePortionGrams(itemName);
+            const label = grams ? `${grams}g` : 'Sin tamaño';
+            addCount(bonelessBySize, label, qty);
+            totalBoneless += qty;
+
+            addCount(productsSold, grams ? `Boneless ${grams}g` : 'Boneless', qty);
+
+            // Regla papas por gramaje
+            if (grams) {
+              let friesSize = null;
+              if (grams >= 900) friesSize = 'Extragrandes';
+              else if (grams >= 450) friesSize = 'Medianas';
+              else if (grams >= 200) friesSize = 'Complemento';
+              if (friesSize) {
+                addCount(friesBySize, friesSize, qty);
+                addCount(productsSold, `Papas ${friesSize}`, qty);
+              }
+            }
+
+            continue;
+          }
+
+          // 3) Papas como item
+          if (isFriesItem(itemName)) {
+            const size = classifyFriesSize(itemName) || classifyFriesSize(itemText) || 'Sin tamaño';
+            addCount(friesBySize, size, qty);
+            addCount(productsSold, normalizeFriesDisplayName(`Papas ${size}`) || itemName, qty);
+            continue;
+          }
+
+          // 4) Hamburguesas como item
+          if (isBurgerItem(itemName)) {
+            const display = itemName.trim() || 'Hamburguesa';
+            addCount(burgersByType, display, qty);
+            totalBurgers += qty;
+
+            addCount(productsSold, display, qty);
+
+            // Papas agregadas (estructura real del pedido)
+            let friesAlreadyCounted = false;
+            const friesFromObj = friesNameFromFriesObject(item.fries);
+            if (friesFromObj) {
+              addCount(productsSold, friesFromObj, qty);
+              addCount(friesBySize, classifyFriesSize(friesFromObj) || 'Complemento', qty);
+              friesAlreadyCounted = true;
+            }
+
+            // Papas gratis incluidas por promo
+            if (item.freeFriesIncluded) {
+              addCount(friesBySize, 'Complemento', qty);
+              addCount(productsSold, 'Papas Complemento', qty);
+              friesAlreadyCounted = true;
+            }
+
+            // Si trae papas mencionadas en customizations (papas $25) y no trae tamaño explícito: complemento
+            if (!friesAlreadyCounted) {
+              const t = normText(itemText);
+              if (t.includes('papas') && !t.includes('sin papas')) {
+                const explicit = classifyFriesSize(itemText);
+                addCount(friesBySize, explicit || 'Complemento', qty);
+                addCount(productsSold, `Papas ${(explicit || 'Complemento')}`, qty);
+              }
+            }
+
+            continue;
+          }
+
+          // 4.5) Hotdogs como item
+          if (isHotdogItem(itemName) || isHotdogItem(itemText)) {
+            const display = itemName.trim() || 'Hotdog';
+            addCount(productsSold, display, qty);
+
+            let friesAlreadyCounted = false;
+            const friesFromObj = friesNameFromFriesObject(item.fries);
+            if (friesFromObj) {
+              addCount(productsSold, friesFromObj, qty);
+              addCount(friesBySize, classifyFriesSize(friesFromObj) || 'Complemento', qty);
+              friesAlreadyCounted = true;
+            }
+            if (item.freeFriesIncluded) {
+              addCount(friesBySize, 'Complemento', qty);
+              addCount(productsSold, 'Papas Complemento', qty);
+              friesAlreadyCounted = true;
+            }
+
+            if (!friesAlreadyCounted) {
+              const t = normText(itemText);
+              if (t.includes('papas') && !t.includes('sin papas')) {
+                const explicit = classifyFriesSize(itemText);
+                addCount(friesBySize, explicit || 'Complemento', qty);
+                addCount(productsSold, `Papas ${(explicit || 'Complemento')}`, qty);
+              }
+            }
+            continue;
+          }
+
+          // 5) Otros items: si mencionan papas con tamaño explícito
+          const maybeFries = classifyFriesSize(itemText);
+          if (maybeFries && normText(itemText).includes('papas')) {
+            addCount(friesBySize, maybeFries, qty);
+            addCount(productsSold, `Papas ${maybeFries}`, qty);
+          }
+        }
+      }
+
+      return {
+        totalOrders,
+        totalBurgers,
+        totalBoneless,
+        totalCombos,
+        burgersByType,
+        bonelessBySize,
+        combosByType,
+        friesBySize,
+        productsSold,
+        insumosUsed
+      };
+    }
+
+    // ------------------------
+    // Render
+    // ------------------------
+    function setBanner(msg, type) {
+      const el = document.getElementById('status-banner');
+      if (!el) return;
+      if (!msg) {
+        el.classList.add('hidden');
+        el.textContent = '';
+        return;
+      }
+      el.classList.remove('hidden');
+      const base = 'p-4 rounded-2xl border';
+      const css = type === 'error'
+        ? 'bg-slate-900/80 border-rose-700 text-rose-200'
+        : type === 'success'
+          ? 'bg-slate-900/80 border-rose-700 text-rose-200'
+          : 'bg-slate-900/80 border-slate-700 text-rose-200';
+      el.className = base + ' ' + css;
+      el.textContent = msg;
+    }
+
+    function formatTable(mapObj) {
+      const entries = Object.entries(mapObj || {}).sort((a, b) => (b[1] || 0) - (a[1] || 0));
+      if (!entries.length) {
+        return '<div class="text-xs text-rose-200/80">Sin datos</div>';
+      }
+      const rows = entries.map(([name, count]) => {
+        const safeName = safeText(name);
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-b-0">
+            <div class="font-semibold text-rose-100">${escapeHtml(safeName)}</div>
+            <div class="text-rose-300 font-extrabold">${Number(count || 0)}</div>
+          </div>`;
+      }).join('');
+      return `<div class="divide-y divide-slate-800">${rows}</div>`;
+    }
+
+    function escapeHtml(str) {
+      return safeText(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function render() {
+      const filtered = filterOrders(allHistoryOrders);
+      const empty = document.getElementById('empty');
+      const summary = document.getElementById('summary');
+
+      if (!filtered.length) {
+        summary.classList.add('hidden');
+        empty.classList.remove('hidden');
+
+        document.getElementById('burgers-table').innerHTML = '';
+        document.getElementById('boneless-table').innerHTML = '';
+        document.getElementById('combos-table').innerHTML = '';
+        document.getElementById('fries-table').innerHTML = '';
+        document.getElementById('products-table').innerHTML = '';
+        document.getElementById('insumos-table').innerHTML = '';
+        return;
+      }
+
+      summary.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      const out = aggregate(filtered);
+
+      document.getElementById('sum-orders').textContent = String(out.totalOrders || 0);
+      document.getElementById('sum-burgers').textContent = String(out.totalBurgers || 0);
+      document.getElementById('sum-boneless').textContent = String(out.totalBoneless || 0);
+      document.getElementById('sum-combos').textContent = String(out.totalCombos || 0);
+
+      document.getElementById('burgers-count').textContent = `${Object.keys(out.burgersByType || {}).length} tipos`;
+      document.getElementById('boneless-count').textContent = `${Object.keys(out.bonelessBySize || {}).length} tamaños`;
+      document.getElementById('combos-count').textContent = `${Object.keys(out.combosByType || {}).length} tipos`;
+      document.getElementById('fries-count').textContent = `${Object.keys(out.friesBySize || {}).length} tamaños`;
+      document.getElementById('products-count').textContent = `${Object.keys(out.productsSold || {}).length} productos`;
+      document.getElementById('insumos-count').textContent = `${Object.keys(out.insumosUsed || {}).length} insumos`;
+
+      document.getElementById('burgers-table').innerHTML = formatTable(out.burgersByType);
+      document.getElementById('boneless-table').innerHTML = formatTable(out.bonelessBySize);
+      document.getElementById('combos-table').innerHTML = formatTable(out.combosByType);
+      document.getElementById('fries-table').innerHTML = formatTable(out.friesBySize);
+      document.getElementById('products-table').innerHTML = formatTable(out.productsSold);
+      document.getElementById('insumos-table').innerHTML = formatTable(out.insumosUsed);
+
+      document.getElementById('fries-complemento').textContent = String(out.friesBySize?.['Complemento'] || 0);
+      document.getElementById('fries-medianas').textContent = String(out.friesBySize?.['Medianas'] || 0);
+      document.getElementById('fries-extragrandes').textContent = String(out.friesBySize?.['Extragrandes'] || 0);
+    }
+
+    function setTimeFilter(next) {
+      currentTimeFilter = next || 'all';
+      selectedDate = null;
+      const dateInput = document.getElementById('date-filter');
+      if (dateInput) dateInput.value = '';
+
+      ['all', 'day', 'week', 'month'].forEach((k) => {
+        const btn = document.getElementById(`filter-${k}`);
+        if (!btn) return;
+        if (k === currentTimeFilter) {
+          btn.classList.add('bg-rose-500', 'text-slate-950', 'border-rose-500');
+          btn.classList.remove('bg-slate-900', 'text-rose-100', 'border-slate-700');
+        } else {
+          btn.classList.remove('bg-rose-500', 'text-slate-950', 'border-rose-500');
+          btn.classList.add('bg-slate-900', 'text-rose-100', 'border-slate-700');
+        }
+      });
+
+      render();
+    }
+
+    function onDateFilterChange(value) {
+      if (!value) {
+        selectedDate = null;
+        render();
+        return;
+      }
+      const d = new Date(value + 'T00:00:00');
+      if (isNaN(d.getTime())) {
+        selectedDate = null;
+      } else {
+        selectedDate = d;
+      }
+      render();
+    }
+
+    function clearDateFilter() {
+      selectedDate = null;
+      const dateInput = document.getElementById('date-filter');
+      if (dateInput) dateInput.value = '';
+      render();
+    }
+
+    function start() {
+      loadComboConfigurations();
+
+      document.getElementById('filter-all').addEventListener('click', () => setTimeFilter('all'));
+      document.getElementById('filter-day').addEventListener('click', () => setTimeFilter('day'));
+      document.getElementById('filter-week').addEventListener('click', () => setTimeFilter('week'));
+      document.getElementById('filter-month').addEventListener('click', () => setTimeFilter('month'));
+
+      document.getElementById('date-filter').addEventListener('change', (e) => onDateFilterChange(e.target.value));
+      document.getElementById('clear-date').addEventListener('click', () => clearDateFilter());
+
+      setTimeFilter('all');
+      setBanner('Conectando a Firebase...', 'info');
+
+      let deliveredFromOrders = [];
+      let historyFromHistoryCollection = [];
+
+      function mergeAndRender() {
+        // Merge por id (history puede tener el mismo id que orders)
+        const byId = new Map();
+        (historyFromHistoryCollection || []).forEach((o) => {
+          const key = String(o?.id || o?.originalOrderId || o?.orderNumber || JSON.stringify(o)).slice(0, 200);
+          byId.set(key, o);
+        });
+        (deliveredFromOrders || []).forEach((o) => {
+          const key = String(o?.id || o?.originalOrderId || o?.orderNumber || JSON.stringify(o)).slice(0, 200);
+          if (!byId.has(key)) byId.set(key, o);
+        });
+        allHistoryOrders = Array.from(byId.values());
+        const msgParts = [];
+        msgParts.push(`Orders(entregados): ${deliveredFromOrders.length}`);
+        msgParts.push(`Historial(orders_history): ${historyFromHistoryCollection.length}`);
+        msgParts.push(`Total usado: ${allHistoryOrders.length}`);
+        setBanner(`Cargado. ${msgParts.join(' | ')}`, 'success');
+        render();
+      }
+
+      const tryConnect = () => {
+        if (!window.firebaseOrderManager) {
+          return false;
+        }
+
+        // 1) Igual que Historialdepedidos: escuchar orders y filtrar delivered
+        if (typeof window.firebaseOrderManager.onOrdersChange === 'function' && !unsubscribeOrders) {
+          unsubscribeOrders = window.firebaseOrderManager.onOrdersChange((orders) => {
+            deliveredFromOrders = (Array.isArray(orders) ? orders : []).filter(o => String(o?.status || '').toLowerCase() === 'delivered');
+            mergeAndRender();
+          });
+        }
+
+        // 2) Compatibilidad: si existe orders_history, también lo escuchamos
+        if (typeof window.firebaseOrderManager.onHistoryOrdersChange === 'function' && !unsubscribeHistory) {
+          unsubscribeHistory = window.firebaseOrderManager.onHistoryOrdersChange((orders) => {
+            historyFromHistoryCollection = Array.isArray(orders) ? orders : [];
+            mergeAndRender();
+          });
+        }
+
+        // Considerar conectado si al menos uno quedó suscrito
+        return Boolean(unsubscribeOrders || unsubscribeHistory);
+      };
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts += 1;
+        if (tryConnect()) {
+          clearInterval(timer);
+          return;
+        }
+        if (attempts >= 50) {
+          clearInterval(timer);
+          setBanner('No se pudo iniciar Firebase. Abre esta página desde el servidor (npm start) y verifica tu internet.', 'error');
+        }
+      }, 150);
+
+      window.addEventListener('beforeunload', () => {
+        if (unsubscribeOrders) {
+          try { unsubscribeOrders(); } catch (_) {}
+        }
+        if (unsubscribeHistory) {
+          try { unsubscribeHistory(); } catch (_) {}
+        }
+      });
+    }
+
+    start();
+  </script>
+</body>
+</html>

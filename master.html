@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍔</text></svg>">
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
@@ -33,24 +34,9 @@
       <p class="mt-2 text-sm text-gray-600">Botones directos a todas las páginas existentes del proyecto, con una breve descripción de su función.</p>
 
       <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <!-- Inicio / index -->
-        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-700 text-white">
-                  <i class="fas fa-house"></i>
-                </span>
-                <h2 class="text-lg font-extrabold">Inicio (index)</h2>
-              </div>
-              <p class="mt-2 text-sm text-gray-600">Página de entrada del proyecto (si se usa en hosting/servidor).</p>
-            </div>
-            <a href="index.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-800 text-white font-bold sr-btn">
-              <span>Abrir</span>
-              <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-          <div class="mt-3 text-xs text-gray-500">Archivo: index.html</div>
+        <!-- Sección: Clientes / Front -->
+        <div class="sm:col-span-2">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Clientes / Front</h2>
         </div>
 
         <!-- Web principal / menú -->
@@ -113,6 +99,11 @@
           <div class="mt-3 text-xs text-gray-500">Archivo: tuenvio.html</div>
         </div>
 
+        <!-- Sección: Operación del día a día -->
+        <div class="sm:col-span-2 mt-2">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Operación (cocina, entregas, captura)</h2>
+        </div>
+
         <!-- Control de envíos -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div class="flex items-start justify-between gap-3">
@@ -153,7 +144,32 @@
           <div class="mt-3 text-xs text-gray-500">Archivo: repartidor.html</div>
         </div>
 
-        <!-- Admin productos -->
+        <!-- Pedido manual (para tomar pedidos en local) -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-600 text-white">
+                  <i class="fas fa-clipboard-check"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Pedido manual</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Pantalla optimizada para capturar pedidos rápido en mostrador o teléfono (sin fotos, todo texto).</p>
+            </div>
+            <a href="pedido-manual.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: pedido-manual.html</div>
+        </div>
+
+        <!-- Sección: Administración y configuración -->
+        <div class="sm:col-span-2 mt-4">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Administración y configuración</h2>
+        </div>
+
+        <!-- Panel de administración -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -173,7 +189,7 @@
           <div class="mt-3 text-xs text-gray-500">Archivo: admin.html</div>
         </div>
 
-        <!-- Admin clientes -->
+        <!-- Admin clientes (Firebase, con sesión) -->
         <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -191,6 +207,111 @@
             </a>
           </div>
           <div class="mt-3 text-xs text-gray-500">Archivo: clientes-admin.html</div>
+        </div>
+
+        <!-- Clientes (manuales, sin sesión) -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-teal-600 text-white">
+                  <i class="fas fa-address-book"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Clientes (manual)</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Gestión rápida de clientes guardados manualmente (lista en Firebase, importación/exportación).</p>
+            </div>
+            <a href="clientes.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: clientes.html</div>
+        </div>
+
+        <!-- Productos y costos internos -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500 text-white">
+                  <i class="fas fa-burger"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Productos y costos</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Listado de productos del menú junto con su costo interno de producción.</p>
+            </div>
+            <a href="Productos.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: Productos.html</div>
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white">
+                  <i class="fas fa-boxes-stacked"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Ingredientes</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Catálogo de ingredientes: alta/edición, costo por unidad y exportación/importación JSON.</p>
+            </div>
+            <a href="ingredientes.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: ingredientes.html</div>
+        </div>
+
+        <!-- Orden de imágenes del menú -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-700 text-white">
+                  <i class="fas fa-images"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Imágenes del menú</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Herramienta para definir y reordenar las imágenes que aparecen en la página principal.</p>
+            </div>
+            <a href="admin-burger-images.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-800 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: admin-burger-images.html</div>
+        </div>
+
+        <!-- Sección: Reportes y análisis -->
+        <div class="sm:col-span-2 mt-4">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Reportes y análisis</h2>
+        </div>
+
+        <!-- Panel de estadísticas -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-sky-600 text-white">
+                  <i class="fas fa-chart-column"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Panel de estadísticas</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">KPIs y gráficos de ventas (delivery y pickup) con filtros por fechas.</p>
+            </div>
+            <a href="data.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: data.html</div>
         </div>
 
         <!-- Historial de pedidos -->
@@ -211,6 +332,71 @@
             </a>
           </div>
           <div class="mt-3 text-xs text-gray-500">Archivo: Historialdepedidos.html</div>
+        </div>
+
+        <!-- Ganancias -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-600 text-white">
+                  <i class="fas fa-chart-line"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Ganancias</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Resumen diario de ventas, costos de producción y utilidad aproximada.</p>
+            </div>
+            <a href="Ganancias.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: Ganancias.html</div>
+        </div>
+
+        <!-- Items vendidos -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-rose-600 text-white">
+                  <i class="fas fa-chart-pie"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Items vendidos</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Estadísticas de hamburguesas, boneless, combos y papas vendidas por rango de fechas.</p>
+            </div>
+            <a href="itemsvendidos.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: itemsvendidos.html</div>
+        </div>
+
+        <!-- Insumos gastados (por recetas) -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-sky-600 text-white">
+                  <i class="fas fa-box-open"></i>
+                </span>
+                <h2 class="text-lg font-extrabold">Insumos gastados</h2>
+              </div>
+              <p class="mt-2 text-sm text-gray-600">Suma ingredientes usados en base a productos vendidos y sus recetas (día/semana/mes/fecha o rango).</p>
+            </div>
+            <a href="insumosgastados.html" target="_blank" rel="noopener noreferrer" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold sr-btn">
+              <span>Abrir</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+          <div class="mt-3 text-xs text-gray-500">Archivo: insumosgastados.html</div>
+        </div>
+
+        <!-- Sección: Otros / utilidades -->
+        <div class="sm:col-span-2 mt-4">
+          <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Otros / Utilidades</h2>
         </div>
 
         <!-- Ideas / notas -->

@@ -1,0 +1,1639 @@
+<!doctype html>
+<html lang="es" class="sr-dark" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel de Estadísticas - Restaurante</title>
+
+  <!-- Bootstrap 5 (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+  <script src="js/sr-shell.js" defer></script>
+
+  <style>
+    :root {
+      --sr-bg: #0b1220;
+      --sr-surface: rgba(17, 24, 39, 0.92);
+      --sr-surface-2: rgba(2, 6, 23, 0.72);
+      --sr-border: rgba(255, 255, 255, 0.10);
+      --sr-text: #e5e7eb;
+      --sr-muted: rgba(229, 231, 235, 0.72);
+      --sr-shadow: 0 10px 26px rgba(0, 0, 0, 0.38);
+    }
+
+    body {
+      background: radial-gradient(1200px 700px at 12% 8%, rgba(59, 130, 246, 0.20), transparent 60%),
+                  radial-gradient(900px 520px at 88% 12%, rgba(34, 197, 94, 0.18), transparent 58%),
+                  radial-gradient(1000px 640px at 50% 100%, rgba(245, 158, 11, 0.16), transparent 60%),
+                  var(--sr-bg);
+      color: var(--sr-text);
+    }
+
+    .app-shell { min-height: 100vh; }
+
+    .navbar {
+      background: rgba(2, 6, 23, 0.78) !important;
+      border-bottom: 1px solid var(--sr-border) !important;
+      backdrop-filter: blur(18px);
+    }
+
+    .navbar-brand { font-weight: 900; letter-spacing: -0.02em; }
+
+    .kpi-card,
+    .panel-card {
+      border: 1px solid var(--sr-border);
+      background: var(--sr-surface);
+      box-shadow: var(--sr-shadow);
+    }
+
+    .panel-title { font-weight: 900; letter-spacing: -0.02em; }
+
+    .muted { color: var(--sr-muted) !important; }
+
+    .badge-soft {
+      background: rgba(59, 130, 246, 0.16);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.22);
+    }
+
+    .chart-wrap { position: relative; height: 320px; }
+    @media (min-width: 992px) { .chart-wrap { height: 360px; } }
+
+    .chart-wrap.tall { height: 520px; }
+    .scroll-panel {
+      background: var(--sr-surface-2);
+      border: 1px solid var(--sr-border);
+      border-radius: 18px;
+      padding: 12px;
+      max-height: 720px;
+      overflow: auto;
+    }
+
+    .form-control,
+    .form-select {
+      background-color: rgba(17, 24, 39, 0.75) !important;
+      border-color: var(--sr-border) !important;
+      color: var(--sr-text) !important;
+    }
+    .form-control::placeholder { color: rgba(229, 231, 235, 0.45); }
+
+    .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .table {
+      --bs-table-bg: transparent;
+      --bs-table-color: var(--sr-text);
+      --bs-table-border-color: var(--sr-border);
+    }
+    .table thead th { color: rgba(229, 231, 235, 0.8); }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <!-- Top bar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+      <div class="container py-2">
+        <a class="navbar-brand fw-black" href="#">SR &amp; SRA BURGER</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <div class="ms-auto d-flex gap-2 align-items-center">
+            <span id="dataSourceBadge" class="badge badge-soft rounded-pill px-3 py-2">Cargando datos…</span>
+            <span class="muted small">Actualizado: <span id="updatedAt">—</span></span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+        <div>
+          <h1 class="h3 mb-1 fw-black">Panel de control de estadísticas</h1>
+          <p class="muted mb-0">Métricas reales de ventas online (delivery) y pickup, con filtro por fechas.</p>
+        </div>
+      </div>
+
+      <div id="statusAlert" class="alert alert-info d-none" role="alert"></div>
+
+      <!-- Filtros -->
+      <section class="card panel-card mb-4">
+        <div class="card-body">
+          <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <h2 class="h6 panel-title mb-0">Rango de fechas</h2>
+                <span class="muted small">(usa los timestamps de pedidos)</span>
+              </div>
+              <div class="row g-2">
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label small muted mb-1" for="dateFrom">Desde</label>
+                  <input id="dateFrom" type="date" class="form-control" />
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label small muted mb-1" for="dateTo">Hasta</label>
+                  <input id="dateTo" type="date" class="form-control" />
+                </div>
+                <div class="col-12 col-lg-4">
+                  <label class="form-label small muted mb-1">Atajos</label>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button id="quick7" type="button" class="btn btn-outline-light btn-sm">7 días</button>
+                    <button id="quick14" type="button" class="btn btn-outline-light btn-sm">14 días</button>
+                    <button id="quick30" type="button" class="btn btn-outline-light btn-sm">30 días</button>
+                    <button id="quickMtd" type="button" class="btn btn-outline-light btn-sm">Mes actual</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-end gap-2">
+              <div class="text-end">
+                <div class="muted small">Pedidos en rango</div>
+                <div class="h4 mb-0 fw-black" id="ordersInRange">0</div>
+              </div>
+              <button id="applyFilters" type="button" class="btn btn-primary fw-bold">Aplicar</button>
+            </div>
+          </div>
+          <div class="muted small mt-2">Tip: si no ves datos, revisa permisos de Firestore o usa el mismo navegador donde se hayan creado pedidos (respaldo localStorage).</div>
+        </div>
+      </section>
+
+      <!-- KPI row (opcional, solo UI) -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Ventas (rango seleccionado)</div>
+              <div class="display-6 fw-black" id="kpiSales">$0</div>
+              <div class="small text-success" id="kpiTrend">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Pedidos (rango seleccionado)</div>
+              <div class="display-6 fw-black" id="kpiOrders">0</div>
+              <div class="small muted">Reales</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Ticket promedio</div>
+              <div class="display-6 fw-black" id="kpiAov">$0</div>
+              <div class="small muted">Reales</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">% Online (Delivery) vs Pickup</div>
+              <div class="display-6 fw-black" id="kpiMix">—</div>
+              <div class="small muted">Reales</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI row: costos y ganancias -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Costo insumos (estimado)</div>
+              <div class="display-6 fw-black" id="kpiCost">$0</div>
+              <div class="small muted" id="kpiCostHint">Basado en recetas/ingredientes</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Ganancia bruta (estimada)</div>
+              <div class="display-6 fw-black" id="kpiProfit">$0</div>
+              <div class="small muted">Ingresos - costo insumos</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-12 col-xl-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="muted small">Margen bruto (estimado)</div>
+              <div class="display-6 fw-black" id="kpiMargin">—</div>
+              <div class="small muted">Si faltan recetas, el margen baja</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts grid -->
+      <div class="row g-3">
+        <!-- Ventas Totales por Día -->
+        <div class="col-12">
+          <section class="card panel-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Ventas Totales por Día</h2>
+                <span class="muted small">MXN • rango seleccionado</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartSalesByDay" aria-label="Ventas Totales por Día" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Ingresos vs Costos vs Ganancia -->
+        <div class="col-12">
+          <section class="card panel-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Ingresos vs Costos vs Ganancia (Estimado)</h2>
+                <span class="muted small">MXN • mismo rango</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartProfitByDay" aria-label="Ingresos vs Costos vs Ganancia" role="img"></canvas>
+              </div>
+              <div class="muted small mt-2">Nota: el costo se calcula con recetas (Products) + costo unitario por ingrediente (Ingredientes). Si faltan recetas, el costo puede quedar incompleto.</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Items Más Vendidos -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Items Más Vendidos</h2>
+                <span class="muted small">Top 10 (rango seleccionado)</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartTopItems" aria-label="Items Más Vendidos" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Métodos de Pago Utilizados -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Métodos de Pago Utilizados</h2>
+                <span class="muted small">Distribución real</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartPaymentMethods" aria-label="Métodos de Pago Utilizados" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Ventas por Tipo de Pedido -->
+        <div class="col-12">
+          <section class="card panel-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Ventas por Tipo de Pedido (Online vs Pickup)</h2>
+                <span class="muted small">MXN • comparación</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartSalesByType" aria-label="Ventas por Tipo de Pedido" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Ventas por Hora -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Ventas por Hora</h2>
+                <span class="muted small">MXN • ayuda a ver picos</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartSalesByHour" aria-label="Ventas por Hora" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Ventas por Día de Semana -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Ventas por Día de Semana</h2>
+                <span class="muted small">MXN • patrón semanal</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartSalesByWeekday" aria-label="Ventas por Día de Semana" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Estado de pedidos + Pagados vs No pagados -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Estado de Pedidos</h2>
+                <span class="muted small">Conteo • operativo</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartOrdersByStatus" aria-label="Estado de Pedidos" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Pagados vs No Pagados</h2>
+                <span class="muted small">Conteo • control</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartPaidVsUnpaid" aria-label="Pagados vs No Pagados" role="img"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Todos los productos vendidos -->
+        <div class="col-12">
+          <section class="card panel-card">
+            <div class="card-body">
+              <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-2">
+                <div>
+                  <h2 class="h5 panel-title mb-0">Productos Vendidos (Todos)</h2>
+                  <div class="muted small">Cantidad total vendida por producto en el rango.</div>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                  <input id="productSearch" class="form-control form-control-sm" style="max-width: 280px" placeholder="Buscar producto…" />
+                  <select id="productSort" class="form-select form-select-sm" style="max-width: 220px">
+                    <option value="qty_desc">Ordenar: Cantidad (desc)</option>
+                    <option value="qty_asc">Ordenar: Cantidad (asc)</option>
+                    <option value="rev_desc">Ordenar: Ingresos (desc)</option>
+                    <option value="rev_asc">Ordenar: Ingresos (asc)</option>
+                    <option value="name_asc">Ordenar: Nombre (A→Z)</option>
+                    <option value="name_desc">Ordenar: Nombre (Z→A)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="scroll-panel mb-3">
+                <div class="chart-wrap tall" style="height: 620px; min-height: 420px;">
+                  <canvas id="chartAllProducts" aria-label="Productos Vendidos" role="img"></canvas>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th class="text-end">Cantidad</th>
+                      <th class="text-end">Ingresos</th>
+                    </tr>
+                  </thead>
+                  <tbody id="productsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Top Ganancia por Item -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Top Ganancia por Ítem (Estimado)</h2>
+                <span class="muted small">Top 10 • rango seleccionado</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartTopProfitItems" aria-label="Top Ganancia por Ítem" role="img"></canvas>
+              </div>
+              <div class="table-responsive mt-3">
+                <table class="table table-sm align-middle">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th class="text-end">Cant.</th>
+                      <th class="text-end">Ingresos</th>
+                      <th class="text-end">Costo</th>
+                      <th class="text-end">Ganancia</th>
+                      <th class="text-end">Margen</th>
+                    </tr>
+                  </thead>
+                  <tbody id="profitItemsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Top Costo por Ingrediente -->
+        <div class="col-12 col-lg-6">
+          <section class="card panel-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                <h2 class="h5 panel-title mb-0">Top Costo por Ingrediente (Estimado)</h2>
+                <span class="muted small">Top 12 • rango seleccionado</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartTopIngredientsCost" aria-label="Top Costo por Ingrediente" role="img"></canvas>
+              </div>
+              <div class="table-responsive mt-3">
+                <table class="table table-sm align-middle">
+                  <thead>
+                    <tr>
+                      <th>Ingrediente</th>
+                      <th class="text-end">Usado</th>
+                      <th class="text-end">Unidad</th>
+                      <th class="text-end">$/unidad</th>
+                      <th class="text-end">Costo</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ingredientsCostTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="py-4 text-center muted small">
+        Panel con datos reales • Chart.js + Bootstrap
+      </footer>
+    </main>
+  </div>
+
+  <!-- Chart.js (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Bootstrap JS (opcional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <script type="module">
+    // Panel REAL: usa Firestore (colecciones orders + orders_history).
+    // Si Firestore no está disponible por permisos/conexión, usa el respaldo REAL de localStorage (key: "orders").
+
+    import './js/firebase-config.js';
+
+    const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n || 0));
+    const fmtNum = (n, digits = 2) => {
+      const v = Number(n || 0);
+      if (!Number.isFinite(v)) return '0';
+      return new Intl.NumberFormat('es-MX', { maximumFractionDigits: digits, minimumFractionDigits: Math.min(2, digits) }).format(v);
+    };
+    const fmtPct = (n) => {
+      const v = Number(n);
+      if (!Number.isFinite(v)) return '—';
+      return `${Math.round(v)}%`;
+    };
+
+    function setBadge(text, kind = 'info') {
+      const badge = document.getElementById('dataSourceBadge');
+      if (!badge) return;
+      badge.textContent = text;
+      const base = 'badge rounded-pill px-3 py-2';
+      const map = {
+        info: 'badge-soft',
+        success: 'bg-success-subtle text-success border border-success-subtle',
+        warning: 'bg-warning-subtle text-warning border border-warning-subtle',
+        danger: 'bg-danger-subtle text-danger border border-danger-subtle'
+      };
+      badge.className = `${base} ${map[kind] || map.info}`;
+    }
+
+    function showStatus(message, variant = 'info') {
+      const el = document.getElementById('statusAlert');
+      if (!el) return;
+      el.className = `alert alert-${variant}`;
+      el.textContent = message;
+      el.classList.remove('d-none');
+    }
+
+    function hideStatus() {
+      const el = document.getElementById('statusAlert');
+      if (!el) return;
+      el.classList.add('d-none');
+    }
+
+    function safeNumber(v) {
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function normText(s) {
+      return String(s || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    async function waitForFirebaseManager(timeoutMs = 7000) {
+      const start = Date.now();
+      while ((!window.firebaseManager || !window.firebaseManager.getSettings) && (Date.now() - start) < timeoutMs) {
+        await new Promise(r => setTimeout(r, 80));
+      }
+      return Boolean(window.firebaseManager && window.firebaseManager.getSettings);
+    }
+
+    async function loadAdminSettingsSafe() {
+      const ok = await waitForFirebaseManager(7000);
+      if (!ok) return null;
+      try {
+        return await window.firebaseManager.getSettings();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function computeIngredientUnitCost(ing) {
+      const p = Number(ing?.pricePerPack ?? 0);
+      const u = Number(ing?.unitsPerPack ?? 0);
+      if (!Number.isFinite(p) || !Number.isFinite(u) || u <= 0) return 0;
+      return p / u;
+    }
+
+    function buildIngredientIndex(catalog) {
+      const byId = new Map();
+      const byName = new Map();
+      (Array.isArray(catalog) ? catalog : []).forEach((ing) => {
+        if (!ing) return;
+        const id = String(ing.id || '').trim();
+        const name = String(ing.name || '').trim();
+        if (id) byId.set(id, ing);
+        if (name) byName.set(normText(name), ing);
+      });
+      return { byId, byName };
+    }
+
+    function computeRecipeUnitCost(recipe, ingIndex) {
+      const lines = Array.isArray(recipe?.ingredients) ? recipe.ingredients : [];
+      let total = 0;
+      let usedAny = false;
+      for (const ln of lines) {
+        if (!ln) continue;
+        const qty = Number(ln.qty ?? ln.quantity ?? 0);
+        if (!Number.isFinite(qty) || qty <= 0) continue;
+        const ing = (ln.ingredientId && ingIndex.byId.get(String(ln.ingredientId)))
+          || (ln.name && ingIndex.byName.get(normText(ln.name)))
+          || null;
+        if (!ing) continue;
+        const unitCost = computeIngredientUnitCost(ing);
+        total += unitCost * qty;
+        usedAny = true;
+      }
+      return usedAny ? total : null;
+    }
+
+    function getItemProductId(item) {
+      try {
+        const v = item?.productId ?? item?.id ?? item?.baseItemId ?? item?.itemId ?? item?.baseItem?.id ?? item?.baseItem?.productId;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function getLineRevenue(it, qty) {
+      const line = safeNumber(it?.price);
+      if (line > 0) return line;
+      const unit = safeNumber(it?.unitPrice);
+      if (unit > 0) return unit * qty;
+      return 0;
+    }
+
+    function toDateMaybe(v) {
+      if (!v) return null;
+      if (v instanceof Date) return v;
+      if (typeof v === 'string') {
+        const d = new Date(v);
+        return Number.isFinite(d.getTime()) ? d : null;
+      }
+      if (typeof v === 'object' && typeof v.toDate === 'function') {
+        try {
+          const d = v.toDate();
+          return d instanceof Date ? d : null;
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    function dayKey(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function keysBetween(fromDate, toDate) {
+      const keys = [];
+      const d0 = new Date(fromDate);
+      const d1 = new Date(toDate);
+      d0.setHours(0,0,0,0);
+      d1.setHours(0,0,0,0);
+      if (d0 > d1) return keys;
+
+      const cur = new Date(d0);
+      while (cur <= d1) {
+        keys.push(dayKey(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      return keys;
+    }
+
+    function labelFromKey(k) {
+      const [yyyy, mm, dd] = k.split('-');
+      return `${dd}/${mm}`;
+    }
+
+    function normalizePayment(pm) {
+      const s = String(pm || '').toLowerCase();
+      if (!s) return 'No especificado';
+      if (s.includes('efect')) return 'Efectivo';
+      if (s.includes('linea') || s.includes('línea') || s.includes('mercado') || s.includes('mp') || s.includes('tarjeta')) return 'Tarjeta (MP)';
+      if (s.includes('transf')) return 'Transferencia';
+      if (s.includes('vale') || s.includes('promo') || s.includes('cup')) return 'Promo/Vales';
+      return 'Otro';
+    }
+
+    function isDelivery(order) {
+      const dt = String(order && (order.deliveryType || order.type) || '').toLowerCase();
+      // En este proyecto: 'delivery' = domicilio; cualquier otra cosa se toma como pickup.
+      return dt === 'delivery';
+    }
+
+    async function loadOrdersFromFirebase() {
+      // Esperar a que firebase-config inicialice managers globales
+      const start = Date.now();
+      while (!window.firebaseOrderManager && Date.now() - start < 6000) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      if (!window.firebaseOrderManager) throw new Error('FirebaseOrderManager no disponible');
+
+      const live = await window.firebaseOrderManager.getOrders();
+      let hist = [];
+      try {
+        hist = await window.firebaseOrderManager.getHistoryOrders();
+      } catch (_) {
+        hist = [];
+      }
+
+      // Unificar y normalizar
+      const all = [];
+      const seen = new Set();
+      for (const o of [...(live || []), ...(hist || [])]) {
+        const key = String(o && (o.id || o.orderNumber || ''));
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        all.push(o);
+      }
+      return all;
+    }
+
+    function loadOrdersFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem('orders');
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    // Defaults (dark look & feel)
+    Chart.defaults.font.family = "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial";
+    Chart.defaults.color = 'rgba(229, 231, 235, 0.85)';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.10)';
+
+    const charts = {};
+    function mountChart(id, config) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (charts[id]) {
+        try { charts[id].destroy(); } catch (_) {}
+        charts[id] = null;
+      }
+      charts[id] = new Chart(el, config);
+    }
+
+    function buildCharts(agg) {
+      mountChart('chartSalesByDay', {
+        type: 'line',
+        data: {
+          labels: agg.salesLabels,
+          datasets: [{
+            label: 'Ventas diarias (MXN)',
+            data: agg.salesByDay,
+            borderColor: '#60a5fa',
+            backgroundColor: 'rgba(96, 165, 250, 0.16)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Ventas Totales por Día' },
+            legend: { display: true }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } },
+            x: { ticks: { maxRotation: 0 } }
+          }
+        }
+      });
+
+      mountChart('chartTopItems', {
+        type: 'bar',
+        data: {
+          labels: agg.topItemsLabels,
+          datasets: [{
+            label: 'Unidades vendidas',
+            data: agg.topItemsUnits,
+            backgroundColor: 'rgba(34, 197, 94, 0.70)',
+            borderColor: 'rgba(34, 197, 94, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Top Items Más Vendidos' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      mountChart('chartPaymentMethods', {
+        type: 'doughnut',
+        data: {
+          labels: agg.paymentLabels,
+          datasets: [{
+            label: 'Distribución',
+            data: agg.paymentCounts,
+            backgroundColor: [
+              'rgba(13, 110, 253, 0.80)',
+              'rgba(25, 135, 84, 0.80)',
+              'rgba(255, 193, 7, 0.80)',
+              'rgba(220, 53, 69, 0.80)',
+              'rgba(111, 66, 193, 0.80)',
+              'rgba(108, 117, 125, 0.80)'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Métodos de Pago Utilizados' },
+            legend: { position: 'bottom' }
+          },
+          cutout: '62%'
+        }
+      });
+
+      mountChart('chartSalesByType', {
+        type: 'bar',
+        data: {
+          labels: ['Online (Delivery)', 'Pickup'],
+          datasets: [{
+            label: 'Ingresos (MXN)',
+            data: [agg.salesDelivery, agg.salesPickup],
+            backgroundColor: ['rgba(96, 165, 250, 0.70)', 'rgba(34, 197, 94, 0.70)'],
+            borderColor: ['rgba(96, 165, 250, 0.95)', 'rgba(34, 197, 94, 0.95)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Ventas por Tipo de Pedido (Online vs Pickup)' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } } }
+        }
+      });
+
+      // Ventas por hora
+      mountChart('chartSalesByHour', {
+        type: 'bar',
+        data: {
+          labels: agg.hourLabels,
+          datasets: [{
+            label: 'Ventas (MXN)',
+            data: agg.salesByHour,
+            backgroundColor: 'rgba(245, 158, 11, 0.70)',
+            borderColor: 'rgba(245, 158, 11, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Ventas por Hora' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } } }
+        }
+      });
+
+      // Ventas por día de semana
+      mountChart('chartSalesByWeekday', {
+        type: 'bar',
+        data: {
+          labels: agg.weekdayLabels,
+          datasets: [{
+            label: 'Ventas (MXN)',
+            data: agg.salesByWeekday,
+            backgroundColor: 'rgba(167, 139, 250, 0.70)',
+            borderColor: 'rgba(167, 139, 250, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Ventas por Día de Semana' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } } }
+        }
+      });
+
+      // Estado de pedidos
+      mountChart('chartOrdersByStatus', {
+        type: 'doughnut',
+        data: {
+          labels: agg.statusLabels,
+          datasets: [{
+            label: 'Pedidos',
+            data: agg.statusCounts,
+            backgroundColor: [
+              'rgba(96, 165, 250, 0.85)',
+              'rgba(34, 197, 94, 0.85)',
+              'rgba(245, 158, 11, 0.85)',
+              'rgba(244, 63, 94, 0.85)',
+              'rgba(148, 163, 184, 0.85)'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Estado de Pedidos' },
+            legend: { position: 'bottom' }
+          },
+          cutout: '62%'
+        }
+      });
+
+      // Pagados vs no pagados
+      mountChart('chartPaidVsUnpaid', {
+        type: 'pie',
+        data: {
+          labels: ['Pagado', 'No pagado'],
+          datasets: [{
+            label: 'Pedidos',
+            data: [agg.paidCount, agg.unpaidCount],
+            backgroundColor: ['rgba(34, 197, 94, 0.85)', 'rgba(244, 63, 94, 0.85)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Pagados vs No Pagados' },
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // Todos los productos (horizontal)
+      mountChart('chartAllProducts', {
+        type: 'bar',
+        data: {
+          labels: agg.productsLabels,
+          datasets: [{
+            label: 'Cantidad vendida',
+            data: agg.productsQty,
+            backgroundColor: 'rgba(96, 165, 250, 0.55)',
+            borderColor: 'rgba(96, 165, 250, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Productos Vendidos (Cantidad)' },
+            legend: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true },
+            y: { ticks: { autoSkip: false } }
+          }
+        }
+      });
+    }
+
+    function buildFinancialCharts(agg, fin) {
+      const labels = agg.salesLabels;
+      mountChart('chartProfitByDay', {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Ingresos (MXN)',
+              data: fin.revenueByDay,
+              backgroundColor: 'rgba(96, 165, 250, 0.65)',
+              borderColor: 'rgba(96, 165, 250, 0.95)',
+              borderWidth: 1
+            },
+            {
+              label: 'Costo insumos (MXN)',
+              data: fin.costByDay,
+              backgroundColor: 'rgba(244, 63, 94, 0.45)',
+              borderColor: 'rgba(244, 63, 94, 0.85)',
+              borderWidth: 1
+            },
+            {
+              label: 'Ganancia bruta (MXN)',
+              data: fin.profitByDay,
+              backgroundColor: 'rgba(34, 197, 94, 0.55)',
+              borderColor: 'rgba(34, 197, 94, 0.95)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Ingresos vs Costos vs Ganancia (Estimado)' },
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } },
+            x: { ticks: { maxRotation: 0 } }
+          }
+        }
+      });
+
+      const topProfit = (fin.itemsByProfit || []).slice(0, 10);
+      mountChart('chartTopProfitItems', {
+        type: 'bar',
+        data: {
+          labels: topProfit.map(x => x.name),
+          datasets: [{
+            label: 'Ganancia (MXN)',
+            data: topProfit.map(x => Math.round(x.profit || 0)),
+            backgroundColor: 'rgba(34, 197, 94, 0.70)',
+            borderColor: 'rgba(34, 197, 94, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Top Ganancia por Ítem' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } } }
+        }
+      });
+
+      const topIng = (fin.ingredientsByCost || []).slice(0, 12);
+      mountChart('chartTopIngredientsCost', {
+        type: 'bar',
+        data: {
+          labels: topIng.map(x => x.name),
+          datasets: [{
+            label: 'Costo (MXN)',
+            data: topIng.map(x => Math.round(x.cost || 0)),
+            backgroundColor: 'rgba(245, 158, 11, 0.70)',
+            borderColor: 'rgba(245, 158, 11, 0.95)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Top Costo por Ingrediente' },
+            legend: { display: false }
+          },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => '$' + v } } }
+        }
+      });
+    }
+
+    function statusLabel(status) {
+      const s = String(status || '').toLowerCase();
+      if (s === 'pending') return 'Pendiente';
+      if (s === 'preparing') return 'Preparando';
+      if (s === 'ready') return 'Listo';
+      if (s === 'delivering') return 'En camino';
+      if (s === 'delivered') return 'Entregado';
+      return status ? String(status) : 'Desconocido';
+    }
+
+    function filterByRange(orders, fromDate, toDate) {
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+      from.setHours(0,0,0,0);
+      to.setHours(23,59,59,999);
+      return (orders || []).filter((o) => {
+        const d = toDateMaybe(o.timestamp) || toDateMaybe(o.archivedAt) || toDateMaybe(o.createdAt) || null;
+        if (!d) return false;
+        return d >= from && d <= to;
+      });
+    }
+
+    function aggregate(orders, fromDate, toDate, productSearch = '', productSort = 'qty_desc') {
+      const keys = keysBetween(fromDate, toDate);
+      const byDay = new Map(keys.map(k => [k, 0]));
+
+      const itemsCount = new Map();
+      const itemsRevenue = new Map();
+      const paymentCount = new Map();
+      const statusCount = new Map();
+      const salesByHour = new Array(24).fill(0);
+      const salesByWeekday = new Array(7).fill(0); // 0=Dom
+
+      let salesDelivery = 0;
+      let salesPickup = 0;
+      let ordersInWindow = 0;
+      let totalSalesWindow = 0;
+      let paidCount = 0;
+      let unpaidCount = 0;
+
+      for (const o of (orders || [])) {
+        const total = safeNumber(o && (o.total ?? (o.totals && o.totals.total)));
+        if (total <= 0) continue;
+
+        const d = toDateMaybe(o.timestamp) || toDateMaybe(o.archivedAt) || toDateMaybe(o.createdAt) || null;
+        if (!d) continue;
+        const k = dayKey(d);
+        if (byDay.has(k)) {
+          byDay.set(k, byDay.get(k) + total);
+          ordersInWindow += 1;
+          totalSalesWindow += total;
+        }
+
+        // Hour + weekday
+        try {
+          const hr = d.getHours();
+          if (hr >= 0 && hr <= 23) salesByHour[hr] += total;
+          const wd = d.getDay();
+          if (wd >= 0 && wd <= 6) salesByWeekday[wd] += total;
+        } catch (_) {}
+
+        // Items
+        const items = Array.isArray(o.items) ? o.items : [];
+        for (const it of items) {
+          const name = String(it && it.name || '').trim();
+          if (!name) continue;
+          const qty = Math.max(0, Math.floor(safeNumber(it.quantity || 1)));
+          itemsCount.set(name, (itemsCount.get(name) || 0) + (qty || 1));
+          // En este proyecto, it.price suele ser total de la línea (unit*qty). Si no, cae a 0.
+          const line = safeNumber(it.price);
+          itemsRevenue.set(name, (itemsRevenue.get(name) || 0) + (line || 0));
+        }
+
+        // Payment method
+        const pm = normalizePayment(o.paymentMethod);
+        paymentCount.set(pm, (paymentCount.get(pm) || 0) + 1);
+
+        // Status
+        const st = statusLabel(o.status);
+        statusCount.set(st, (statusCount.get(st) || 0) + 1);
+
+        // Paid
+        if (o.paid) paidCount += 1;
+        else unpaidCount += 1;
+
+        // Delivery vs pickup
+        if (isDelivery(o)) salesDelivery += total;
+        else salesPickup += total;
+      }
+
+      // Series final
+      const salesLabels = keys.map(labelFromKey);
+      const salesByDay = keys.map(k => Math.round(byDay.get(k) || 0));
+
+      const topItems = Array.from(itemsCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const topItemsLabels = topItems.map(x => x[0]);
+      const topItemsUnits = topItems.map(x => x[1]);
+
+      const paymentEntries = Array.from(paymentCount.entries()).sort((a, b) => b[1] - a[1]);
+      const paymentLabels = paymentEntries.map(x => x[0]);
+      const paymentCounts = paymentEntries.map(x => x[1]);
+
+      const statusEntries = Array.from(statusCount.entries()).sort((a, b) => b[1] - a[1]);
+      const statusLabels = statusEntries.map(x => x[0]);
+      const statusCounts = statusEntries.map(x => x[1]);
+
+      // Productos: preparar para tabla + gráfica (con filtro/orden)
+      const q = String(productSearch || '').trim().toLowerCase();
+      let products = Array.from(itemsCount.entries()).map(([name, qty]) => ({
+        name,
+        qty,
+        revenue: Number(itemsRevenue.get(name) || 0)
+      }));
+
+      if (q) {
+        products = products.filter(p => p.name.toLowerCase().includes(q));
+      }
+
+      const sorter = {
+        qty_desc: (a, b) => b.qty - a.qty,
+        qty_asc: (a, b) => a.qty - b.qty,
+        rev_desc: (a, b) => b.revenue - a.revenue,
+        rev_asc: (a, b) => a.revenue - b.revenue,
+        name_asc: (a, b) => a.name.localeCompare(b.name, 'es'),
+        name_desc: (a, b) => b.name.localeCompare(a.name, 'es')
+      }[productSort] || ((a, b) => b.qty - a.qty);
+
+      products.sort(sorter);
+      const productsLabels = products.map(p => p.name);
+      const productsQty = products.map(p => p.qty);
+
+      return {
+        salesLabels,
+        salesByDay,
+        topItemsLabels: topItemsLabels.length ? topItemsLabels : ['Sin datos'],
+        topItemsUnits: topItemsUnits.length ? topItemsUnits : [0],
+        paymentLabels: paymentLabels.length ? paymentLabels : ['Sin datos'],
+        paymentCounts: paymentCounts.length ? paymentCounts : [0],
+        statusLabels: statusLabels.length ? statusLabels : ['Sin datos'],
+        statusCounts: statusCounts.length ? statusCounts : [0],
+        salesDelivery: Math.round(salesDelivery),
+        salesPickup: Math.round(salesPickup),
+        hourLabels: Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + ':00'),
+        salesByHour: salesByHour.map(x => Math.round(x)),
+        weekdayLabels: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        salesByWeekday: salesByWeekday.map(x => Math.round(x)),
+        paidCount,
+        unpaidCount,
+        products,
+        productsLabels: productsLabels.length ? productsLabels : ['Sin datos'],
+        productsQty: productsQty.length ? productsQty : [0],
+        ordersInWindow,
+        totalSalesWindow
+      };
+    }
+
+    function computeFinancials(orders, fromDate, toDate, settings) {
+      const keys = keysBetween(fromDate, toDate);
+      const revenueByDay = keys.map(() => 0);
+      const costByDay = keys.map(() => 0);
+      const profitByDay = keys.map(() => 0);
+
+      const ingredientsCatalog = Array.isArray(settings?.ingredientsCatalog) ? settings.ingredientsCatalog : [];
+      const productsRecipes = (settings && settings.productsRecipes) ? settings.productsRecipes : {};
+      const productionCosts = (settings && settings.productionCosts) ? settings.productionCosts : {};
+
+      const ingIndex = buildIngredientIndex(ingredientsCatalog);
+
+      const itemAgg = new Map();
+      const ingAgg = new Map();
+
+      const keyIndex = new Map(keys.map((k, idx) => [k, idx]));
+
+      function addIngredientUsage(ingredientId, fallbackName, unit, qty) {
+        const id = String(ingredientId || '').trim();
+        const key = id || normText(fallbackName || '') || ('_unknown_' + String(fallbackName || '').trim());
+        const prev = ingAgg.get(key) || { id: id || null, name: fallbackName || 'Ingrediente', unit: unit || '', used: 0, unitCost: 0, cost: 0 };
+        prev.used += Number(qty || 0);
+        ingAgg.set(key, prev);
+      }
+
+      function addItemLine(name, pid, qty, revenue, cost) {
+        const key = (pid != null) ? `pid:${pid}` : `name:${normText(name)}`;
+        const prev = itemAgg.get(key) || { key, pid: pid != null ? pid : null, name: name || 'Item', qty: 0, revenue: 0, cost: 0 };
+        prev.qty += Number(qty || 0);
+        prev.revenue += Number(revenue || 0);
+        prev.cost += Number(cost || 0);
+        itemAgg.set(key, prev);
+      }
+
+      function computeLineCostFromPid(pid, qty) {
+        const q = Number(qty || 0);
+        if (!Number.isFinite(q) || q <= 0) return 0;
+        const pc = Number(productionCosts && productionCosts[String(pid)]);
+        if (Number.isFinite(pc) && pc >= 0) return pc * q;
+
+        const recipe = productsRecipes ? productsRecipes[String(pid)] : null;
+        if (!recipe) return 0;
+        const unit = computeRecipeUnitCost(recipe, ingIndex);
+        if (unit == null) return 0;
+        return unit * q;
+      }
+
+      function addIngredientsFromPid(pid, qty) {
+        const q = Number(qty || 0);
+        if (!Number.isFinite(q) || q <= 0) return;
+        const recipe = productsRecipes ? productsRecipes[String(pid)] : null;
+        if (!recipe || !Array.isArray(recipe.ingredients)) return;
+        for (const ln of recipe.ingredients) {
+          if (!ln) continue;
+          const lnQty = Number(ln.qty ?? ln.quantity ?? 0);
+          if (!Number.isFinite(lnQty) || lnQty <= 0) continue;
+          const ing = (ln.ingredientId && ingIndex.byId.get(String(ln.ingredientId)))
+            || (ln.name && ingIndex.byName.get(normText(ln.name)))
+            || null;
+          const name = String(ln.name || ing?.name || 'Ingrediente');
+          const unit = String(ln.unit || ing?.unit || '');
+          const used = lnQty * q;
+          addIngredientUsage(ing?.id || ln.ingredientId, name, unit, used);
+        }
+      }
+
+      for (const o of (orders || [])) {
+        const total = safeNumber(o && (o.total ?? (o.totals && o.totals.total)));
+        if (total <= 0) continue;
+        const d = toDateMaybe(o.timestamp) || toDateMaybe(o.archivedAt) || toDateMaybe(o.createdAt) || null;
+        if (!d) continue;
+        const k = dayKey(d);
+        const idx = keyIndex.get(k);
+        if (idx == null) continue;
+
+        revenueByDay[idx] += total;
+
+        let orderCost = 0;
+        const items = Array.isArray(o.items) ? o.items : [];
+        for (const it of items) {
+          if (!it) continue;
+          const qty = Number(it.quantity || 1);
+          if (!Number.isFinite(qty) || qty <= 0) continue;
+          const name = String(it.name || '').trim() || 'Item';
+          const pid = getItemProductId(it);
+          const revenue = getLineRevenue(it, qty);
+
+          const cost = (pid != null) ? computeLineCostFromPid(pid, qty) : 0;
+          orderCost += cost;
+          addItemLine(name, pid, qty, revenue, cost);
+          if (pid != null) addIngredientsFromPid(pid, qty);
+
+          // Extras dentro de item
+          if (Array.isArray(it.menuExtras)) {
+            for (const ex of it.menuExtras) {
+              if (!ex) continue;
+              const exQty = Number(ex.quantity || 1);
+              if (!Number.isFinite(exQty) || exQty <= 0) continue;
+              const exPid = getItemProductId(ex);
+              if (exPid == null) continue;
+              const exTotalQty = exQty * qty;
+              const exCost = computeLineCostFromPid(exPid, exTotalQty);
+              orderCost += exCost;
+              addItemLine(String(ex.name || 'Extra'), exPid, exTotalQty, 0, exCost);
+              addIngredientsFromPid(exPid, exTotalQty);
+            }
+          }
+
+          // Papas/aros en estructuras antiguas
+          if (it.fries) {
+            const fPid = getItemProductId(it.fries);
+            if (fPid != null) {
+              const fCost = computeLineCostFromPid(fPid, 1 * qty);
+              orderCost += fCost;
+              addItemLine(String(it.fries.name || `Papas ${it.fries.type || ''}` || 'Papas'), fPid, 1 * qty, 0, fCost);
+              addIngredientsFromPid(fPid, 1 * qty);
+            }
+          }
+          if (it.onionRings) {
+            const oPid = getItemProductId(it.onionRings);
+            if (oPid != null) {
+              const oCost = computeLineCostFromPid(oPid, 1 * qty);
+              orderCost += oCost;
+              addItemLine(String(it.onionRings.name || 'Aros de Cebolla'), oPid, 1 * qty, 0, oCost);
+              addIngredientsFromPid(oPid, 1 * qty);
+            }
+          }
+        }
+
+        costByDay[idx] += orderCost;
+        profitByDay[idx] += (total - orderCost);
+      }
+
+      // Calcular costo por ingrediente con unitCost
+      for (const v of ingAgg.values()) {
+        const ing = (v.id && ingIndex.byId.get(String(v.id))) || (v.name && ingIndex.byName.get(normText(v.name))) || null;
+        const unitCost = ing ? computeIngredientUnitCost(ing) : 0;
+        v.unitCost = unitCost;
+        v.cost = unitCost * Number(v.used || 0);
+        v.unit = String(v.unit || ing?.unit || '');
+      }
+
+      const itemsByProfit = Array.from(itemAgg.values()).map((x) => {
+        const profit = (x.revenue || 0) - (x.cost || 0);
+        const margin = x.revenue > 0 ? (profit / x.revenue) * 100 : null;
+        return { ...x, profit, margin };
+      }).sort((a, b) => (b.profit || 0) - (a.profit || 0));
+
+      const ingredientsByCost = Array.from(ingAgg.values())
+        .sort((a, b) => (b.cost || 0) - (a.cost || 0));
+
+      const totalRevenue = revenueByDay.reduce((s, x) => s + (Number(x) || 0), 0);
+      const totalCost = costByDay.reduce((s, x) => s + (Number(x) || 0), 0);
+      const totalProfit = profitByDay.reduce((s, x) => s + (Number(x) || 0), 0);
+      const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : null;
+
+      return {
+        revenueByDay: revenueByDay.map(x => Math.round(x)),
+        costByDay: costByDay.map(x => Math.round(x)),
+        profitByDay: profitByDay.map(x => Math.round(x)),
+        totalRevenue,
+        totalCost,
+        totalProfit,
+        marginPct,
+        itemsByProfit,
+        ingredientsByCost
+      };
+    }
+
+    function setDateInputs(fromDate, toDate) {
+      const fromEl = document.getElementById('dateFrom');
+      const toEl = document.getElementById('dateTo');
+      if (fromEl) fromEl.valueAsDate = fromDate;
+      if (toEl) toEl.valueAsDate = toDate;
+    }
+
+    function getDateInputs() {
+      const fromEl = document.getElementById('dateFrom');
+      const toEl = document.getElementById('dateTo');
+      const from = (fromEl && fromEl.value) ? new Date(fromEl.value) : null;
+      const to = (toEl && toEl.value) ? new Date(toEl.value) : null;
+      if (!from || !to || !Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime())) return null;
+      from.setHours(0,0,0,0);
+      to.setHours(0,0,0,0);
+      return { from, to };
+    }
+
+    function renderProductsTable(products) {
+      const tbody = document.getElementById('productsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (!products || !products.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="muted">Sin datos</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = products.map(p => {
+        const safeName = String(p.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<tr>
+          <td>${safeName}</td>
+          <td class="text-end">${Number(p.qty || 0)}</td>
+          <td class="text-end">${fmtMoney(p.revenue || 0)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderProfitItemsTable(items) {
+      const tbody = document.getElementById('profitItemsTableBody');
+      if (!tbody) return;
+      const arr = Array.isArray(items) ? items.slice(0, 12) : [];
+      if (!arr.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">Sin datos (faltan costos/recetas)</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = arr.map((p) => {
+        const safeName = String(p.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const m = (p.margin == null) ? '—' : fmtPct(p.margin);
+        return `<tr>
+          <td>${safeName}</td>
+          <td class="text-end">${fmtNum(p.qty || 0, 0)}</td>
+          <td class="text-end">${fmtMoney(p.revenue || 0)}</td>
+          <td class="text-end">${fmtMoney(p.cost || 0)}</td>
+          <td class="text-end">${fmtMoney(p.profit || 0)}</td>
+          <td class="text-end">${m}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderIngredientsCostTable(list) {
+      const tbody = document.getElementById('ingredientsCostTableBody');
+      if (!tbody) return;
+      const arr = Array.isArray(list) ? list.slice(0, 20) : [];
+      if (!arr.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">Sin datos (faltan recetas/ingredientes)</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = arr.map((r) => {
+        const safeName = String(r.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeUnit = String(r.unit || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<tr>
+          <td>${safeName}</td>
+          <td class="text-end">${fmtNum(r.used || 0, 3)}</td>
+          <td class="text-end">${safeUnit || '—'}</td>
+          <td class="text-end">${fmtMoney(r.unitCost || 0)}</td>
+          <td class="text-end">${fmtMoney(r.cost || 0)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    let allOrders = [];
+    let source = 'firebase';
+
+    function applyUIWithOrders(orders, fromDate, toDate) {
+      const productSearch = (document.getElementById('productSearch')?.value || '').trim();
+      const productSort = (document.getElementById('productSort')?.value || 'qty_desc');
+
+      const inRange = filterByRange(orders, fromDate, toDate);
+      const agg = aggregate(inRange, fromDate, toDate, productSearch, productSort);
+
+      // KPIs
+      const totalSales = agg.totalSalesWindow;
+      const totalOrders = agg.ordersInWindow;
+      const aov = totalOrders ? (totalSales / totalOrders) : 0;
+      const mixTotal = (agg.salesDelivery + agg.salesPickup) || 0;
+      const onlinePct = mixTotal ? Math.round((agg.salesDelivery / mixTotal) * 100) : 0;
+
+      document.getElementById('kpiSales').textContent = fmtMoney(totalSales);
+      document.getElementById('kpiOrders').textContent = String(totalOrders);
+      document.getElementById('kpiAov').textContent = fmtMoney(aov);
+      document.getElementById('kpiMix').textContent = mixTotal ? `${onlinePct}% / ${100 - onlinePct}%` : '—';
+      document.getElementById('kpiTrend').textContent = totalOrders ? 'Datos reales del periodo' : '—';
+      document.getElementById('ordersInRange').textContent = String(totalOrders);
+
+      renderProductsTable(agg.products);
+      buildCharts(agg);
+
+      const fin = computeFinancials(inRange, fromDate, toDate, window.__sr_admin_settings || null);
+      document.getElementById('kpiCost').textContent = fmtMoney(fin.totalCost);
+      document.getElementById('kpiProfit').textContent = fmtMoney(fin.totalProfit);
+      document.getElementById('kpiMargin').textContent = fin.marginPct == null ? '—' : fmtPct(fin.marginPct);
+
+      const costHint = document.getElementById('kpiCostHint');
+      if (costHint) {
+        const hasRecipes = window.__sr_admin_settings && window.__sr_admin_settings.productsRecipes;
+        const hasIng = window.__sr_admin_settings && Array.isArray(window.__sr_admin_settings.ingredientsCatalog) && window.__sr_admin_settings.ingredientsCatalog.length;
+        costHint.textContent = (hasRecipes && hasIng)
+          ? 'Basado en recetas/ingredientes'
+          : 'Faltan recetas o ingredientes (costo incompleto)';
+      }
+
+      renderProfitItemsTable(fin.itemsByProfit);
+      renderIngredientsCostTable(fin.ingredientsByCost);
+      buildFinancialCharts(agg, fin);
+    }
+
+    async function main() {
+      document.getElementById('updatedAt').textContent = new Date().toLocaleString('es-MX');
+      setBadge('Cargando datos…', 'info');
+      showStatus('Cargando pedidos…', 'info');
+
+      // default range: 14 días
+      const now = new Date();
+      const to = new Date(now);
+      const from = new Date(now);
+      from.setDate(now.getDate() - 13);
+      setDateInputs(from, to);
+
+      let orders = [];
+      try {
+        orders = await loadOrdersFromFirebase();
+        setBadge('Fuente: Firebase (orders)', 'success');
+        hideStatus();
+      } catch (e) {
+        source = 'local';
+        orders = loadOrdersFromLocalStorage();
+        setBadge('Fuente: localStorage (respaldo)', 'warning');
+        showStatus('No se pudo leer Firebase (permisos/conexión). Mostrando respaldo real desde este navegador (localStorage).', 'warning');
+      }
+
+      // Settings (recetas/ingredientes/costos). No bloquea el dashboard si falla.
+      try {
+        const settings = await loadAdminSettingsSafe();
+        if (settings) {
+          // Si no hay ingredientes en Firebase, intentar fallback local
+          let ingredientsCatalog = Array.isArray(settings.ingredientsCatalog) ? settings.ingredientsCatalog : [];
+          if (!ingredientsCatalog.length) {
+            try {
+              const raw = localStorage.getItem('sr_ingredients_v1');
+              const parsed = raw ? JSON.parse(raw) : null;
+              if (Array.isArray(parsed)) ingredientsCatalog = parsed;
+            } catch (_) {}
+          }
+
+          window.__sr_admin_settings = {
+            ...settings,
+            ingredientsCatalog
+          };
+        } else {
+          // fallback mínimo: solo ingredientes locales (si existen)
+          let localIngredients = [];
+          try {
+            const raw = localStorage.getItem('sr_ingredients_v1');
+            const parsed = raw ? JSON.parse(raw) : null;
+            if (Array.isArray(parsed)) localIngredients = parsed;
+          } catch (_) {}
+          window.__sr_admin_settings = { ingredientsCatalog: localIngredients };
+        }
+      } catch (_) {
+        window.__sr_admin_settings = { ingredientsCatalog: [] };
+      }
+
+      allOrders = orders;
+
+      if (!orders.length) {
+        showStatus(source === 'firebase'
+          ? 'No hay pedidos para mostrar o Firestore no permitió lectura.'
+          : 'No hay pedidos en localStorage (aún no se han creado pedidos desde este navegador).',
+          'warning'
+        );
+      }
+
+      // Hooks UI
+      const applyBtn = document.getElementById('applyFilters');
+      const searchEl = document.getElementById('productSearch');
+      const sortEl = document.getElementById('productSort');
+
+      function applyFromInputs() {
+        const r = getDateInputs();
+        if (!r) {
+          showStatus('Selecciona fechas válidas (Desde y Hasta).', 'warning');
+          return;
+        }
+        hideStatus();
+        applyUIWithOrders(allOrders, r.from, r.to);
+      }
+
+      if (applyBtn) applyBtn.addEventListener('click', applyFromInputs);
+      if (searchEl) searchEl.addEventListener('input', () => {
+        // live update
+        const r = getDateInputs();
+        if (!r) return;
+        applyUIWithOrders(allOrders, r.from, r.to);
+      });
+      if (sortEl) sortEl.addEventListener('change', () => {
+        const r = getDateInputs();
+        if (!r) return;
+        applyUIWithOrders(allOrders, r.from, r.to);
+      });
+
+      // quick presets
+      const setLastNDays = (n) => {
+        const now = new Date();
+        const to = new Date(now);
+        const from = new Date(now);
+        from.setDate(now.getDate() - (n - 1));
+        setDateInputs(from, to);
+        applyUIWithOrders(allOrders, from, to);
+      };
+      document.getElementById('quick7')?.addEventListener('click', () => setLastNDays(7));
+      document.getElementById('quick14')?.addEventListener('click', () => setLastNDays(14));
+      document.getElementById('quick30')?.addEventListener('click', () => setLastNDays(30));
+      document.getElementById('quickMtd')?.addEventListener('click', () => {
+        const now = new Date();
+        const from = new Date(now.getFullYear(), now.getMonth(), 1);
+        const to = new Date(now);
+        setDateInputs(from, to);
+        applyUIWithOrders(allOrders, from, to);
+      });
+
+      // initial render
+      applyUIWithOrders(allOrders, from, to);
+    }
+
+    main();
+  </script>
+</body>
+</html>

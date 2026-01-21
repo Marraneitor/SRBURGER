@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Insumos gastados - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
+  <style>
+    body { font-family: Inter, Poppins, system-ui, -apple-system, Segoe UI, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-sky-100">
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-sky-500 text-slate-950 grid place-items-center">
+          <i class="fas fa-box-open"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-sky-200">SR &amp; SRA BURGER</div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Insumos gastados</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="master.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-100 font-bold border border-slate-700">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+    <div id="status-banner" class="hidden p-4 rounded-2xl border"></div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="text-sm font-extrabold text-sky-200 mr-1">Mostrar:</div>
+        <button id="filter-all" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-sky-100">Todos</button>
+        <button id="filter-day" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-sky-100">Día</button>
+        <button id="filter-week" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-sky-100">Semana</button>
+        <button id="filter-month" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 font-bold hover:bg-slate-800 text-sky-100">Mes</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 ml-auto">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900/80 shadow-sm">
+          <i class="fas fa-calendar-day text-sky-300 text-sm"></i>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-semibold text-sky-200 leading-tight">Fecha específica</span>
+            <input id="date-filter" type="date" class="mt-1 text-xs border-0 focus:ring-0 p-0 bg-transparent text-sky-100" />
+          </div>
+        </div>
+        <button id="clear-date" type="button" class="px-3 py-2 rounded-xl text-xs font-semibold text-sky-200 hover:text-sky-100 hover:bg-slate-900 border border-transparent">Limpiar</button>
+
+        <div class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900/80 shadow-sm">
+          <i class="fas fa-calendar-range text-sky-300 text-sm"></i>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-semibold text-sky-200 leading-tight">Rango</span>
+            <div class="mt-1 flex items-center gap-2">
+              <input id="range-start" type="date" class="text-xs border-0 focus:ring-0 p-0 bg-transparent text-sky-100" />
+              <span class="text-xs text-slate-500">→</span>
+              <input id="range-end" type="date" class="text-xs border-0 focus:ring-0 p-0 bg-transparent text-sky-100" />
+            </div>
+          </div>
+        </div>
+        <button id="clear-range" type="button" class="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-semibold text-sky-200 hover:text-sky-100 hover:bg-slate-900 border border-transparent">Limpiar rango</button>
+      </div>
+    </div>
+
+    <section id="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-sky-200 uppercase tracking-wide">Pedidos</div>
+        <div id="sum-orders" class="mt-1 text-2xl font-extrabold text-sky-100">0</div>
+        <div class="mt-1 text-xs text-sky-200/80">Entregados</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-sky-200 uppercase tracking-wide">Productos</div>
+        <div id="sum-products" class="mt-1 text-2xl font-extrabold text-sky-300">0</div>
+        <div class="mt-1 text-xs text-sky-200/80">Desglose (incluye combos)</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-sky-200 uppercase tracking-wide">Ingredientes</div>
+        <div id="sum-ingredients" class="mt-1 text-2xl font-extrabold text-sky-300">0</div>
+        <div class="mt-1 text-xs text-sky-200/80">Usados (según recetas)</div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="text-[11px] font-semibold text-sky-200 uppercase tracking-wide">Sin receta</div>
+        <div id="sum-missing" class="mt-1 text-2xl font-extrabold text-amber-300">0</div>
+        <div class="mt-1 text-xs text-sky-200/80">Productos no mapeados</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-sky-100">Ingredientes usados</h2>
+          <span id="ingredients-count" class="text-xs font-semibold text-sky-200">0 ingredientes</span>
+        </div>
+        <div class="text-xs text-sky-200/80 mb-2">Suma cantidades por ingrediente usando recetas de Productos + catálogo de Ingredientes.</div>
+        <div id="ingredients-table" class="text-sm text-sky-100"></div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-sky-100">Productos sin receta / no encontrados</h2>
+          <span id="missing-count" class="text-xs font-semibold text-sky-200">0 productos</span>
+        </div>
+        <div class="text-xs text-sky-200/80 mb-2">Estos productos se vendieron pero no se pudo calcular insumos (falta receta o no coincide el nombre).</div>
+        <div id="missing-table" class="text-sm text-sky-100"></div>
+        <div class="mt-3 text-xs text-slate-400">Tip: agrega/edita recetas en <a href="Productos.html" class="underline text-sky-200 hover:text-sky-100">Productos y costos</a>.</div>
+      </div>
+
+      <div class="lg:col-span-2 p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-extrabold text-sky-100">Productos vendidos (desglose)</h2>
+          <span id="products-count" class="text-xs font-semibold text-sky-200">0 productos</span>
+        </div>
+        <div class="text-xs text-sky-200/80 mb-2">Mismo desglose que Items vendidos: incluye lo que va dentro de combos (hamburguesas/hotdogs/papas) y papas agregadas.</div>
+        <div id="products-table" class="text-sm text-sky-100"></div>
+      </div>
+    </section>
+
+    <div id="empty" class="hidden text-center py-16">
+      <div class="w-24 h-24 bg-slate-900/70 border border-slate-800 rounded-2xl grid place-items-center mx-auto mb-6">
+        <i class="fas fa-inbox text-sky-300 text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-extrabold text-sky-100">Sin datos</h3>
+      <p class="text-sky-200/80 mt-2">No hay pedidos entregados en ese rango.</p>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script>
+    // ------------------------
+    // Estado
+    // ------------------------
+    let unsubscribeOrders = null;
+    let unsubscribeHistory = null;
+    let allHistoryOrders = [];
+
+    let currentTimeFilter = 'all';
+    let selectedDate = null;
+    let rangeStart = null;
+    let rangeEnd = null;
+
+    let firebaseSettings = null;
+    let productsRecipes = {};
+    let ingredientsCatalog = [];
+
+    // ------------------------
+    // Helpers de tiempo
+    // ------------------------
+    function tsToDate(ts) {
+      try {
+        if (!ts) return null;
+        if (typeof ts === 'string') {
+          const d = new Date(ts);
+          return isNaN(d.getTime()) ? null : d;
+        }
+        if (typeof ts === 'object' && typeof ts.toDate === 'function') {
+          return ts.toDate();
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function getOrderDate(order) {
+      return tsToDate(order?.deliveredAt || order?.archivedAt || order?.timestamp);
+    }
+
+    function startOfToday(d) {
+      const x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    function endOfToday(d) {
+      const x = new Date(d);
+      x.setHours(23, 59, 59, 999);
+      return x;
+    }
+
+    function startOfWeekMonday(d) {
+      const x = startOfToday(d);
+      const day = x.getDay();
+      const diff = (day === 0) ? 6 : (day - 1);
+      x.setDate(x.getDate() - diff);
+      return x;
+    }
+
+    function startOfMonth(d) {
+      const x = startOfToday(d);
+      x.setDate(1);
+      return x;
+    }
+
+    function sameDay(a, b) {
+      return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    // ------------------------
+    // Texto / normalización
+    // ------------------------
+    function safeText(v) {
+      return v == null ? '' : String(v);
+    }
+
+    function normText(s) {
+      return safeText(s)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function escapeHtml(str) {
+      return safeText(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function setBanner(msg, type) {
+      const el = document.getElementById('status-banner');
+      if (!el) return;
+      if (!msg) {
+        el.classList.add('hidden');
+        el.textContent = '';
+        return;
+      }
+      el.classList.remove('hidden');
+      const base = 'p-4 rounded-2xl border';
+      const css = type === 'error'
+        ? 'bg-slate-900/80 border-rose-700 text-rose-200'
+        : type === 'success'
+          ? 'bg-slate-900/80 border-sky-700 text-sky-200'
+          : 'bg-slate-900/80 border-slate-700 text-sky-200';
+      el.className = base + ' ' + css;
+      el.textContent = msg;
+    }
+
+    function fmtQty(n) {
+      const v = Number(n || 0);
+      if (!Number.isFinite(v)) return '0';
+      if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+      // hasta 3 decimales, sin ceros al final
+      return v.toFixed(3).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+    }
+
+    function formatTable(mapObj, options) {
+      const entries = Object.entries(mapObj || {}).sort((a, b) => (b[1] || 0) - (a[1] || 0));
+      if (!entries.length) {
+        return '<div class="text-xs text-sky-200/80">Sin datos</div>';
+      }
+      const rows = entries.map(([name, count]) => {
+        const safeName = safeText(name);
+        const suffix = options && options.suffix ? String(options.suffix) : '';
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-slate-800 last:border-b-0">
+            <div class="font-semibold text-sky-100">${escapeHtml(safeName)}</div>
+            <div class="text-sky-300 font-extrabold">${escapeHtml(fmtQty(count))}${suffix ? `<span class=\"text-xs text-slate-400 font-semibold ml-1\">${escapeHtml(suffix)}</span>` : ''}</div>
+          </div>`;
+      }).join('');
+      return `<div class="divide-y divide-slate-800">${rows}</div>`;
+    }
+
+    // ------------------------
+    // Menú base (para mapear nombre -> id)
+    // NOTA: se usa para poder ligar ventas (por nombre) con recetas (por id)
+    // ------------------------
+    const BASE_MENU_DATA = {
+      "Hamburguesas": [
+        { id: 1, name: "Clásica PREMIUM" },
+        { id: 2, name: "BBQ BEACON CRUNCH" },
+        { id: 11, name: "Alohawai Burger" },
+        { id: 12, name: "CheesseTorraBurger" },
+        { id: 13, name: "Choriargentina Burger" }
+      ],
+      "Hot Dogs": [
+        { id: 5, name: "Hotdog Jumbo" },
+        { id: 27, name: "Jalapeño Dog" }
+      ],
+      "Combos": [
+        { id: 26, name: "DOBLES DOBLES" },
+        { id: 6, name: "Combo Pareja" },
+        { id: 15, name: "Combo Dúo" },
+        { id: 7, name: "Combo Amigos" },
+        { id: 14, name: "Combo Familiar" }
+      ],
+      "Extras": [
+        { id: 8, name: "Papas Gajo Medianas" },
+        { id: 16, name: "Papas Gajo Grandes" },
+        { id: 28, name: "Papas Francesas Medianas" },
+        { id: 29, name: "Papas Francesas Grandes" },
+        { id: 17, name: "Salchipapas Medianas" },
+        { id: 18, name: "Salchipapas Grandes" },
+        { id: 19, name: "Aros de Cebolla (8 pz)" },
+        { id: 20, name: "Aros de Cebolla Grande (15 pz)" }
+      ],
+      "Bebidas": [
+        { id: 21, name: "Coca-Cola 600ml" },
+        { id: 22, name: "Coca-Cola 1.75L" },
+        { id: 23, name: "Coca-Cola 3L" },
+        { id: 24, name: "Agua Natural 600ml" }
+      ]
+    };
+
+    function buildProductNameToIdIndex(settings) {
+      const index = new Map();
+      const s = settings || {};
+      const infoOverrides = s.productInfoOverrides || {};
+      const customProducts = s.customProducts || {};
+
+      function addEntry(id, name) {
+        const pid = Number(id);
+        if (!Number.isFinite(pid)) return;
+        const nm = safeText(name).trim();
+        if (!nm) return;
+        index.set(normText(nm), pid);
+      }
+
+      // Base menu
+      Object.keys(BASE_MENU_DATA).forEach((cat) => {
+        const arr = Array.isArray(BASE_MENU_DATA[cat]) ? BASE_MENU_DATA[cat] : [];
+        arr.forEach((p) => {
+          const id = p && p.id;
+          if (!id) return;
+          const ovr = infoOverrides[id] || {};
+          const effectiveName = (ovr.name || p.name || '').toString();
+          addEntry(id, effectiveName);
+        });
+      });
+
+      // Custom products
+      Object.keys(customProducts || {}).forEach((cat) => {
+        const arr = Array.isArray(customProducts[cat]) ? customProducts[cat] : [];
+        arr.forEach((p) => {
+          if (!p) return;
+          const id = p.id;
+          const ovr = infoOverrides[id] || {};
+          const effectiveName = (ovr.name || p.name || '').toString();
+          addEntry(id, effectiveName);
+        });
+      });
+
+      return index;
+    }
+
+    function buildIngredientIndex(catalog) {
+      const byId = new Map();
+      const byName = new Map();
+      (Array.isArray(catalog) ? catalog : []).forEach((ing) => {
+        if (!ing) return;
+        const id = safeText(ing.id).trim();
+        const name = safeText(ing.name).trim();
+        if (id) byId.set(id, ing);
+        if (name) byName.set(normText(name), ing);
+      });
+      return { byId, byName };
+    }
+
+    // ------------------------
+    // Reuso del desglose de Items vendidos
+    // (para que combos/hotdogs/papas se cuenten igual)
+    // ------------------------
+    function extractAllTextFromItem(item) {
+      const chunks = [];
+      const maybePush = (x) => {
+        if (x == null) return;
+        if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean') {
+          chunks.push(String(x));
+          return;
+        }
+        if (Array.isArray(x)) {
+          x.forEach(maybePush);
+          return;
+        }
+        if (typeof x === 'object') {
+          ['name', 'type', 'size', 'label', 'title', 'text'].forEach((k) => {
+            if (x[k]) chunks.push(String(x[k]));
+          });
+          return;
+        }
+        chunks.push(String(x));
+      };
+
+      maybePush(item?.name);
+      maybePush(item?.productName);
+      maybePush(item?.title);
+      maybePush(item?.customizations);
+      maybePush(item?.details);
+      maybePush(item?.notes);
+      maybePush(item?.fries);
+      maybePush(item?.menuExtras);
+      maybePush(item?.onionRings);
+      return chunks.join('\n');
+    }
+
+    function parsePortionGrams(text) {
+      const t = normText(text);
+      const m1 = t.match(/porcion\s*:\s*(\d{2,4})\s*g/);
+      if (m1) return Number(m1[1]);
+      const m2 = t.match(/(\d{2,4})\s*g/);
+      if (m2) return Number(m2[1]);
+      return null;
+    }
+
+    function classifyFriesSize(text) {
+      const t = normText(text);
+      if (!t) return null;
+      if (t.includes('extragrande') || t.includes('extra grande') || t.includes('xl') || t.includes('xxl')) return 'Extragrandes';
+      if (t.includes('mediana') || t.includes('medianas')) return 'Medianas';
+      if (t.includes('complemento')) return 'Complemento';
+      if (t.includes('grande') || t.includes('grandes')) return 'Extragrandes';
+      return null;
+    }
+
+    function isFriesItem(itemName) {
+      const t = normText(itemName);
+      return t.includes('papas');
+    }
+
+    function isBonelessItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      return t.includes('boneless') || t.includes('boneles') || t.includes('boneles');
+    }
+
+    function isBurgerItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      if (!t) return false;
+      if (t.includes('combo')) return false;
+      if (t.includes('boneless') || t.includes('boneles')) return false;
+      if (t.includes('papas')) return false;
+      if (t.includes('hot dog') || t.includes('hotdog')) return false;
+      return t.includes('burger') || t.includes('hamburguesa');
+    }
+
+    function isHotdogItem(itemNameOrText) {
+      const t = normText(itemNameOrText);
+      if (!t) return false;
+      if (t.includes('combo')) return false;
+      return t.includes('hot dog') || t.includes('hotdog');
+    }
+
+    function parseBurgersFromCustomizations(text) {
+      const lines = safeText(text)
+        .split(/\r?\n|\|/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const burgers = [];
+      for (const ln of lines) {
+        const n = normText(ln);
+        if (n.startsWith('incluye:') || n.startsWith('incluye ')) continue;
+        if (n.includes('incluye:')) {
+          const left = ln.split(/incluye\s*:/i)[0].trim();
+          if (left) {
+            const sub = parseBurgersFromCustomizations(left);
+            sub.forEach(x => burgers.push(x));
+          }
+          continue;
+        }
+        let m = ln.match(/hamburguesa\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          burgers.push(m[1].trim());
+          continue;
+        }
+        m = ln.match(/burger\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          burgers.push(m[1].trim());
+          continue;
+        }
+        if ((n.includes('hamburguesa') || n.includes('burger')) && ln.includes(':')) {
+          const parts = ln.split(':');
+          const rhs = parts.slice(1).join(':').trim();
+          if (rhs) burgers.push(rhs);
+        }
+      }
+      return burgers;
+    }
+
+    function cleanBurgerName(name) {
+      let s = safeText(name).trim();
+      if (!s) return '';
+      s = s.split(/incluye\s*:/i)[0].trim();
+      if (s.includes('|')) s = s.split('|')[0].trim();
+      s = s.replace(/^hamburguesa\s*\d*\s*:\s*/i, '').trim();
+      s = s.replace(/^burger\s*\d*\s*:\s*/i, '').trim();
+      s = s.replace(/\s+/g, ' ').trim();
+      return s;
+    }
+
+    function parseHotdogsFromCustomizations(text) {
+      const lines = safeText(text).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const hotdogs = [];
+      for (const ln of lines) {
+        const n = normText(ln);
+        let m = ln.match(/hot\s*dog\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          hotdogs.push(m[1].trim());
+          continue;
+        }
+        m = ln.match(/hotdog\s*\d*\s*:\s*(.+)$/i);
+        if (m && m[1]) {
+          hotdogs.push(m[1].trim());
+          continue;
+        }
+        if ((n.includes('hotdog') || n.includes('hot dog')) && ln.includes(':')) {
+          const parts = ln.split(':');
+          const rhs = parts.slice(1).join(':').trim();
+          if (rhs) hotdogs.push(rhs);
+        }
+      }
+      return hotdogs;
+    }
+
+    function addCount(map, key, qty) {
+      const k = (key || 'Sin especificar').trim();
+      const q = Number(qty || 0);
+      if (!Number.isFinite(q) || q <= 0) return;
+      map[k] = (map[k] || 0) + q;
+    }
+
+    function normalizeFriesDisplayName(v) {
+      const t = safeText(v).trim();
+      if (!t) return null;
+      const lower = normText(t);
+      const type = lower.includes('gajo') ? 'Gajo' : (lower.includes('francesa') ? 'Francesas' : null);
+      const s = classifyFriesSize(t);
+      if (type && s) return `Papas ${type} ${s}`;
+      if (type && !s) return `Papas ${type}`;
+      if (s === 'Complemento') return 'Papas Complemento';
+      if (s === 'Medianas') return 'Papas Medianas';
+      if (s === 'Extragrandes') return 'Papas Extragrandes';
+      return t;
+    }
+
+    function friesNameFromFriesObject(friesObj) {
+      if (!friesObj) return null;
+      const name = safeText(friesObj.name || '').trim();
+      if (name) return normalizeFriesDisplayName(name);
+      const type = safeText(friesObj.type || '').trim();
+      const size = safeText(friesObj.size || friesObj.tamano || '').trim();
+      if (type && size) return normalizeFriesDisplayName(`Papas ${type} ${size}`);
+      if (type) return normalizeFriesDisplayName('Papas ' + type);
+      return null;
+    }
+
+    function friesDisplayFromIncludedFries(includedFries) {
+      if (!includedFries) return null;
+      const rawType = safeText(includedFries.type || '').trim();
+      const rawSize = safeText(includedFries.size || '').trim();
+      if (!rawType && !rawSize) return friesNameFromFriesObject(includedFries);
+
+      const t = normText(rawType);
+      const type = t.includes('gajo') ? 'Gajo' : (t.includes('francesa') ? 'Francesas' : (rawType || null));
+
+      const s = classifyFriesSize(rawSize) || classifyFriesSize(rawType) || (/\bgrande|grandes|xl\b/i.test(rawSize) ? 'Extragrandes' : null);
+      if (type && s) return `Papas ${type} ${s}`;
+      if (type) return `Papas ${type}`;
+      if (s) return `Papas ${s}`;
+      return null;
+    }
+
+    function parseIncludedFriesFromText(text) {
+      const raw = safeText(text);
+      if (!raw.trim()) return null;
+
+      const lines = raw
+        .split(/\r?\n|\|/)
+        .map(s => String(s || '').trim())
+        .filter(Boolean);
+
+      for (const ln of lines) {
+        if (/^\d+\s*x\s*papas/i.test(ln)) continue;
+        if (/papas/i.test(ln)) {
+          const fixed = ln.replace(/^Papas\s*:\s*/i, 'Papas ').trim();
+          const guess = normalizeFriesDisplayName(fixed);
+          if (guess) return guess;
+
+          const m = ln.match(/papas\s*(?::|\s)\s*([^,]+)/i);
+          if (m && m[1]) {
+            const guess2 = normalizeFriesDisplayName('Papas ' + String(m[1]).trim());
+            if (guess2) return guess2;
+          }
+        }
+      }
+      return null;
+    }
+
+    function pickIncludedFriesFromChoices(choices) {
+      const arr = Array.isArray(choices) ? choices : [];
+      const values = arr
+        .map(ch => friesNameFromFriesObject(ch?.fries))
+        .filter(Boolean);
+      if (!values.length) return null;
+
+      const uniq = new Map();
+      values.forEach(v => {
+        const k = normText(v);
+        if (!uniq.has(k)) uniq.set(k, v);
+      });
+
+      if (uniq.size === 1) return Array.from(uniq.values())[0];
+      return null;
+    }
+
+    // Config de combos (igual que itemsvendidos)
+    let comboConfigurations = {};
+
+    function loadComboConfigurations() {
+      const savedCombos = localStorage.getItem('burgerCombos');
+
+      const defaultConfigs = {
+        'combofamiliar': {
+          name: 'Combo Familiar',
+          items: [
+            { type: 'fries', name: 'Papas Extragrandes', quantity: 1 },
+            { type: 'onion-rings', name: 'Aros de Cebolla Extragrandes', quantity: 1 },
+            { type: 'drink', name: 'Coca-Cola 3L', quantity: 1 }
+          ]
+        },
+        'comboduo': { name: 'Combo Dúo', productIds: ['p_1762250461918_yr88'], items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'hotdog', name: 'Hotdog Jumbo', quantity: 1 } ] },
+        'tripledog': { name: 'Triple DOG', productIds: ['p_1762250304793_2l0s'], items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'hotdog', name: 'Hotdog Jumbo', quantity: 3 } ] },
+        'combopareja': { name: 'Combo Pareja', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1 } ] },
+        'comboamigos': { name: 'Combo Amigos', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 }, { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1 } ] },
+        'comboboneles': { name: 'Combo Boneles', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] },
+        'combodoblesdobles': { name: 'Combo Dobles Dobles', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] },
+        'combodoblesdoblesbbq': { name: 'Combo Dobles Dobles BBQ', items: [ { type: 'fries', name: 'Papas Medianas', quantity: 1 } ] }
+      };
+
+      let merged = { ...defaultConfigs };
+      if (savedCombos) {
+        try {
+          const combos = JSON.parse(savedCombos);
+          if (Array.isArray(combos)) {
+            combos.forEach((combo) => {
+              if (!combo || !combo.name) return;
+              const key = normText(combo.name).replace(/\s+/g, '');
+              const pid = combo.id || combo.productId;
+              const cfg = { ...combo };
+              if (pid && !cfg.productIds) cfg.productIds = [String(pid)];
+              if (Array.isArray(cfg.productIds)) cfg.productIds = cfg.productIds.map(String);
+              merged[key] = cfg;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ Error leyendo burgerCombos. Usando defaults.', e);
+        }
+      }
+
+      (function enforceComboDefaults() {
+        function upsertFries(cfg, desiredName) {
+          if (!cfg || !Array.isArray(cfg.items)) return;
+          const idx = cfg.items.findIndex(it => (it && (it.type === 'fries' || /papas/i.test(String(it.name || '')))));
+          const item = { type: 'fries', name: desiredName, quantity: 1 };
+          if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+          else cfg.items.push(item);
+        }
+        function upsertRings(cfg, desiredName) {
+          if (!cfg || !Array.isArray(cfg.items)) return;
+          const idx = cfg.items.findIndex(it => (it && (it.type === 'onion-rings' || /aros/i.test(String(it.name || '')))));
+          const item = { type: 'onion-rings', name: desiredName, quantity: 1 };
+          if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+          else cfg.items.push(item);
+        }
+        upsertFries(merged['comboduo'], 'Papas Medianas');
+        upsertFries(merged['combopareja'], 'Papas Medianas');
+        upsertFries(merged['comboamigos'], 'Papas Medianas');
+        upsertFries(merged['comboboneles'], 'Papas Medianas');
+        upsertFries(merged['combodoblesdobles'], 'Papas Medianas');
+        upsertFries(merged['combodoblesdoblesbbq'], 'Papas Medianas');
+        upsertFries(merged['combofamiliar'], 'Papas Extragrandes');
+
+        upsertRings(merged['combopareja'], 'Aros de Cebolla Medianas');
+        upsertRings(merged['comboamigos'], 'Aros de Cebolla Medianas');
+        upsertRings(merged['combofamiliar'], 'Aros de Cebolla Extragrandes');
+      })();
+
+      comboConfigurations = merged;
+    }
+
+    function getComboConfig(itemName) {
+      if (!comboConfigurations) return null;
+      const key = normText(itemName).replace(/\s+/g, '');
+      if (comboConfigurations[key]) return comboConfigurations[key];
+
+      const t = normText(itemName);
+      for (const k of Object.keys(comboConfigurations)) {
+        const cfg = comboConfigurations[k];
+        const name = normText(cfg?.name || '');
+        if (name && t.includes(name)) return cfg;
+      }
+      return null;
+    }
+
+    function getItemProductId(item) {
+      try {
+        const v = item?.id ?? item?.productId ?? item?.baseItemId ?? item?.itemId ?? item?.baseItem?.id ?? item?.baseItem?.productId;
+        if (v == null) return null;
+        const s = String(v).trim();
+        return s ? s : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function getComboConfigByProductId(productId) {
+      if (!comboConfigurations || !productId) return null;
+      const pid = String(productId).trim();
+      if (!pid) return null;
+      for (const k of Object.keys(comboConfigurations)) {
+        const cfg = comboConfigurations[k];
+        const ids = Array.isArray(cfg?.productIds) ? cfg.productIds : (cfg?.id ? [String(cfg.id)] : null);
+        if (Array.isArray(ids) && ids.map(String).includes(pid)) return cfg;
+      }
+      return null;
+    }
+
+    function getComboConfigForItem(item) {
+      const pid = getItemProductId(item);
+      const byId = getComboConfigByProductId(pid);
+      if (byId) return byId;
+
+      const nameCandidate = safeText(item?.name || item?.productName || item?.title || item?.baseItem?.name || '');
+      const byName = getComboConfig(nameCandidate);
+      if (byName) return byName;
+
+      const key = normText(nameCandidate).replace(/\s+/g, '');
+      if (key === 'duo' || key === 'combo_duo' || key === 'comboduo') return comboConfigurations?.['comboduo'] || null;
+      if (key === 'tripledog' || (key.includes('triple') && key.includes('dog'))) return comboConfigurations?.['tripledog'] || null;
+
+      return null;
+    }
+
+    function filterOrders(orders) {
+      const now = new Date();
+      const todayStart = startOfToday(now);
+      const weekStart = startOfWeekMonday(now);
+      const monthStart = startOfMonth(now);
+
+      return (orders || []).filter((o) => {
+        const d = getOrderDate(o);
+        if (!d) return false;
+
+        // Rango (si está definido) toma prioridad
+        if (rangeStart && rangeEnd) {
+          return d >= startOfToday(rangeStart) && d <= endOfToday(rangeEnd);
+        }
+
+        if (selectedDate) {
+          return sameDay(d, selectedDate);
+        }
+
+        if (currentTimeFilter === 'day') return d >= todayStart;
+        if (currentTimeFilter === 'week') return d >= weekStart;
+        if (currentTimeFilter === 'month') return d >= monthStart;
+        return true;
+      });
+    }
+
+    function aggregateProductsSold(orders) {
+      const productsSold = {};
+      let totalOrders = 0;
+
+      for (const order of orders || []) {
+        totalOrders += 1;
+        const items = Array.isArray(order?.items) ? order.items : [];
+
+        for (const item of items) {
+          if (!item || typeof item !== 'object') continue;
+          const qtyRaw = Number(item.quantity || 1);
+          const qty = (Number.isFinite(qtyRaw) && qtyRaw > 0) ? qtyRaw : 1;
+
+          const itemName = safeText(item.name || item.productName || item.title || '');
+          const itemText = extractAllTextFromItem(item);
+
+          // 1) Combos
+          const comboCfg = getComboConfigForItem(item);
+          if (comboCfg) {
+            const choices = Array.isArray(item.choices) ? item.choices : [];
+
+            // A) Papas incluidas
+            let friesDisplay = friesDisplayFromIncludedFries(item.includedFries) || friesNameFromFriesObject(item.includedFries);
+            if (!friesDisplay) friesDisplay = friesNameFromFriesObject(item.fries);
+            if (!friesDisplay) friesDisplay = pickIncludedFriesFromChoices(choices);
+            if (!friesDisplay) friesDisplay = parseIncludedFriesFromText(itemText);
+            if (!friesDisplay) {
+              const cfgItems = Array.isArray(comboCfg.items) ? comboCfg.items : [];
+              const friesCfg = cfgItems.find(it => it && (it.type === 'fries' || /papas/i.test(String(it.name || ''))));
+              friesDisplay = normalizeFriesDisplayName(safeText(friesCfg?.name))
+                || (normText(comboCfg?.name).includes('familiar') ? 'Papas Extragrandes' : 'Papas Medianas');
+            }
+            addCount(productsSold, friesDisplay || 'Papas', qty);
+
+            // B) Otros ítems incluidos por config
+            const cfgItems = Array.isArray(comboCfg.items) ? comboCfg.items : [];
+            for (const inc of cfgItems) {
+              if (!inc || !inc.name) continue;
+              const incType = String(inc.type || '').toLowerCase();
+              if (incType === 'fries' || /papas/i.test(String(inc.name))) continue;
+              if (incType === 'hotdog' && Array.isArray(item.hotdogs) && item.hotdogs.length) continue;
+              const incQtyRaw = Number(inc.quantity || 1);
+              const incQty = (Number.isFinite(incQtyRaw) && incQtyRaw > 0) ? incQtyRaw : 1;
+              addCount(productsSold, safeText(inc.name), incQty * qty);
+            }
+
+            // C) Hamburguesas dentro del combo
+            if (choices.length) {
+              for (const ch of choices) {
+                const burgerName = cleanBurgerName(ch?.burger?.name || ch?.burger?.title || ch?.name || '');
+                if (burgerName) addCount(productsSold, burgerName, qty);
+                const extraFries = friesNameFromFriesObject(ch?.fries);
+                if (extraFries) {
+                  if (!(friesDisplay && normText(extraFries) === normText(friesDisplay))) {
+                    addCount(productsSold, extraFries, qty);
+                  }
+                }
+              }
+            } else {
+              const burgersInCombo = parseBurgersFromCustomizations(itemText);
+              if (burgersInCombo.length) {
+                for (const b of burgersInCombo) {
+                  const burgerName = cleanBurgerName(b);
+                  if (!burgerName) continue;
+                  addCount(productsSold, burgerName, qty);
+                }
+              }
+            }
+
+            // D) Hotdogs dentro del combo
+            const hotdogs = Array.isArray(item.hotdogs) ? item.hotdogs : [];
+            if (hotdogs.length) {
+              for (const hd of hotdogs) {
+                const hotdogName = safeText(hd?.hotdog?.name || hd?.hotdog?.title || hd?.name || '').trim();
+                if (hotdogName) addCount(productsSold, hotdogName, qty);
+                const extraFries = friesNameFromFriesObject(hd?.fries);
+                if (extraFries) addCount(productsSold, extraFries, qty);
+              }
+            } else {
+              const hotdogsInCombo = parseHotdogsFromCustomizations(itemText);
+              if (hotdogsInCombo.length) {
+                for (const h of hotdogsInCombo) {
+                  addCount(productsSold, h, qty);
+                }
+              }
+            }
+
+            continue;
+          }
+
+          // 2) Boneless
+          if (isBonelessItem(itemName) || isBonelessItem(itemText)) {
+            const grams = parsePortionGrams(itemText) || parsePortionGrams(itemName);
+            addCount(productsSold, grams ? `Boneless ${grams}g` : 'Boneless', qty);
+
+            if (grams) {
+              let friesSize = null;
+              if (grams >= 900) friesSize = 'Extragrandes';
+              else if (grams >= 450) friesSize = 'Medianas';
+              else if (grams >= 200) friesSize = 'Complemento';
+              if (friesSize) addCount(productsSold, `Papas ${friesSize}`, qty);
+            }
+            continue;
+          }
+
+          // 3) Papas como item
+          if (isFriesItem(itemName)) {
+            const size = classifyFriesSize(itemName) || classifyFriesSize(itemText) || 'Sin tamaño';
+            addCount(productsSold, normalizeFriesDisplayName(`Papas ${size}`) || itemName, qty);
+            continue;
+          }
+
+          // 4) Hamburguesas como item
+          if (isBurgerItem(itemName)) {
+            const display = itemName.trim() || 'Hamburguesa';
+            addCount(productsSold, display, qty);
+
+            const friesFromObj = friesNameFromFriesObject(item.fries);
+            if (friesFromObj) {
+              addCount(productsSold, friesFromObj, qty);
+            }
+            if (item.freeFriesIncluded) {
+              addCount(productsSold, 'Papas Complemento', qty);
+            }
+            if (!friesFromObj && !item.freeFriesIncluded) {
+              const t = normText(itemText);
+              if (t.includes('papas') && !t.includes('sin papas')) {
+                const explicit = classifyFriesSize(itemText);
+                addCount(productsSold, `Papas ${(explicit || 'Complemento')}`, qty);
+              }
+            }
+            continue;
+          }
+
+          // 4.5) Hotdogs como item
+          if (isHotdogItem(itemName) || isHotdogItem(itemText)) {
+            const display = itemName.trim() || 'Hotdog';
+            addCount(productsSold, display, qty);
+
+            const friesFromObj = friesNameFromFriesObject(item.fries);
+            if (friesFromObj) {
+              addCount(productsSold, friesFromObj, qty);
+            }
+            if (item.freeFriesIncluded) {
+              addCount(productsSold, 'Papas Complemento', qty);
+            }
+            if (!friesFromObj && !item.freeFriesIncluded) {
+              const t = normText(itemText);
+              if (t.includes('papas') && !t.includes('sin papas')) {
+                const explicit = classifyFriesSize(itemText);
+                addCount(productsSold, `Papas ${(explicit || 'Complemento')}`, qty);
+              }
+            }
+            continue;
+          }
+
+          // 5) Otros items: si mencionan papas con tamaño explícito
+          const maybeFries = classifyFriesSize(itemText);
+          if (maybeFries && normText(itemText).includes('papas')) {
+            addCount(productsSold, `Papas ${maybeFries}`, qty);
+          }
+        }
+      }
+
+      return { totalOrders, productsSold };
+    }
+
+    // ------------------------
+    // Cálculo de insumos gastados
+    // ------------------------
+    function computeIngredientsUsed(productsSold, nameToId, recipes, ingIndex) {
+      const totals = new Map();
+      const missing = {};
+
+      const entries = Object.entries(productsSold || {});
+      for (const [prodName, prodQty] of entries) {
+        const qtySold = Number(prodQty || 0);
+        if (!Number.isFinite(qtySold) || qtySold <= 0) continue;
+
+        const pid = nameToId.get(normText(prodName));
+        if (!pid) {
+          addCount(missing, prodName, qtySold);
+          continue;
+        }
+
+        const recipe = recipes ? recipes[String(pid)] : null;
+        const lines = Array.isArray(recipe?.ingredients) ? recipe.ingredients : [];
+        if (!lines.length) {
+          addCount(missing, prodName, qtySold);
+          continue;
+        }
+
+        for (const ln of lines) {
+          if (!ln) continue;
+          const perProd = Number(ln.qty ?? ln.quantity ?? 0);
+          if (!Number.isFinite(perProd) || perProd <= 0) continue;
+
+          const ingId = safeText(ln.ingredientId || '').trim() || null;
+          const ingById = ingId ? ingIndex.byId.get(ingId) : null;
+          const ingByName = (!ingById && ln.name) ? ingIndex.byName.get(normText(ln.name)) : null;
+          const ing = ingById || ingByName || null;
+
+          const displayName = safeText(ing?.name || ln.name || 'Ingrediente').trim() || 'Ingrediente';
+          const unit = safeText(ln.unit || ing?.unit || '').trim();
+          const totalQty = perProd * qtySold;
+
+          const key = ingId ? `id:${ingId}` : `name:${normText(displayName)}`;
+          const prev = totals.get(key);
+          if (prev) {
+            prev.qty += totalQty;
+          } else {
+            totals.set(key, { name: displayName, unit, qty: totalQty });
+          }
+        }
+      }
+
+      // Convertir a map simple para render (manteniendo unidad)
+      const byDisplay = {};
+      const list = Array.from(totals.values()).sort((a, b) => (b.qty || 0) - (a.qty || 0));
+      list.forEach((r) => {
+        const label = r.unit ? `${r.name} (${r.unit})` : r.name;
+        byDisplay[label] = r.qty;
+      });
+
+      return { ingredientsMap: byDisplay, missingProductsMap: missing };
+    }
+
+    // ------------------------
+    // Render
+    // ------------------------
+    function render() {
+      const filtered = filterOrders(allHistoryOrders);
+      const empty = document.getElementById('empty');
+      const summary = document.getElementById('summary');
+
+      if (!filtered.length) {
+        summary.classList.add('hidden');
+        empty.classList.remove('hidden');
+
+        document.getElementById('ingredients-table').innerHTML = '';
+        document.getElementById('missing-table').innerHTML = '';
+        document.getElementById('products-table').innerHTML = '';
+        return;
+      }
+
+      summary.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      const out = aggregateProductsSold(filtered);
+      const settings = firebaseSettings || {};
+      const nameToId = buildProductNameToIdIndex(settings);
+      const ingIndex = buildIngredientIndex(ingredientsCatalog);
+      const usage = computeIngredientsUsed(out.productsSold, nameToId, productsRecipes, ingIndex);
+
+      const ingredientCount = Object.keys(usage.ingredientsMap || {}).length;
+      const missingCount = Object.keys(usage.missingProductsMap || {}).length;
+
+      document.getElementById('sum-orders').textContent = String(out.totalOrders || 0);
+      document.getElementById('sum-products').textContent = String(Object.keys(out.productsSold || {}).length || 0);
+      document.getElementById('sum-ingredients').textContent = String(ingredientCount || 0);
+      document.getElementById('sum-missing').textContent = String(missingCount || 0);
+
+      document.getElementById('ingredients-count').textContent = `${ingredientCount} ingredientes`;
+      document.getElementById('missing-count').textContent = `${missingCount} productos`;
+      document.getElementById('products-count').textContent = `${Object.keys(out.productsSold || {}).length} productos`;
+
+      document.getElementById('ingredients-table').innerHTML = formatTable(usage.ingredientsMap, { suffix: '' });
+      document.getElementById('missing-table').innerHTML = formatTable(usage.missingProductsMap, { suffix: '' });
+      document.getElementById('products-table').innerHTML = formatTable(out.productsSold, { suffix: '' });
+    }
+
+    function setTimeFilter(next) {
+      currentTimeFilter = next || 'all';
+      selectedDate = null;
+      rangeStart = null;
+      rangeEnd = null;
+
+      const dateInput = document.getElementById('date-filter');
+      if (dateInput) dateInput.value = '';
+      const rs = document.getElementById('range-start');
+      const re = document.getElementById('range-end');
+      if (rs) rs.value = '';
+      if (re) re.value = '';
+
+      ['all', 'day', 'week', 'month'].forEach((k) => {
+        const btn = document.getElementById(`filter-${k}`);
+        if (!btn) return;
+        if (k === currentTimeFilter) {
+          btn.classList.add('bg-sky-500', 'text-slate-950', 'border-sky-500');
+          btn.classList.remove('bg-slate-900', 'text-sky-100', 'border-slate-700');
+        } else {
+          btn.classList.remove('bg-sky-500', 'text-slate-950', 'border-sky-500');
+          btn.classList.add('bg-slate-900', 'text-sky-100', 'border-slate-700');
+        }
+      });
+
+      render();
+    }
+
+    function onDateFilterChange(value) {
+      rangeStart = null;
+      rangeEnd = null;
+      const rs = document.getElementById('range-start');
+      const re = document.getElementById('range-end');
+      if (rs) rs.value = '';
+      if (re) re.value = '';
+
+      if (!value) {
+        selectedDate = null;
+        render();
+        return;
+      }
+      const d = new Date(value + 'T00:00:00');
+      selectedDate = isNaN(d.getTime()) ? null : d;
+      render();
+    }
+
+    function clearDateFilter() {
+      selectedDate = null;
+      const dateInput = document.getElementById('date-filter');
+      if (dateInput) dateInput.value = '';
+      render();
+    }
+
+    function onRangeChange() {
+      selectedDate = null;
+      const dateInput = document.getElementById('date-filter');
+      if (dateInput) dateInput.value = '';
+
+      const rs = document.getElementById('range-start')?.value || '';
+      const re = document.getElementById('range-end')?.value || '';
+
+      if (!rs || !re) {
+        rangeStart = null;
+        rangeEnd = null;
+        render();
+        return;
+      }
+
+      const d1 = new Date(rs + 'T00:00:00');
+      const d2 = new Date(re + 'T00:00:00');
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
+        rangeStart = null;
+        rangeEnd = null;
+        render();
+        return;
+      }
+
+      // normalizar orden
+      rangeStart = d1 <= d2 ? d1 : d2;
+      rangeEnd = d1 <= d2 ? d2 : d1;
+      render();
+    }
+
+    function clearRangeFilter() {
+      rangeStart = null;
+      rangeEnd = null;
+      const rs = document.getElementById('range-start');
+      const re = document.getElementById('range-end');
+      if (rs) rs.value = '';
+      if (re) re.value = '';
+      render();
+    }
+
+    async function loadSettings() {
+      // Preferir Firebase settings; fallback a localStorage si hiciera falta.
+      try {
+        if (window.firebaseManager && typeof window.firebaseManager.getSettings === 'function') {
+          firebaseSettings = await window.firebaseManager.getSettings();
+          productsRecipes = (firebaseSettings && firebaseSettings.productsRecipes) || {};
+          ingredientsCatalog = (firebaseSettings && firebaseSettings.ingredientsCatalog) || [];
+        }
+      } catch (e) {
+        console.warn('⚠️ No se pudieron cargar settings de Firebase:', e);
+      }
+
+      // Fallback a localStorage de ingredientes
+      if (!Array.isArray(ingredientsCatalog) || !ingredientsCatalog.length) {
+        try {
+          const raw = localStorage.getItem('sr_ingredients_v1');
+          const parsed = raw ? JSON.parse(raw) : null;
+          if (Array.isArray(parsed)) ingredientsCatalog = parsed;
+        } catch (_) {}
+      }
+
+      // productsRecipes normalmente viven en Firebase settings
+      if (!productsRecipes || typeof productsRecipes !== 'object') {
+        productsRecipes = {};
+      }
+    }
+
+    function start() {
+      loadComboConfigurations();
+
+      document.getElementById('filter-all').addEventListener('click', () => setTimeFilter('all'));
+      document.getElementById('filter-day').addEventListener('click', () => setTimeFilter('day'));
+      document.getElementById('filter-week').addEventListener('click', () => setTimeFilter('week'));
+      document.getElementById('filter-month').addEventListener('click', () => setTimeFilter('month'));
+
+      document.getElementById('date-filter').addEventListener('change', (e) => onDateFilterChange(e.target.value));
+      document.getElementById('clear-date').addEventListener('click', () => clearDateFilter());
+
+      const rs = document.getElementById('range-start');
+      const re = document.getElementById('range-end');
+      if (rs) rs.addEventListener('change', onRangeChange);
+      if (re) re.addEventListener('change', onRangeChange);
+      const clearRangeBtn = document.getElementById('clear-range');
+      if (clearRangeBtn) clearRangeBtn.addEventListener('click', clearRangeFilter);
+
+      setTimeFilter('all');
+      setBanner('Conectando a Firebase...', 'info');
+
+      let deliveredFromOrders = [];
+      let historyFromHistoryCollection = [];
+
+      function mergeAndRender() {
+        const byId = new Map();
+        (historyFromHistoryCollection || []).forEach((o) => {
+          const key = String(o?.id || o?.originalOrderId || o?.orderNumber || JSON.stringify(o)).slice(0, 200);
+          byId.set(key, o);
+        });
+        (deliveredFromOrders || []).forEach((o) => {
+          const key = String(o?.id || o?.originalOrderId || o?.orderNumber || JSON.stringify(o)).slice(0, 200);
+          if (!byId.has(key)) byId.set(key, o);
+        });
+        allHistoryOrders = Array.from(byId.values());
+
+        const msgParts = [];
+        msgParts.push(`Orders(entregados): ${deliveredFromOrders.length}`);
+        msgParts.push(`Historial(orders_history): ${historyFromHistoryCollection.length}`);
+        msgParts.push(`Total usado: ${allHistoryOrders.length}`);
+        setBanner(`Cargado. ${msgParts.join(' | ')}`, 'success');
+        render();
+      }
+
+      const tryConnect = async () => {
+        if (!window.firebaseOrderManager) return false;
+
+        // Settings
+        if (!firebaseSettings && window.firebaseManager) {
+          await loadSettings();
+        }
+
+        // Si cambian settings, refrescar cache
+        if (window.firebaseManager && typeof window.firebaseManager.listenToSettings === 'function') {
+          try {
+            // Solo una vez
+            if (!window.__sr_insumos_listening_settings) {
+              window.__sr_insumos_listening_settings = true;
+              window.firebaseManager.listenToSettings((s) => {
+                firebaseSettings = s || {};
+                productsRecipes = (firebaseSettings && firebaseSettings.productsRecipes) || {};
+                ingredientsCatalog = (firebaseSettings && firebaseSettings.ingredientsCatalog) || ingredientsCatalog || [];
+                render();
+              });
+            }
+          } catch (_) {}
+        }
+
+        if (typeof window.firebaseOrderManager.onOrdersChange === 'function' && !unsubscribeOrders) {
+          unsubscribeOrders = window.firebaseOrderManager.onOrdersChange((orders) => {
+            deliveredFromOrders = (Array.isArray(orders) ? orders : []).filter(o => String(o?.status || '').toLowerCase() === 'delivered');
+            mergeAndRender();
+          });
+        }
+
+        if (typeof window.firebaseOrderManager.onHistoryOrdersChange === 'function' && !unsubscribeHistory) {
+          unsubscribeHistory = window.firebaseOrderManager.onHistoryOrdersChange((orders) => {
+            historyFromHistoryCollection = Array.isArray(orders) ? orders : [];
+            mergeAndRender();
+          });
+        }
+
+        return Boolean(unsubscribeOrders || unsubscribeHistory);
+      };
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts += 1;
+        Promise.resolve(tryConnect()).then((ok) => {
+          if (ok) {
+            clearInterval(timer);
+            return;
+          }
+          if (attempts >= 50) {
+            clearInterval(timer);
+            setBanner('No se pudo iniciar Firebase. Abre esta página desde el servidor (npm start) y verifica tu internet.', 'error');
+          }
+        });
+      }, 150);
+
+      window.addEventListener('beforeunload', () => {
+        if (unsubscribeOrders) {
+          try { unsubscribeOrders(); } catch (_) {}
+        }
+        if (unsubscribeHistory) {
+          try { unsubscribeHistory(); } catch (_) {}
+        }
+      });
+    }
+
+    start();
+  </script>
+</body>
+</html>

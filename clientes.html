@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes (Manual) - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
+
+  <!-- Firebase (para que los clientes se vean en todos los dispositivos) -->
+  <script type="module" src="js/firebase-config.js"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-user-plus text-slate-900"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="font-bold text-lg truncate">Clientes (Manual)</div>
+          <div id="storage-mode" class="text-xs text-slate-400 truncate">Cargando…</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs flex-shrink-0">
+        <a href="pedido-manual.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+          <i class="fas fa-receipt"></i>
+          <span>Pedido manual</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-black flex items-center gap-2">
+            <i class="fas fa-address-book text-yellow-400"></i>
+            Clientes guardados
+          </h1>
+          <p class="text-xs text-slate-400">Se guardan en Firebase (y se cachean localmente). No requieren sesión.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="export-btn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold flex items-center gap-2">
+            <i class="fas fa-file-export"></i>
+            Exportar
+          </button>
+          <label class="px-3 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 text-xs font-semibold flex items-center gap-2 cursor-pointer">
+            <i class="fas fa-file-import"></i>
+            Importar
+            <input id="import-file" type="file" accept="application/json" class="hidden" />
+          </label>
+          <button id="clear-all-btn" class="px-3 py-2 rounded-xl bg-red-600/80 hover:bg-red-600 text-xs font-semibold flex items-center gap-2">
+            <i class="fas fa-trash"></i>
+            Vaciar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="font-extrabold text-lg flex items-center gap-2">
+            <i class="fas fa-file-circle-plus text-purple-400"></i>
+            Importar lista (CSV)
+          </h2>
+          <p class="text-xs text-slate-400">Pega líneas con formato: Nombre,Teléfono,Dirección. Teléfono puede ir vacío/"No disponible".</p>
+        </div>
+        <button id="bulk-import-btn" class="px-3 py-2 rounded-xl bg-purple-600/80 hover:bg-purple-600 text-xs font-bold flex items-center gap-2">
+          <i class="fas fa-cloud-arrow-up"></i>
+          Subir a Firebase
+        </button>
+      </div>
+
+      <div class="mt-3 grid grid-cols-1 gap-3">
+        <textarea id="bulk-import-text" rows="10" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-xs whitespace-pre" placeholder="Nombre,Teléfono,Dirección">Nombre,Número,Dirección
+Alan montoya,9222076329,Atrás de Teresita
+Alan Montoya,No disponible,No disponible
+ana zachiel,9222034590,No disponible
+angie,9221597301,centro
+Arcángel,No disponible,No disponible
+Casa Rosa Tiendita,No disponible,Enfrente de emiliano zapata escuela
+CENDI,desconocido,desconocido
+charly,9221192201,Ordaz
+Claudia,9222053732,Calle quintanarro colonia emiliano zapata
+Colonia Calle california,9221286098,Colonia calle california
+consuegro,No disponible,No disponible
+cristal,9221400629,Gimnasio santa clara
+Cristy Vinales,228 288 9858,Sor Juana Inés de la Cruz #8 col obrera
+Daniel ortiz,9214096329,Congreso
+Dany,9221124362,guadalupe victoria #27 col. congreso
+denis vazques,9222822876,casa madera
+Denise,9222822876,Calle tecnologico casa madera
+Diana,No disponible,emilianozaaa
+Didi,9222831642,Desconocida
+Fany,9221306105,Desconocida
+Gabriela Cortez,9221569358,Congreso
+Gerard,No disponible,colonia 20 de noviembre
+Gladys Casa Rosa,9222271093,desconocida
+gloria cabrera,No disponible,No disponible
+Hermano mimi,desconocido,desconocido
+Hernesto Martinez,9221633150,Desconocida
+ISRAEL UNI,DESCONOCIDO,DESCONOCIDO
+JAIME,9221579492,Talcualoya
+Jeronimo,9221585606,Desconocida
+joelito malom,111111111,casa
+Karim,9221928934,Petrolera
+kris cambrany,922 104 0382,José María Bocanegra #39 col. Congreso
+LIA BRIGTH,923776600,Congreso
+Liz Mendez,9331579589,San antonio
+Lupita Mamá,9221911075,casa
+machape,9221854701,machapapa
+mad,922 121 0072,Colonia méxico
+Maribel Vecina,9221281283,Coahuila 31
+Miguel Pimentel,5638430441,Desconocido
+Mimi,9221637737,Coahuila 34
+Monica,922 174 4271,santa clara
+MotelRoyal,2941540814,No disponible
+Nicole,No disponible,Casa
+Pablo Verazas,9221140524,Desconocida
+paul,9221745327,centro
+pollero,9221657362,desconocido
+Reyes azteca,No disponible,Reyez Azteca
+Ricardos Guasti,9711506565,97 agustin melgar
+Rios,922 105 2004,Val paraiso enfrente de la judicial
+ruben ortiz,922 122 1810,cartonera insurgentes norte
+SADIN SPA,9222119184,Petrolera
+Sergio,9214308785,Playon Sur
+Simon,922 121 1457,Bixiweb
+SY,9221135326,CONGRESO
+Tienda Esquina,9221751654,Colonia 10 de mayo
+TONY DIVA,9613612532,nueva tacoteno
+uriel,9222108294,coahuila 36
+Viridiana Maciel,9221569521,Desconocida
+YOSHUA,desconocido,desconocido
+Yuri,9221253602,desconocido</textarea>
+        <div id="bulk-import-status" class="text-xs text-slate-400"></div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+        <h2 class="font-extrabold text-lg mb-3 flex items-center gap-2">
+          <i class="fas fa-circle-plus text-emerald-400"></i>
+          Agregar / editar
+        </h2>
+
+        <form id="customer-form" class="space-y-3">
+          <input type="hidden" id="customer-id" />
+
+          <div>
+            <label class="text-xs text-slate-300">Nombre</label>
+            <input id="customer-name" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Nombre completo" />
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-300">Teléfono</label>
+            <input id="customer-phone" type="tel" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="922 123 4567" />
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-300">Dirección</label>
+            <textarea id="customer-address" rows="3" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Calle, número, colonia, referencias..."></textarea>
+          </div>
+
+          <div id="form-error" class="text-xs text-red-300 hidden"></div>
+
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-extrabold flex items-center justify-center gap-2">
+              <i class="fas fa-save"></i>
+              Guardar
+            </button>
+            <button type="button" id="reset-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-50 font-semibold">
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <h2 class="font-extrabold text-lg flex items-center gap-2">
+            <i class="fas fa-list text-blue-400"></i>
+            Lista
+          </h2>
+          <div class="relative w-64 max-w-full">
+            <i class="fas fa-search text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="search" type="text" class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm" placeholder="Buscar por nombre o teléfono" />
+          </div>
+        </div>
+
+        <div id="customers-empty" class="text-sm text-slate-400 py-8 text-center">Aún no hay clientes guardados.</div>
+        <div id="customers-list" class="space-y-2"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'sr_manual_customers';
+
+    async function waitForFirebaseManualCustomers(timeoutMs = 6000) {
+      const started = Date.now();
+      while (Date.now() - started < timeoutMs) {
+        if (window.firebaseManualCustomerManager) return window.firebaseManualCustomerManager;
+        await new Promise(r => setTimeout(r, 50));
+      }
+      return null;
+    }
+
+    function setStorageModeLabel(text, ok) {
+      const el = document.getElementById('storage-mode');
+      if (!el) return;
+      el.textContent = text;
+      el.className = `text-xs truncate ${ok ? 'text-emerald-400' : 'text-slate-400'}`;
+    }
+
+    async function syncFromFirebase({ silent = false } = {}) {
+      const mgr = await waitForFirebaseManualCustomers();
+      if (!mgr) {
+        if (!silent) setStorageModeLabel('Modo local (sin Firebase)', false);
+        return null;
+      }
+      try {
+        const list = await mgr.getCustomers({ limitCount: 500 });
+        const mapped = (Array.isArray(list) ? list : []).map(c => ({
+          id: c.id,
+          name: c.name || '',
+          phone: c.phone || (c.phoneDigits || ''),
+          phoneDigits: c.phoneDigits || String(c.phone || '').replace(/\D/g, ''),
+          address: c.address || ''
+        }));
+        saveCustomers(mapped);
+        if (!silent) setStorageModeLabel('Guardando en Firebase ✓', true);
+        return mapped;
+      } catch (e) {
+        console.warn('No se pudo sincronizar desde Firebase:', e);
+        if (!silent) setStorageModeLabel('Firebase sin acceso (usando cache local)', false);
+        return null;
+      }
+    }
+
+    function loadCustomers() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveCustomers(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function normalizePhone(phone) {
+      return String(phone || '').replace(/\D/g, '');
+    }
+
+    function isUnavailable(value) {
+      const v = String(value || '').trim().toLowerCase();
+      return !v || v === 'no disponible' || v === 'desconocido' || v === 'desconocida' || v === 'n/a' || v === 'na' || v === 'null';
+    }
+
+    function sortCustomers(list) {
+      return [...list].sort((a, b) => {
+        const an = String(a.name || '').toLowerCase();
+        const bn = String(b.name || '').toLowerCase();
+        if (an < bn) return -1;
+        if (an > bn) return 1;
+        return String(a.phone || '').localeCompare(String(b.phone || ''));
+      });
+    }
+
+    const form = document.getElementById('customer-form');
+    const idEl = document.getElementById('customer-id');
+    const nameEl = document.getElementById('customer-name');
+    const phoneEl = document.getElementById('customer-phone');
+    const addressEl = document.getElementById('customer-address');
+    const errorEl = document.getElementById('form-error');
+
+    const listEl = document.getElementById('customers-list');
+    const emptyEl = document.getElementById('customers-empty');
+    const searchEl = document.getElementById('search');
+
+    function setFormError(msg) {
+      if (!msg) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+      } else {
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function resetForm() {
+      idEl.value = '';
+      nameEl.value = '';
+      phoneEl.value = '';
+      addressEl.value = '';
+      setFormError('');
+      nameEl.focus();
+    }
+
+    function render() {
+      const q = String(searchEl.value || '').trim().toLowerCase();
+      const customers = sortCustomers(loadCustomers());
+      const filtered = customers.filter(c => {
+        const n = String(c.name || '').toLowerCase();
+        const p = String(c.phone || '');
+        return !q || n.includes(q) || p.includes(normalizePhone(q));
+      });
+
+      listEl.innerHTML = '';
+      emptyEl.classList.toggle('hidden', filtered.length > 0);
+
+      filtered.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'p-3 rounded-2xl border border-slate-800 bg-slate-950/40';
+
+        const top = document.createElement('div');
+        top.className = 'flex items-start justify-between gap-3';
+
+        const info = document.createElement('div');
+        info.className = 'min-w-0';
+        info.innerHTML = `
+          <div class="font-bold truncate">${escapeHtml(c.name || '(Sin nombre)')}</div>
+          <div class="text-xs text-slate-400">${escapeHtml(c.phone || '')}</div>
+          <div class="text-xs text-slate-300 mt-1 whitespace-pre-wrap">${escapeHtml(c.address || '')}</div>
+        `;
+
+        const actions = document.createElement('div');
+        actions.className = 'flex items-center gap-2 flex-shrink-0';
+        actions.innerHTML = `
+          <button class="edit px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold"><i class="fas fa-pen"></i></button>
+          <button class="del px-3 py-1.5 rounded-xl bg-red-600/80 hover:bg-red-600 text-xs font-semibold"><i class="fas fa-trash"></i></button>
+        `;
+
+        actions.querySelector('.edit').addEventListener('click', () => {
+          idEl.value = c.id;
+          nameEl.value = c.name || '';
+          phoneEl.value = c.phone || '';
+          addressEl.value = c.address || '';
+          setFormError('');
+          nameEl.focus();
+        });
+
+        actions.querySelector('.del').addEventListener('click', () => {
+          if (!confirm('¿Eliminar este cliente?')) return;
+          (async () => {
+            const mgr = await waitForFirebaseManualCustomers();
+            if (mgr) {
+              try {
+                await mgr.deleteCustomer(c.id);
+              } catch (e) {
+                console.warn('No se pudo eliminar en Firebase:', e);
+                alert('No se pudo eliminar en Firebase. Verifica internet/reglas.');
+                return;
+              }
+            }
+
+            const next = loadCustomers().filter(x => String(x.id) !== String(c.id));
+            saveCustomers(next);
+            render();
+          })();
+        });
+
+        top.appendChild(info);
+        top.appendChild(actions);
+        card.appendChild(top);
+        listEl.appendChild(card);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = String(nameEl.value || '').trim();
+      const phoneRaw = String(phoneEl.value || '').trim();
+      const phone = normalizePhone(phoneRaw);
+      const address = String(addressEl.value || '').trim();
+
+      if (!name) return setFormError('El nombre es obligatorio.');
+      if (phone && phone.length > 0 && phone.length < 8) return setFormError('El teléfono debe tener al menos 8 dígitos (o déjalo vacío).');
+      if (!address) return setFormError('La dirección es obligatoria.');
+
+      const list = loadCustomers();
+      const now = Date.now();
+      const editingId = idEl.value ? String(idEl.value) : '';
+
+      // Duplicado por teléfono
+      if (!editingId && phone) {
+        const exists = list.some(c => normalizePhone(c.phone) === phone);
+        if (exists) {
+          if (!confirm('Ya existe un cliente con ese teléfono. ¿Quieres reemplazarlo?')) return;
+        }
+      }
+
+      (async () => {
+        const mgr = await waitForFirebaseManualCustomers();
+        let finalId = editingId || (phone ? `p_${encodeURIComponent(phone)}` : `n_${encodeURIComponent(name)}_${Date.now()}`);
+
+        if (mgr) {
+          try {
+            const res = await mgr.upsertCustomer({
+              id: editingId || undefined,
+              name,
+              phone: phoneRaw,
+              address
+            });
+            if (res && res.id) finalId = res.id;
+          } catch (e) {
+            console.warn('No se pudo guardar en Firebase:', e);
+            alert('No se pudo guardar en Firebase. Se guardará solo en este dispositivo.');
+          }
+        }
+
+        // Cache local (para que cargue rápido y funcione offline)
+        const next = list
+          .filter(c => String(c.id) !== String(finalId))
+          .filter(c => !phone || normalizePhone(c.phone) !== phone || String(c.id) === String(finalId));
+
+        next.push({ id: finalId, name, phone: phone ? phoneRaw : '', phoneDigits: phone || '', address, updatedAt: now });
+        saveCustomers(next);
+
+        if (mgr) await syncFromFirebase({ silent: true });
+
+        resetForm();
+        render();
+      })();
+    });
+
+    // Bulk import CSV/text
+    const bulkBtn = document.getElementById('bulk-import-btn');
+    const bulkText = document.getElementById('bulk-import-text');
+    const bulkStatus = document.getElementById('bulk-import-status');
+
+    function setBulkStatus(msg, ok) {
+      if (!bulkStatus) return;
+      bulkStatus.textContent = msg || '';
+      bulkStatus.className = `text-xs ${ok ? 'text-emerald-400' : 'text-slate-400'}`;
+    }
+
+    if (bulkBtn && bulkText) {
+      bulkBtn.addEventListener('click', async () => {
+        const mgr = await waitForFirebaseManualCustomers();
+        if (!mgr) {
+          alert('Firebase no está disponible. Verifica conexión/reglas.');
+          return;
+        }
+
+        const raw = String(bulkText.value || '');
+        const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        if (!lines.length) return;
+
+        // Skip header
+        const startIndex = (lines[0].toLowerCase().includes('nombre') && lines[0].includes(',')) ? 1 : 0;
+        let okCount = 0;
+        let failCount = 0;
+        let noAddressCount = 0;
+
+        const unquote = (val) => {
+          const s = String(val || '').trim();
+          if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+            return s.slice(1, -1).trim();
+          }
+          return s;
+        };
+
+        setBulkStatus('Subiendo a Firebase…', false);
+        bulkBtn.disabled = true;
+
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i];
+          const parts = line.split(',');
+          const name = unquote(parts[0]);
+          const phoneRaw = unquote(parts[1]);
+          const address = unquote(parts.slice(2).join(','));
+
+          const phone = isUnavailable(phoneRaw) ? '' : phoneRaw;
+          const addr = isUnavailable(address) ? '' : address;
+
+          if (!name) { failCount++; continue; }
+          if (!addr) noAddressCount++;
+
+          try {
+            await mgr.upsertCustomer({ name, phone, address: addr });
+            okCount++;
+            if ((okCount + failCount) % 10 === 0) {
+              setBulkStatus(`Subiendo… OK: ${okCount} / Fallas: ${failCount} / Sin dirección: ${noAddressCount}`, false);
+            }
+          } catch (e) {
+            console.warn('Bulk import error:', line, e);
+            failCount++;
+          }
+        }
+
+        await syncFromFirebase({ silent: true });
+        render();
+        bulkBtn.disabled = false;
+        setBulkStatus(`Listo. Guardados: ${okCount}. Fallas: ${failCount}. Sin dirección: ${noAddressCount}.`, true);
+        alert(`Importación lista. Guardados: ${okCount}. Fallas: ${failCount}. Sin dirección: ${noAddressCount}.`);
+      });
+    }
+
+    document.getElementById('reset-btn').addEventListener('click', resetForm);
+    searchEl.addEventListener('input', render);
+
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const data = loadCustomers();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clientes-manual-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('import-file').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed)) throw new Error('Formato inválido');
+
+        const merged = loadCustomers();
+        const mgr = await waitForFirebaseManualCustomers();
+        parsed.forEach(c => {
+          const id = String(c.id || Date.now() + Math.random());
+          const name = String(c.name || '').trim();
+          const phoneRaw = String(c.phone || '').trim();
+          const phoneDigits = normalizePhone(phoneRaw);
+          const address = String(c.address || '').trim();
+          if (!name || !phoneDigits || phoneDigits.length < 8 || !address) return;
+
+          const existsByPhone = merged.some(x => normalizePhone(x.phone) === phoneDigits);
+          if (existsByPhone) return;
+          merged.push({ id, name, phone: phoneRaw, phoneDigits, address, updatedAt: Date.now() });
+        });
+
+        saveCustomers(merged);
+        if (mgr) {
+          // Subir/actualizar en Firebase
+          for (const c of merged) {
+            try {
+              await mgr.upsertCustomer({ id: c.id, name: c.name, phone: c.phone, address: c.address });
+            } catch (err) {
+              console.warn('Import: no se pudo subir un cliente:', err);
+            }
+          }
+          await syncFromFirebase({ silent: true });
+        }
+        render();
+        alert('Importación completada.');
+      } catch (err) {
+        alert('No se pudo importar. Asegúrate de subir un JSON válido.');
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    document.getElementById('clear-all-btn').addEventListener('click', () => {
+      if (!confirm('¿Vaciar todos los clientes (Firebase y este dispositivo)?')) return;
+      (async () => {
+        const current = loadCustomers();
+        const mgr = await waitForFirebaseManualCustomers();
+        if (mgr) {
+          for (const c of current) {
+            try {
+              await mgr.deleteCustomer(c.id);
+            } catch (e) {
+              console.warn('Clear: no se pudo borrar en Firebase:', e);
+            }
+          }
+        }
+        saveCustomers([]);
+        render();
+        resetForm();
+      })();
+    });
+
+    // Render inmediato desde cache y luego sincroniza Firebase
+    render();
+    resetForm();
+    syncFromFirebase({ silent: false }).then(() => render());
+  </script>
+</body>
+</html>

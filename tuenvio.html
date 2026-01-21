@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="sr-dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/sr-ui.css">
 </head>
 <body class="bg-gradient-to-b from-white to-gray-50 min-h-screen">
   <header class="bg-white shadow-sm">
@@ -233,7 +232,7 @@
 
       // Acciones
       const msg = encodeURIComponent(`Hola, mi número de orden es ${order.orderNumber}. ¿Podrían confirmarme el estado?`);
-      const phone = (order.customer?.phone || '').replace(/\D/g, '') || '5219221593688';
+      const phone = '5219221593688';
       const wa = `https://wa.me/${phone}?text=${msg}`;
       const waBtn = document.getElementById('wa-btn');
       if (waBtn) waBtn.href = wa;

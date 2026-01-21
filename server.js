@@ -1,5 +1,4 @@
-// Simple local server with Twilio order endpoint for local development
-// Usage: put your .env in project root with TWILIO_* and OWNER_PHONE
+// Simple local server for local development
 // Run: npm install; npm start (serves http://localhost:3000)
 
 const nodePath = require('path');
@@ -9,11 +8,15 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const firebaseAdmin = require('firebase-admin');
 
-dotenv.config();
+// Cargar siempre el .env del directorio del proyecto (evita fallos si se ejecuta desde otra ruta)
+dotenv.config({ path: nodePath.join(__dirname, '.env') });
 
 const app = express();
 const DEFAULT_PORT = Number(process.env.PORT) || 3000;
-const TWILIO_MOCK = String(process.env.TWILIO_MOCK || '').toLowerCase() === '1' || String(process.env.TWILIO_MOCK || '').toLowerCase() === 'true';
+const MP_ACCESS_TOKEN = (process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim();
+const MP_PUBLIC_KEY = (process.env.MP_PUBLIC_KEY || process.env.MERCADOPAGO_PUBLIC_KEY || '').trim();
+const MP_USER_ID = (process.env.MP_USER_ID || '').trim();
+const MP_APP_ID = (process.env.MP_APP_ID || '').trim();
 
 let _firebaseAdminApp = null;
 
@@ -93,15 +96,6 @@ app.get('/', (req, res) => {
   }
   res.status(404).send('No se encontró paginaburger.html o index.html');
 });
-
-// Twilio client setup (lazily required only when needed)
-function getTwilioClient() {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
-  if (TWILIO_MOCK) return null;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return null;
-  const twilio = require('twilio');
-  return twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-}
 
 function formatMoney(n) {
   try {
@@ -201,55 +195,6 @@ function buildOwnerMessage(body) {
   return lines.join('\n');
 }
 
-async function sendOwnerMessage(message) {
-  const client = getTwilioClient();
-  const channel = (process.env.TWILIO_CHANNEL || 'whatsapp').toLowerCase();
-  const contentSid = (process.env.TWILIO_CONTENT_SID || '').trim();
-  // Aceptar múltiples nombres de variables y normalizar (sin prefijo whatsapp:)
-  const normalize = (num) => {
-    if (!num) return '';
-    let n = String(num).trim().replace(/^whatsapp:/i, '');
-    // eliminar espacios, guiones, paréntesis y caracteres no numéricos salvo '+'
-    n = n.replace(/[^\d+]/g, '');
-    if (n.startsWith('00')) n = '+' + n.slice(2);
-    if (!n.startsWith('+') && /^\d+$/.test(n)) n = '+' + n; // forzar E.164
-    return n;
-  };
-  const from = normalize(process.env.TWILIO_FROM || process.env.TWILIO_WHATSAPP_FROM || process.env.SMS_FROM);
-  const to = normalize(process.env.OWNER_PHONE || process.env.STORE_WHATSAPP_TO || process.env.SMS_TO);
-
-  // Modo mock si falta algo o se forzó con TWILIO_MOCK
-  if (TWILIO_MOCK || !client || !from || !to) {
-    console.warn('[MOCK] Envío Twilio simulado. Configura .env para envío real.');
-    console.warn('Faltan:', { hasFrom: !!from, hasTo: !!to, hasClient: !!client });
-    console.warn('Mensaje al dueño:\n' + message);
-    return { sid: `mock-${Date.now()}`, mock: true };
-  }
-
-  const wrap = (num) => (channel === 'whatsapp' ? `whatsapp:${num}` : num);
-  try {
-    const payload = contentSid && channel === 'whatsapp'
-      ? { from: wrap(from), to: wrap(to), contentSid }
-      : { from: wrap(from), to: wrap(to), body: message };
-    console.log('[Twilio] Enviando mensaje', { channel, from: payload.from, to: payload.to, usingTemplate: !!payload.contentSid });
-    const res = await client.messages.create(payload);
-    console.log('[Twilio] Enviado OK', { sid: res.sid, status: res.status });
-    return res;
-  } catch (e) {
-    // Adjuntar detalles comunes de Twilio
-    const errInfo = {
-      message: e.message,
-      code: e.code,
-      status: e.status,
-      moreInfo: e.moreInfo,
-    };
-    console.error('[Twilio] Error al enviar', errInfo);
-    const wrapped = new Error(`Twilio error${e.code ? ' ' + e.code : ''}: ${e.message}${e.moreInfo ? ' (' + e.moreInfo + ')' : ''}`);
-    wrapped.status = e.status || 502;
-    throw wrapped;
-  }
-}
-
 async function handleSendOrder(req, res) {
   try {
     const payload = req.body || {};
@@ -258,10 +203,10 @@ async function handleSendOrder(req, res) {
       payload.orderNumber = generateOrderNumber();
     }
     const msg = buildOwnerMessage(payload);
-    const twilioRes = await sendOwnerMessage(msg);
-    res.json({ ok: true, sid: twilioRes.sid, orderNumber: payload.orderNumber });
+    console.log('[Pedido] Recibido (sin Twilio)\n' + msg);
+    res.json({ ok: true, orderNumber: payload.orderNumber });
   } catch (err) {
-    console.error('Error enviando mensaje Twilio:', err);
+    console.error('Error procesando pedido:', err);
     const status = (err.status && Number(err.status)) || 500;
     res.status(status).json({ ok: false, error: err.message || 'Error interno' });
   }
@@ -269,6 +214,183 @@ async function handleSendOrder(req, res) {
 
 app.post('/api/send-order', handleSendOrder);
 app.post('/api/send-orden', handleSendOrder);
+
+// Crear preferencia de pago en Mercado Pago para "Pago en línea"
+async function createMercadoPagoPreference(orderPayload, req) {
+  if (!MP_ACCESS_TOKEN) {
+    throw new Error('Mercado Pago no está configurado. Define MP_ACCESS_TOKEN o MERCADOPAGO_ACCESS_TOKEN en tu .env');
+  }
+
+  const totalCandidates = [
+    orderPayload && orderPayload.total,
+    orderPayload && orderPayload.totals && orderPayload.totals.total,
+  ];
+  let total = 0;
+  for (const v of totalCandidates) {
+    const n = typeof v === 'number' ? v : Number(v);
+    if (Number.isFinite(n) && n > 0) {
+      total = n;
+      break;
+    }
+  }
+
+  if (!Number.isFinite(total) || total <= 0) {
+    throw new Error('Total inválido para crear el pago en Mercado Pago');
+  }
+
+  const orderNumber = String(orderPayload && (orderPayload.orderNumber || orderPayload.order_id || '') || generateOrderNumber());
+  const customer = orderPayload && orderPayload.customer ? orderPayload.customer : {};
+
+  // Base URL para redirects. En algunos contextos el header Origin puede venir como "null".
+  let baseUrl = (process.env.PUBLIC_BASE_URL || req.get('origin') || '').trim();
+  if (!baseUrl || baseUrl === 'null') {
+    const host = String(req.get('host') || '').trim();
+    const proto = String(req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim();
+    if (host) baseUrl = `${proto}://${host}`;
+  }
+  if (!baseUrl || baseUrl === 'null') {
+    baseUrl = `http://localhost:${DEFAULT_PORT}`;
+  }
+  baseUrl = baseUrl.replace(/\/$/, '');
+
+  const isLocalHostLike = (u) => {
+    try {
+      const url = new URL(u);
+      const host = String(url.hostname || '').toLowerCase();
+      if (host === 'localhost' || host === '127.0.0.1') return true;
+      // RFC1918 + common LAN ranges
+      if (host.startsWith('192.168.')) return true;
+      if (host.startsWith('10.')) return true;
+      if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(host)) return true;
+      return false;
+    } catch (_) {
+      return true;
+    }
+  };
+
+  // Mercado Pago suele rechazar auto_return en entornos localhost/LAN.
+  // Lo habilitamos solo cuando el back_url es HTTPS y público.
+  const canUseAutoReturn = baseUrl.startsWith('https://') && !isLocalHostLike(baseUrl);
+
+  const backUrls = {
+    success: `${baseUrl}/paginaburger.html?payment=approved&order=${encodeURIComponent(orderNumber)}`,
+    pending: `${baseUrl}/paginaburger.html?payment=pending&order=${encodeURIComponent(orderNumber)}`,
+    failure: `${baseUrl}/paginaburger.html?payment=failure&order=${encodeURIComponent(orderNumber)}`,
+  };
+
+  const body = {
+    items: [
+      {
+        title: `Pedido SR & SRA BURGER #${orderNumber}`,
+        quantity: 1,
+        currency_id: 'MXN',
+        unit_price: Number(total.toFixed(2)),
+      },
+    ],
+    external_reference: orderNumber,
+    payer: {
+      name: customer && customer.name ? String(customer.name) : undefined,
+      email: customer && customer.email ? String(customer.email) : undefined,
+    },
+    back_urls: backUrls,
+    // Algunos flujos/SDKs usan redirect_urls. Enviamos ambos.
+    redirect_urls: backUrls,
+    ...(canUseAutoReturn ? { auto_return: 'approved' } : {}),
+    metadata: {
+      orderNumber,
+    },
+  };
+
+  const resp = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '');
+    throw new Error(`Mercado Pago respondió con estado ${resp.status}: ${text || 'sin detalle'}`);
+  }
+
+  const data = await resp.json();
+  return data;
+}
+
+app.post('/api/mercadopago/create-preference', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const orderNumber = payload.orderNumber || generateOrderNumber();
+    const orderData = Object.assign({}, payload.orderData || {}, { orderNumber });
+
+    const preference = await createMercadoPagoPreference(orderData, req);
+
+    return res.json({
+      ok: true,
+      orderNumber,
+      preferenceId: preference && preference.id,
+      initPoint: (preference && (preference.init_point || preference.sandbox_init_point)) || null,
+      raw: preference,
+    });
+  } catch (e) {
+    console.error('Error creando preferencia de Mercado Pago:', e);
+    const status = e && e.status ? Number(e.status) : 500;
+    return res.status(status).json({ ok: false, error: e.message || 'mp-preference-failed' });
+  }
+});
+
+// Consultar estado de pago por orderNumber/external_reference.
+// Esto permite mostrar confirmación incluso si Mercado Pago no redirige en localhost/LAN.
+app.get('/api/mercadopago/payment-status', async (req, res) => {
+  try {
+    if (!MP_ACCESS_TOKEN) {
+      return res.status(500).json({ ok: false, error: 'Mercado Pago no está configurado (MP_ACCESS_TOKEN).' });
+    }
+
+    const order = String(req.query.order || req.query.external_reference || '').trim();
+    if (!order) return res.status(400).json({ ok: false, error: 'Missing order' });
+
+    const url = new URL('https://api.mercadopago.com/v1/payments/search');
+    url.searchParams.set('external_reference', order);
+    url.searchParams.set('sort', 'date_created');
+    url.searchParams.set('criteria', 'desc');
+    url.searchParams.set('limit', '10');
+
+    const r = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+      },
+    });
+
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      return res.status(502).json({ ok: false, error: `MP search ${r.status}: ${text || 'sin detalle'}` });
+    }
+
+    const data = await r.json().catch(() => null);
+    const results = data && Array.isArray(data.results) ? data.results : [];
+    if (!results.length) {
+      return res.json({ ok: true, order, status: 'not_found' });
+    }
+
+    const statuses = results.map((p) => String(p && p.status || '').toLowerCase()).filter(Boolean);
+    const latest = results[0] || {};
+    const latestId = latest && latest.id != null ? String(latest.id) : null;
+    const latestStatus = latest && latest.status ? String(latest.status).toLowerCase() : null;
+
+    let status = 'unknown';
+    if (statuses.includes('approved')) status = 'approved';
+    else if (statuses.some((s) => s === 'in_process' || s === 'pending')) status = 'pending';
+    else if (statuses.some((s) => s === 'rejected' || s === 'cancelled')) status = 'failure';
+    else status = latestStatus || 'unknown';
+
+    return res.json({ ok: true, order, status, paymentId: latestId, latestStatus });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || 'mp-status-failed' });
+  }
+});
 
 // Mark order as paid + credit points (server-side, instant)
 app.post('/api/mark-paid', async (req, res) => {
@@ -469,32 +591,26 @@ app.get('/api/distance-matrix', async (req, res) => {
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 // Config check (no expone secretos)
-app.get('/api/config-check', (_req, res) => {
-  const channel = (process.env.TWILIO_CHANNEL || 'whatsapp').toLowerCase();
-  const normalize = (num) => {
-    if (!num) return '';
-    let n = String(num).trim().replace(/^whatsapp:/i, '');
-    n = n.replace(/[^\d+]/g, '');
-    if (n.startsWith('00')) n = '+' + n.slice(2);
-    if (!n.startsWith('+') && /^\d+$/.test(n)) n = '+' + n;
-    return n;
-  };
-  const normFrom = normalize(process.env.TWILIO_FROM || process.env.TWILIO_WHATSAPP_FROM || process.env.SMS_FROM);
-  const normTo = normalize(process.env.OWNER_PHONE || process.env.STORE_WHATSAPP_TO || process.env.SMS_TO);
+app.get('/api/mp-config-check', (_req, res) => {
   res.json({
     ok: true,
-    mock: TWILIO_MOCK,
     has: {
-      TWILIO_ACCOUNT_SID: !!process.env.TWILIO_ACCOUNT_SID,
-      TWILIO_AUTH_TOKEN: !!process.env.TWILIO_AUTH_TOKEN,
-      TWILIO_FROM: !!process.env.TWILIO_FROM,
-      OWNER_PHONE: !!process.env.OWNER_PHONE,
-      TWILIO_CHANNEL: process.env.TWILIO_CHANNEL || 'whatsapp'
+      MP_ACCESS_TOKEN: !!(process.env.MP_ACCESS_TOKEN || '').trim(),
+      MERCADOPAGO_ACCESS_TOKEN: !!(process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim(),
+      MP_PUBLIC_KEY: !!(process.env.MP_PUBLIC_KEY || '').trim(),
+      MERCADOPAGO_PUBLIC_KEY: !!(process.env.MERCADOPAGO_PUBLIC_KEY || '').trim(),
+      MP_USER_ID: !!(process.env.MP_USER_ID || '').trim(),
+      MP_APP_ID: !!(process.env.MP_APP_ID || '').trim(),
     },
-    channel,
-    from: normFrom,
-    to: normTo,
-    twilioReady: !TWILIO_MOCK && !!process.env.TWILIO_ACCOUNT_SID && !!process.env.TWILIO_AUTH_TOKEN && !!normFrom && !!normTo
+    mpReady: !!((process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim()),
+    mpPublicKeyReady: !!MP_PUBLIC_KEY,
+  });
+});
+
+app.get('/api/config-check', (_req, res) => {
+  res.json({
+    ok: true,
+    note: 'Twilio fue removido. Este endpoint queda como placeholder.'
   });
 });
 

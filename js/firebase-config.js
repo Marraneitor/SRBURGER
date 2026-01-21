@@ -154,7 +154,7 @@ class FirebaseOrderManager {
             const rand = Math.floor(Math.random() * 900) + 100; // 100-999
             const orderNumber = `${yyyy}${mm}${dd}-${rand}`;
 
-            // Calcular puntos (se acreditan SOLO cuando el pedido se marca como pagado)
+            // Calcular puntos (se acreditan automáticamente al crear el pedido)
             const totalNumber = typeof orderData.total === 'number' ? orderData.total : Number(orderData.total || 0);
             const pointsEarned = Math.max(0, Math.floor(totalNumber / 10));
 
@@ -170,7 +170,7 @@ class FirebaseOrderManager {
                 onWaySent: false,
                 arrivedSent: false,
                 paid: false,
-                // Puntos: se guardan como referencia y se acreditan al marcar PAGADO
+                // Puntos: se guardan como referencia y se acreditan automáticamente (idempotente)
                 pointsEarned,
                 pointsCredited: false,
                 pointsAdded: 0,
@@ -179,6 +179,27 @@ class FirebaseOrderManager {
 
             const docRef = await addDoc(this.ordersCollection, cleanedOrder);
             console.log('✅ Pedido agregado con ID: ', docRef.id);
+
+            // Acreditar puntos al cliente al momento de crear el pedido.
+            // - No depende de que alguien marque "Pagado".
+            // - Es idempotente por orderId (usa creditedOrders en el doc del cliente).
+            try {
+                const uid = String(cleanedOrder.clienteId || '').trim();
+                if (uid) {
+                    const pointsAdded = await this.addPointsFromPaidOrderOnce(totalNumber, uid, docRef.id);
+                    if (Number(pointsAdded || 0) > 0) {
+                        await this.updateOrder(docRef.id, {
+                            pointsCredited: true,
+                            pointsAdded: Number(pointsAdded || 0),
+                            pointsCreditedAt: serverTimestamp(),
+                            pointsEarned
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ No se pudieron acreditar puntos al crear el pedido:', e);
+            }
+
             return { id: docRef.id, orderNumber };
         } catch (error) {
             console.error('❌ Error agregando pedido: ', error);
@@ -1065,7 +1086,7 @@ class FirebaseClientManager {
         }
     }
 
-    // Sumar puntos por una orden pagada UNA SOLA VEZ (idempotente)
+    // Sumar puntos por una orden UNA SOLA VEZ (idempotente)
     // - Guarda el id del pedido dentro del documento del cliente para evitar duplicados.
     async addPointsFromPaidOrderOnce(orderTotal, uid, orderId) {
         try {
@@ -1260,10 +1281,133 @@ class FirebaseClientManager {
     }
 }
 
+// Gestor de clientes MANUALES (sin login) para pedidos manuales.
+// Nota: Requiere reglas de Firestore que permitan leer/escribir la colección.
+class FirebaseManualCustomerManager {
+    constructor() {
+        this.db = db;
+        this.customersCollection = collection(db, 'manual_customers');
+    }
+
+    normalizePhoneDigits(value) {
+        return String(value || '').replace(/\D/g, '');
+    }
+
+    encodeKey(value) {
+        return encodeURIComponent(String(value || '').trim());
+    }
+
+    simpleHash(value) {
+        // Deterministic, lightweight hash for doc IDs (not cryptographic)
+        const str = String(value || '');
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) {
+            h = ((h << 5) + h) ^ str.charCodeAt(i);
+        }
+        // Force unsigned 32-bit and base36 for compactness
+        return (h >>> 0).toString(36);
+    }
+
+    makeCustomerDocId({ id, phoneDigits, name, address }) {
+        const given = String(id || '').trim();
+        if (given) return this.encodeKey(given);
+
+        const phone = String(phoneDigits || '').trim();
+        if (phone) return `p_${this.encodeKey(phone)}`;
+
+        const nm = String(name || '').trim();
+        const addr = String(address || '').trim();
+        if (nm) {
+            const key = `${nm.toLowerCase()}|${addr.toLowerCase()}`;
+            return `n_${this.encodeKey(nm)}_${this.simpleHash(key)}`;
+        }
+
+        return `c_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    }
+
+    // Listado (ordenado por nombre)
+    async getCustomers({ limitCount = 500 } = {}) {
+        const q = query(this.customersCollection, orderBy('nameLower', 'asc'), limit(limitCount));
+        const snapshot = await getDocs(q);
+        const list = [];
+        snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        return list;
+    }
+
+    // Listener en tiempo real
+    onCustomersChange(callback, { limitCount = 500 } = {}) {
+        const q = query(this.customersCollection, orderBy('nameLower', 'asc'), limit(limitCount));
+        return onSnapshot(
+            q,
+            (snapshot) => {
+                const list = [];
+                snapshot.forEach((docSnap) => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                callback(list);
+            },
+            (error) => {
+                console.error('❌ Error escuchando clientes manuales:', error);
+                try { if (window.showFirebaseError) window.showFirebaseError(error); } catch (_) {}
+                try { callback([]); } catch (_) {}
+            }
+        );
+    }
+
+    // Crear o actualizar (id determinístico por teléfono si existe)
+    async upsertCustomer({ id, name, phone, address } = {}) {
+        const safeName = String(name || '').trim();
+        const safePhoneRaw = String(phone || '').trim();
+        const phoneDigits = this.normalizePhoneDigits(safePhoneRaw);
+        const safeAddress = String(address || '').trim();
+
+        if (!safeName) throw new Error('El nombre es obligatorio');
+        if (!safeAddress) throw new Error('La dirección es obligatoria');
+
+        // Teléfono opcional: si viene, debe ser razonable
+        if (phoneDigits && phoneDigits.length > 0 && phoneDigits.length < 8) {
+            throw new Error('El teléfono debe tener al menos 8 dígitos (o déjalo vacío)');
+        }
+
+        const docId = this.makeCustomerDocId({ id, phoneDigits, name: safeName, address: safeAddress });
+        const ref = doc(this.db, 'manual_customers', docId);
+
+        await runTransaction(this.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const now = serverTimestamp();
+            const payload = {
+                name: safeName,
+                nameLower: safeName.toLowerCase(),
+                phone: phoneDigits ? safePhoneRaw : null,
+                phoneDigits: phoneDigits || null,
+                address: safeAddress,
+                updatedAt: now
+            };
+            if (!snap.exists()) {
+                tx.set(ref, { ...payload, createdAt: now });
+            } else {
+                tx.set(ref, payload, { merge: true });
+            }
+        });
+
+        return { id: docId };
+    }
+
+    async deleteCustomer(id) {
+        const docId = String(id || '').trim();
+        if (!docId) throw new Error('ID requerido');
+        await deleteDoc(doc(this.db, 'manual_customers', docId));
+        return true;
+    }
+}
+
 // Exportar instancias globales para uso desde las páginas HTML
 window.firebaseOrderManager = new FirebaseOrderManager();
 window.firebaseManager = new FirebaseAdminManager();
 window.firebaseClientManager = new FirebaseClientManager();
+window.firebaseManualCustomerManager = new FirebaseManualCustomerManager();
 window.firebaseAuth = auth;
 window.firebaseDb = db;
 
@@ -1275,4 +1419,4 @@ window.showFirebaseError = function(error) {
     }
 };
 
-export { FirebaseOrderManager, FirebaseAdminManager, FirebaseClientManager, db, auth };
+export { FirebaseOrderManager, FirebaseAdminManager, FirebaseClientManager, FirebaseManualCustomerManager, db, auth };

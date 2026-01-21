@@ -1,11 +1,6 @@
-// Vercel Serverless Function: Receives order payload and forwards it to the owner via Twilio.
-// Env vars (Vercel):
-// - TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
-// - TWILIO_FROM (solo número; el código agrega whatsapp: si corresponde)
-// - OWNER_PHONE (destino en E.164)
-// - TWILIO_CHANNEL ('whatsapp' o 'sms'; default whatsapp)
+// Vercel Serverless Function: Receives order payload.
+// Nota: Twilio fue removido. Este endpoint se mantiene para compatibilidad con el frontend.
 // Optional:
-// - TWILIO_MOCK=true (no envía, solo log)
 // - PUBLIC_BASE_URL (para link de rastreo)
 
 function formatMoney(n) {
@@ -104,44 +99,6 @@ function buildOwnerMessage(body) {
   return lines.join('\n');
 }
 
-function normalizeE164(num) {
-  if (!num) return '';
-  let n = String(num).trim().replace(/^whatsapp:/i, '');
-  n = n.replace(/[^\d+]/g, '');
-  if (n.startsWith('00')) n = '+' + n.slice(2);
-  if (!n.startsWith('+') && /^\d+$/.test(n)) n = '+' + n;
-  return n;
-}
-
-function getTwilioClient() {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
-  const twilioMock = String(process.env.TWILIO_MOCK || '').toLowerCase();
-  const isMock = twilioMock === '1' || twilioMock === 'true';
-  if (isMock) return null;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return null;
-  const twilio = require('twilio');
-  return twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-}
-
-async function sendOwnerMessage(message) {
-  const client = getTwilioClient();
-  const channel = (process.env.TWILIO_CHANNEL || 'whatsapp').toLowerCase();
-  const from = normalizeE164(process.env.TWILIO_FROM || process.env.TWILIO_WHATSAPP_FROM || process.env.SMS_FROM);
-  const to = normalizeE164(process.env.OWNER_PHONE || process.env.STORE_WHATSAPP_TO || process.env.SMS_TO);
-
-  if (!client || !from || !to) {
-    console.warn('[MOCK] Envío Twilio simulado. Configura variables de entorno para envío real.');
-    console.warn('Faltan:', { hasFrom: !!from, hasTo: !!to, hasClient: !!client });
-    console.warn('Mensaje al dueño:\n' + message);
-    return { sid: `mock-${Date.now()}`, mock: true };
-  }
-
-  const wrap = (num) => (channel === 'whatsapp' ? `whatsapp:${num}` : num);
-  const payload = { from: wrap(from), to: wrap(to), body: message };
-  const res = await client.messages.create(payload);
-  return res;
-}
-
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -159,8 +116,8 @@ module.exports = async (req, res) => {
     const payload = req.body || {};
     if (!payload.orderNumber) payload.orderNumber = generateOrderNumber();
     const msg = buildOwnerMessage(payload);
-    const twilioRes = await sendOwnerMessage(msg);
-    return res.status(200).json({ ok: true, sid: twilioRes.sid, orderNumber: payload.orderNumber });
+    console.log('[Pedido] Recibido (sin Twilio)\n' + msg);
+    return res.status(200).json({ ok: true, orderNumber: payload.orderNumber });
   } catch (e) {
     return res.status(500).json({ ok: false, error: e && e.message ? e.message : 'Failed to send message' });
   }

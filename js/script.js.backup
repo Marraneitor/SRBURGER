@@ -700,7 +700,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const out = [];
         src.forEach((originalItem) => {
             if (!originalItem || originalItem.hidden) return;
-            if (category === 'Extras' && /\bGrande(s)?\b/i.test(originalItem.name || '')) return;
             if (isProductHidden(originalItem.id)) return;
             out.push(originalItem);
         });
@@ -716,19 +715,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const looksLikeCombo = /\bcombo\b/i.test(item.name || '');
         const isComboLike = !!(item.isCombo || looksLikeCombo);
-        const isExtraCategory = category === 'Extras';
-        const canUpgradeExtraSize = isExtraCategory && !!EXTRA_LARGE_VARIANTS[item.id];
 
         if (hasOverrideFalse) return 'add';
         if (hasOverrideTrue) return isComboLike ? 'combo' : 'customize';
 
         if (isComboLike) return 'combo';
-        if (item.customizable || canUpgradeExtraSize) return 'customize';
+        if (item.customizable) return 'customize';
         return 'add';
     }
 
     // Decide si mostrar campo de "Especificaciones" para un producto dado
     function shouldShowSpecificationsForItem(item) {
+        // Pedido manual (modo rápido): no usar especificaciones/notas libres
+        if (typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true) {
+            return false;
+        }
         if (!item) return false;
         const id = Number(item.id);
         const rawOverride = specificationsOverridesFromFirebase && (specificationsOverridesFromFirebase[id] ?? specificationsOverridesFromFirebase[String(id)]);
@@ -823,6 +824,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add estimated delivery time
     function addDeliveryTimeEstimate() {
+        // Deshabilitado: no mostrar badge flotante "Entrega: xx-xx min"
+        return;
+
         const currentHour = new Date().getHours();
         let estimatedTime = '25-35 min';
         
@@ -998,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return `
                             <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
                                 <div class="flex items-center space-x-2">
-                                    ${item.image ? `<img src="${item.image}" alt="${item.name}" class="w-8 h-8 rounded object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
+                                    ${((typeof window.__MANUAL_FAST_MODE === 'undefined' || window.__MANUAL_FAST_MODE !== true) && item.image) ? `<img src="${item.image}" alt="${item.name}" class="w-8 h-8 rounded object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                                     <div>
                                         <div class="text-sm font-semibold">${item.name}</div>
                                         <div class="text-xs text-gray-500">$${item.price}</div>
@@ -1061,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toppingsData = [
         { id: 't6', name: 'Doble Carne', price: 30, description: '¿La quieres con doble carne jugosa?', image: '' },
         { id: 't1', name: 'Tocino Extra', price: 15, description: '¿Te gusta el tocino crujiente?', image: '' },
+        { id: 't8', name: 'Piña Extra', price: 15, description: '¿Te gusta la piña tropical?', image: '' },
         { id: 't7', name: 'Chezzy (Queso Cheddar liquido)', price: 10, description: '¿Un toque cremoso extra?', image: '' },
         { id: 't5', name: 'Chiles en rodajas', price: 0, description: 'Chiles en rodajas (gratis)', image: '' }
     ];
@@ -1102,22 +1107,35 @@ document.addEventListener('DOMContentLoaded', () => {
        ]
     };
 
-    // Extras: allow upgrading medium -> large only inside Personalizar
-    const EXTRA_LARGE_VARIANTS = {
-        8: 16,  // Papas Gajo Medianas -> Grandes
-        28: 29, // Papas Francesas Medianas -> Grandes
-        17: 18, // Salchipapas Medianas -> Grandes
-        19: 20  // Aros (8 pz) -> Grande (15 pz)
-    };
+    // Antes se permitía “hacer grande/XL” desde el modal.
+    // Ahora los tamaños grandes ya existen como productos separados en el menú, así que deshabilitamos ese upgrade.
+    const EXTRA_LARGE_VARIANTS = {};
     const WHATSAPP_NUMBER = '5219221593688';
-    // API base: can be overridden via window.__API_BASE; otherwise if opened as file:// use localhost:3000 (vercel dev), else relative
-    const API_BASE = (typeof window !== 'undefined' && window.__API_BASE != null)
-        ? window.__API_BASE
-        : 'http://localhost:3000';
-    // Multiple base options for local dev when opened as file://
+    // API base:
+    // - If window.__API_BASE is set, use it.
+    // - If served over http(s), use the same origin (works on LAN mobile: http://192.168.x.x:PORT).
+    // - If opened as file:// (origin = "null"), fall back to localhost (PC-only).
+    const API_BASE = (() => {
+        try {
+            if (typeof window !== 'undefined' && window.__API_BASE) return String(window.__API_BASE).replace(/\/$/, '');
+            const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+                ? String(window.location.origin)
+                : '';
+            if (origin && origin !== 'null') return origin.replace(/\/$/, '');
+        } catch (_) {}
+        return 'http://localhost:3000';
+    })();
     const API_BASES = (() => {
-        if (typeof window !== 'undefined' && window.__API_BASE) return [window.__API_BASE];
-        return ['http://localhost:3000'];
+        const list = [];
+        try {
+            if (typeof window !== 'undefined' && window.__API_BASE) list.push(String(window.__API_BASE).replace(/\/$/, ''));
+            const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+                ? String(window.location.origin)
+                : '';
+            if (origin && origin !== 'null') list.push(origin.replace(/\/$/, ''));
+        } catch (_) {}
+        list.push('http://localhost:3000');
+        return Array.from(new Set(list));
     })();
 
     // Helper: POST order with fallback endpoints and timeout
@@ -1190,9 +1208,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtotalAfterDiscount = Math.max(0, Number((subtotal - discountAmount).toFixed(2)));
 
         const isDelivery = deliveryTypeValue === 'delivery';
-        const baseDeliveryFee = (isDelivery && userAddress && typeof userAddress.deliveryPrice === 'number' && isFinite(userAddress.deliveryPrice))
-            ? Number(userAddress.deliveryPrice)
-            : 0;
+        
+        // MODO MANUAL: obtener costo de envío del input manual
+        const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
+        let baseDeliveryFee = 0;
+        
+        if (isDelivery) {
+            if (isManualMode) {
+                // Modo manual: leer del input manual-delivery-cost
+                const manualCostEl = document.getElementById('manual-delivery-cost');
+                baseDeliveryFee = manualCostEl ? (parseFloat(manualCostEl.value) || 0) : 0;
+            } else {
+                // Modo normal: usar dirección guardada
+                baseDeliveryFee = (userAddress && typeof userAddress.deliveryPrice === 'number' && isFinite(userAddress.deliveryPrice))
+                    ? Number(userAddress.deliveryPrice)
+                    : 0;
+            }
+        }
 
         let deliveryFee = baseDeliveryFee;
         const freeDelivery = !!(reward && reward.freeDelivery);
@@ -1867,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cartItemsContainer.innerHTML = cart.map((item, index) => `
             <div class="cart-item-enter bg-gradient-to-r from-white to-gray-50 p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-all duration-300">
                 <div class="flex items-start space-x-3">
-                ${item.baseItem && item.baseItem.image ? `<img src="${item.baseItem.image}" alt="${item.baseItem.name}" class="w-16 h-16 object-cover rounded-lg shadow-sm" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : `<div class="w-16 h-16 rounded-lg bg-gray-100"></div>`}
+                ${((typeof window.__MANUAL_FAST_MODE === 'undefined' || window.__MANUAL_FAST_MODE !== true) && item.baseItem && item.baseItem.image) ? `<img src="${item.baseItem.image}" alt="${item.baseItem.name}" class="w-16 h-16 object-cover rounded-lg shadow-sm" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : `<div class="w-16 h-16 rounded-lg bg-gray-100"></div>`}
                     <div class="flex-grow">
                         <h4 class="font-bold text-gray-800 text-lg">${item.baseItem.name}</h4>
                         
@@ -2099,7 +2131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize all enhancements
     function initializeEnhancements() {
-        addDeliveryTimeEstimate();
+        // addDeliveryTimeEstimate(); // deshabilitado
         enhanceFormValidation();
         window.updateTotalPreview = addOrderTotalPreview();
         // One-time attention nudge for delivery selection
@@ -2309,7 +2341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const openCategories = Array.from(document.querySelectorAll('.category-section'))
             .map(sec => ({
                 category: sec.getAttribute('data-category'),
-                isOpen: !sec.querySelector('.menu-grid, .menu-grid-mobile')?.classList.contains('hidden')
+                isOpen: !sec.querySelector('.menu-grid, .menu-grid-mobile, .menu-grid-pos')?.classList.contains('hidden')
             }))
             .filter(x => x.isOpen)
             .map(x => x.category);
@@ -2330,6 +2362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Detect if user is on mobile
         const isMobile = window.innerWidth <= 640;
+        const manualFastModeGlobal = (typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true);
 
         for (const category of getMenuCategoriesInOrder()) {
             const categoryDiv = document.createElement('div');
@@ -2365,11 +2398,16 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             
             const grid = document.createElement('div');
-            // Carrusel horizontal: mismo layout base, ajustado por CSS
-            if (isMobile) {
-                grid.className = 'menu-grid menu-grid-horizontal container-mobile';
+            // Pedido manual (modo rápido): cuadrícula estilo POS
+            if (manualFastModeGlobal) {
+                grid.className = isMobile ? 'menu-grid-pos container-mobile' : 'menu-grid-pos';
             } else {
-                grid.className = 'menu-grid menu-grid-horizontal';
+                // Carrusel horizontal: mismo layout base, ajustado por CSS
+                if (isMobile) {
+                    grid.className = 'menu-grid menu-grid-horizontal container-mobile';
+                } else {
+                    grid.className = 'menu-grid menu-grid-horizontal';
+                }
             }
             // Inicialmente oculto: se mostrará al hacer clic en el encabezado de la categoría
             grid.classList.add('hidden');
@@ -2377,24 +2415,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Build eligible list first (so carousel can loop cleanly)
             const eligibleItems = getEligibleCategoryItems(category);
 
-            // Wrap grid and arrows in a shared shell
-            const carouselShell = document.createElement('div');
-            carouselShell.className = 'category-carousel-shell relative';
+            // Wrap grid and arrows in a shared shell (solo si NO es modo POS)
+            let carouselShell = null;
+            if (!manualFastModeGlobal) {
+                carouselShell = document.createElement('div');
+                carouselShell.className = 'category-carousel-shell relative';
 
-            // Desktop carousel arrows (only if more than 1 item)
-            if (eligibleItems.length > 1) {
-                const navWrap = document.createElement('div');
-                // Hidden by default, shown cuando la categoría se expande
-                navWrap.className = 'carousel-nav-wrap hidden absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 pointer-events-none';
-                navWrap.innerHTML = `
-                    <button type="button" class="carousel-nav-btn category-arrow-desktop category-arrow-left pointer-events-auto" data-dir="-1" aria-label="Anterior">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button type="button" class="carousel-nav-btn category-arrow-desktop category-arrow-right pointer-events-auto" data-dir="1" aria-label="Siguiente">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                `;
-                carouselShell.appendChild(navWrap);
+                // Desktop carousel arrows (only if more than 1 item)
+                if (eligibleItems.length > 1) {
+                    const navWrap = document.createElement('div');
+                    // Hidden by default, shown cuando la categoría se expande
+                    navWrap.className = 'carousel-nav-wrap hidden absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 pointer-events-none';
+                    navWrap.innerHTML = `
+                        <button type="button" class="carousel-nav-btn category-arrow-desktop category-arrow-left pointer-events-auto" data-dir="-1" aria-label="Anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button type="button" class="carousel-nav-btn category-arrow-desktop category-arrow-right pointer-events-auto" data-dir="1" aria-label="Siguiente">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    `;
+                    carouselShell.appendChild(navWrap);
+                }
             }
 
             // Mostrar todos los ítems y usar scroll horizontal / snap para navegar
@@ -2402,6 +2443,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             itemsToRender.forEach((originalItem, index) => {
                 if(!originalItem || originalItem.hidden) return;
+
+                const manualFastMode = (typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true);
                 
                 // Apply daily promotion
                 const item = applyDailyPromotion(originalItem, category);
@@ -2505,8 +2548,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Create different card layouts for mobile vs desktop
                 let cardHtml;
-                
-                if (isMobile) {
+
+                // MODO RÁPIDO (pedido manual): tarjetas sin fotos ni descripción para cargar más rápido
+                if (manualFastMode) {
+                    const priceQuick = `$${item.price.toFixed(0)}`;
+                    cardHtml = `
+                        <div class="menu-card-mobile sr-pos-card" data-item-id="${item.id}">
+                            <div class="sr-pos-name" title="${stripHtml(item.name).replace(/\"/g, '&quot;')}">${item.name}</div>
+                            <div class="sr-pos-price">${priceQuick}</div>
+                            ${buttonType === 'combo'
+                                ? `<button data-id="${item.id}" class="choose-combo-btn sr-pos-action" aria-label="Personalizar"><i class=\"fas fa-utensils\"></i></button>`
+                                : buttonType === 'customize'
+                                    ? `<button data-id="${item.id}" class="customize-btn sr-pos-action" aria-label="Personalizar"><i class=\"fas fa-hamburger\"></i></button>`
+                                    : `<button data-id="${item.id}" class="add-to-cart-btn sr-pos-action" aria-label="Agregar"><i class=\"fas fa-cart-plus\"></i></button>`
+                            }
+                        </div>
+                    `;
+                } else if (isMobile) {
                     // Mobile layout - vertical tile (grid 2-3 cols)
                     let mobileBtn;
                     if (buttonType === 'combo') {
@@ -2523,8 +2581,8 @@ document.addEventListener('DOMContentLoaded', () => {
                              style="animation-delay: ${index * 50}ms;">
                             
                             <!-- Image -->
-                                                        <div class="menu-card-image-mobile relative overflow-hidden bg-gray-100 ${item.image ? 'sr-skeleton' : ''}">
-                                                    ${item.image ? `<img src="${item.image}" alt="Imagen de ${item.name}" class="w-full h-full object-cover sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
+                            <div class="menu-card-image-mobile relative overflow-hidden bg-gray-100 ${(!manualFastMode && item.image) ? 'sr-skeleton' : ''}">
+                                ${(!manualFastMode && item.image) ? `<img src="${item.image}" alt="Imagen de ${item.name}" class="w-full h-full object-cover sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                             </div>
                             
                             <!-- Content -->
@@ -2545,8 +2603,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${badges}
                             
                             <!-- Image container with hover effects -->
-                            <div class="relative overflow-hidden bg-gray-100 h-48 sm:h-56 md:h-64 ${item.image ? 'sr-skeleton' : ''}">
-                                                    ${item.image ? `<img src="${item.image}" alt="Imagen de ${item.name}" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
+                            <div class="relative overflow-hidden bg-gray-100 h-48 sm:h-56 md:h-64 ${(!manualFastMode && item.image) ? 'sr-skeleton' : ''}">
+                                                    ${(!manualFastMode && item.image) ? `<img src="${item.image}" alt="Imagen de ${item.name}" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 sr-img-init" data-sr-img="1" data-item-id="${item.id}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">` : ''}
                                 
                                 <!-- Overlay on hover -->
                                 <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -2597,8 +2655,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 grid.innerHTML += cardHtml;
             });
 
-            carouselShell.appendChild(grid);
-            categoryDiv.appendChild(carouselShell);
+            if (carouselShell) {
+                carouselShell.appendChild(grid);
+                categoryDiv.appendChild(carouselShell);
+            } else {
+                categoryDiv.appendChild(grid);
+            }
             menuContainer.appendChild(categoryDiv);
         }
 
@@ -2606,7 +2668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!openCategories.length) {
             const firstSection = menuContainer.querySelector('.category-section');
             if (firstSection) {
-                const grid = firstSection.querySelector('.menu-grid, .menu-grid-mobile');
+                const grid = firstSection.querySelector('.menu-grid, .menu-grid-mobile, .menu-grid-pos');
                 const navWrap = firstSection.querySelector('.carousel-nav-wrap');
                 const chevron = firstSection.querySelector('.fa-chevron-down');
                 if (grid) grid.classList.remove('hidden');
@@ -2627,7 +2689,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (openCategories.length) {
                 openCategories.forEach(cat => {
                     const section = document.querySelector(`.category-section[data-category="${cat}"]`);
-                    const grid = section?.querySelector('.menu-grid, .menu-grid-mobile');
+                    const grid = section?.querySelector('.menu-grid, .menu-grid-mobile, .menu-grid-pos');
                     const navWrap = section?.querySelector('.carousel-nav-wrap');
                     const chevron = section?.querySelector('.fa-chevron-down');
                     if (grid) grid.classList.remove('hidden');
@@ -2761,7 +2823,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = headerEl.getAttribute('data-category-header');
                 const section = document.querySelector(`.category-section[data-category="${category}"]`);
                 if (!section) return;
-                const grid = section.querySelector('.menu-grid, .menu-grid-mobile');
+                const grid = section.querySelector('.menu-grid, .menu-grid-mobile, .menu-grid-pos');
                 if (!grid) return;
                 const navWrap = section.querySelector('.carousel-nav-wrap');
                 const chevron = headerEl.querySelector('.fa-chevron-down');
@@ -2772,7 +2834,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (chevron) chevron.style.transform = 'rotate(0deg)';
                 } else {
                     // Optionally close others for a clean view
-                    document.querySelectorAll('.category-section .menu-grid, .category-section .menu-grid-mobile').forEach(g => {
+                    document.querySelectorAll('.category-section .menu-grid, .category-section .menu-grid-mobile, .category-section .menu-grid-pos').forEach(g => {
                         if (g !== grid) g.classList.add('hidden');
                     });
                     document.querySelectorAll('.category-section .carousel-nav-wrap').forEach(n => {
@@ -3407,8 +3469,66 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Confirmación de pedido: enviar a backend (Twilio) y mostrar confirmación
+        function getLoggedInClientUid() {
+            try {
+                if (window.firebaseClientManager && typeof window.firebaseClientManager.getCurrentUser === 'function') {
+                    const u = window.firebaseClientManager.getCurrentUser();
+                    if (u && u.uid) return u.uid;
+                }
+            } catch (_) {}
+            try {
+                if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.uid) {
+                    return window.firebaseAuth.currentUser.uid;
+                }
+            } catch (_) {}
+            return null;
+        }
+
+        function redirectToLoginForCheckout() {
+            try {
+                // Si existe un modal de autenticación en la misma página, úsalo y NO navegues.
+                if (typeof window.srOpenAuthModal === 'function') {
+                    window.srOpenAuthModal({ tab: 'login', reason: 'checkout' });
+                    return;
+                }
+                const next = encodeURIComponent('paginaburger.html');
+                window.location.href = `cliente.html?next=${next}`;
+            } catch (_) {
+                window.location.href = 'cliente.html';
+            }
+        }
+
+        // Confirmación de pedido: enviar a backend y mostrar confirmación
         sendWhatsappBtn.addEventListener('click', async () => {
+            const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
+            const sessionUid = getLoggedInClientUid();
+            if (!isManualMode && !sessionUid) {
+                try {
+                    showNotification('Debes iniciar sesión para finalizar tu compra. Te enviamos a Mi cuenta.', 'warning');
+                } catch (_) {
+                    alert('Debes iniciar sesión para finalizar tu compra.');
+                }
+                redirectToLoginForCheckout();
+                return;
+            }
+
+            // MODO MANUAL: no enviar/redirigir a WhatsApp; usar flujo local del pedido manual.
+            if (isManualMode) {
+                try {
+                    if (typeof window.placeOrder === 'function') {
+                        await window.placeOrder();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Error en placeOrder manual:', e);
+                }
+                try {
+                    showNotification('Pedido manual: no se envía WhatsApp automáticamente.', 'info');
+                } catch (_) {
+                    alert('Pedido manual: no se envía WhatsApp automáticamente.');
+                }
+                return;
+            }
             // Bloquear botón y mostrar loading
             const originalHtml = sendWhatsappBtn.innerHTML;
             sendWhatsappBtn.disabled = true;
@@ -3428,7 +3548,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const deliveryTypeValue = deliveryTypeElement.value;
                 const paymentMethod = paymentMethodElement.value;
 
-                if (deliveryTypeValue === 'delivery') {
+                // MODO MANUAL: Si window.__MANUAL_MODE está activado, NO validar direcciones guardadas
+                const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
+
+                if (deliveryTypeValue === 'delivery' && !isManualMode) {
                     const selectEl = document.getElementById('saved-address-select');
                     const selectedOk = !!(selectEl && selectEl.value && selectEl.value !== '__select__');
                     const addrOk = !!(userAddress && userAddress.formatted_address);
@@ -3441,9 +3564,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 let address = '';
                 let deliveryCoords = null;
                 if (deliveryTypeValue === 'delivery') {
-                    address = (userAddress && userAddress.formatted_address) ? String(userAddress.formatted_address) : '';
-                    if (userAddress && userAddress.coordinates && isFinite(userAddress.coordinates.lat) && isFinite(userAddress.coordinates.lng)) {
-                        deliveryCoords = { lat: userAddress.coordinates.lat, lng: userAddress.coordinates.lng };
+                    // MODO MANUAL: usar dirección manual si está disponible
+                    if (isManualMode) {
+                        const manualAddressEl = document.getElementById('manual-address');
+                        address = manualAddressEl ? manualAddressEl.value.trim() : '';
+                        // En modo manual no tenemos coordenadas precisas
+                        deliveryCoords = null;
+                    } else {
+                        // Modo normal: usar dirección guardada
+                        address = (userAddress && userAddress.formatted_address) ? String(userAddress.formatted_address) : '';
+                        if (userAddress && userAddress.coordinates && isFinite(userAddress.coordinates.lat) && isFinite(userAddress.coordinates.lng)) {
+                            deliveryCoords = { lat: userAddress.coordinates.lat, lng: userAddress.coordinates.lng };
+                        }
                     }
                 } else {
                     address = 'Recoger en local - SR & SRA BURGER';
@@ -3594,18 +3726,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     notes += (notes ? ' | ' : '') + `Recompensa: ${pricing.reward.label}`;
                 }
 
-                // Intentar asociar el pedido al usuario autenticado (para puntos)
-                let clienteId = null;
-                try {
-                    if (window.firebaseClientManager && typeof window.firebaseClientManager.getCurrentUser === 'function') {
-                        const u = window.firebaseClientManager.getCurrentUser();
-                        if (u && u.uid) clienteId = u.uid;
-                    } else if (window.firebaseAuth && window.firebaseAuth.currentUser) {
-                        clienteId = window.firebaseAuth.currentUser.uid;
-                    }
-                } catch (_) {
-                    // Si falla, seguimos sin clienteId (pedido anónimo)
-                }
+                // Sesión requerida (excepto modo manual): asociar siempre el pedido al usuario autenticado
+                const clienteId = isManualMode ? (sessionUid || null) : sessionUid;
 
                 const orderData = {
                     customer: { name: customerName, phone: customerPhone, address, coordinates: deliveryCoords },
@@ -3627,10 +3749,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 1) Crear la orden y obtener el número (Firebase o respaldo local)
                 let createdOrderNumber = null;
+                let createdOrderId = null;
                 if (window.firebaseOrderManager && window.firebaseOrderManager.addOrder) {
                     try {
                         const res = await window.firebaseOrderManager.addOrder(orderData);
                         createdOrderNumber = res && res.orderNumber ? res.orderNumber : null;
+                        createdOrderId = res && res.id ? res.id : null;
                         console.log('✅ Orden creada en Firebase. No. Orden:', createdOrderNumber);
                     } catch (e) {
                         console.warn('⚠️ Error guardando en Firebase, usando respaldo local:', e);
@@ -3648,6 +3772,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Mostrar el número en el modal de éxito
                 setLastOrderNumber(createdOrderNumber);
+
+                // Si el método de pago es "Pago en línea", crear preferencia de Mercado Pago y redirigir
+                if (paymentMethod === 'Pago en linea' || paymentMethod === 'Pago en línea') {
+                    try {
+                        // Preparar link de WhatsApp (se mostrará al aprobar pago, porque abrir WA automático suele ser bloqueado)
+                        let pendingWhatsAppUrl = null;
+                        try {
+                            let waMessage = generateWhatsAppMessage(pricing);
+                            if (createdOrderNumber) {
+                                let trackingBase = '';
+                                try {
+                                    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+                                        const origin = String(window.location.origin);
+                                        trackingBase = (origin && origin !== 'null') ? origin.replace(/\/$/, '') : '';
+                                    }
+                                } catch (_) { trackingBase = ''; }
+
+                                const trackingUrl = trackingBase
+                                    ? `${trackingBase}/tuenvio.html?order=${encodeURIComponent(createdOrderNumber)}`
+                                    : `tuenvio.html?order=${encodeURIComponent(createdOrderNumber)}`;
+
+                                waMessage += `\n\n*Número de orden:* ${createdOrderNumber}`;
+                                waMessage += `\n📦 *Rastrea tu pedido:*`;
+                                waMessage += `\n${trackingUrl}`;
+                            }
+                            const encodedMessage = encodeURIComponent(waMessage);
+                            const phone = String(WHATSAPP_NUMBER).replace(/\D/g, '');
+                            pendingWhatsAppUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+                            try { localStorage.setItem('sr_last_whatsapp_url', pendingWhatsAppUrl); } catch (_) {}
+                        } catch (_) {
+                            pendingWhatsAppUrl = null;
+                        }
+
+                        // Importante: si la página se abre como file://, las rutas relativas fallan.
+                        // Usar API_BASE (que cae a http://localhost:3000) mantiene el pago funcionando.
+                        const mpUrl = `${API_BASE}/api/mercadopago/create-preference`;
+                        const mpRes = await fetch(mpUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                orderNumber: createdOrderNumber,
+                                orderData,
+                            }),
+                        });
+
+                        const mpJson = await mpRes.json().catch(() => null);
+                        const initPoint = mpJson && (mpJson.initPoint || (mpJson.raw && (mpJson.raw.init_point || mpJson.raw.sandbox_init_point)));
+
+                        if (!mpRes.ok || !mpJson || !mpJson.ok || !initPoint) {
+                            throw new Error((mpJson && mpJson.error) || 'No se pudo iniciar el pago en línea');
+                        }
+
+                        // Enviar también al backend (no bloqueante para el usuario)
+                        try {
+                            await postOrderToApi({ ...orderData, orderNumber: createdOrderNumber });
+                        } catch (apiErr) {
+                            console.warn('No se pudo enviar el pedido al backend:', apiErr);
+                        }
+
+                        // En localhost/LAN Mercado Pago puede NO redirigir de vuelta.
+                        // Abrir el checkout en otra pestaña y confirmar desde aquí con polling.
+                        // Guardar estado pendiente para poder confirmar aunque el usuario regrese con "atrás"
+                        // o si el navegador bloquea popups.
+                        try { setPendingMpOrder(createdOrderNumber, createdOrderId, pendingWhatsAppUrl); } catch (_) {}
+
+                        const opened = window.open(initPoint, '_blank', 'noopener,noreferrer');
+                        if (!opened) {
+                            // Si el navegador bloqueó popups, caer al redirect normal.
+                            window.location.href = initPoint;
+                            return;
+                        }
+                        try {
+                            showNotification('💳 Se abrió Mercado Pago en otra pestaña. Completa el pago y vuelve aquí; esta página confirmará automáticamente.', 'info');
+                        } catch (_) {}
+                        startMercadoPagoStatusPolling(createdOrderNumber, createdOrderId);
+                        return; // No continuar con el flujo de WhatsApp
+                    } catch (mpErr) {
+                        console.error('Error iniciando pago en línea con Mercado Pago:', mpErr);
+                        try {
+                            showNotification('No se pudo iniciar el pago en línea. Intenta de nuevo o elige otro método.', 'error');
+                        } catch (_) {
+                            alert('No se pudo iniciar el pago en línea. Intenta de nuevo o elige otro método.');
+                        }
+                        return; // Evitar abrir WhatsApp si el usuario eligió Pago en línea
+                    }
+                }
 
                 // 2) Abrir WhatsApp con el detalle del pedido hacia el número del negocio
                 try {
@@ -3695,11 +3907,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn('No se pudo abrir WhatsApp:', waErr);
                 }
 
-                // 3) Enviar al backend (Twilio) incluyendo el número de orden (no bloqueante para el usuario)
+                // 3) Enviar al backend incluyendo el número de orden (no bloqueante para el usuario)
                 try {
                     await postOrderToApi({ ...orderData, orderNumber: createdOrderNumber });
                 } catch (apiErr) {
-                    console.warn('No se pudo enviar el pedido al backend (Twilio):', apiErr);
+                    console.warn('No se pudo enviar el pedido al backend:', apiErr);
                 }
 
                 // 4) Guardar datos del cliente
@@ -3970,30 +4182,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Poblar extras del menú
         const menuExtrasContainer = document.getElementById('menu-extras-container');
         menuExtrasContainer.innerHTML = '';
-        const extrasFiltered = (menuData.Extras || []).filter(e => !/\bGrande(s)?\b/i.test(e.name || ''));
-        const menuExtras = [...extrasFiltered];
+        const menuExtras = [...(menuData.Extras || [])];
         menuExtras.forEach(extra => {
             const existing = currentMenuExtras.find(e => e.id === extra.id);
             const isChecked = existing ? 'checked' : '';
             const quantity = existing?.quantity || 1;
-            const largeId = EXTRA_LARGE_VARIANTS[extra.id];
-            const largeVariant = largeId ? findItemById(largeId) : null;
-            const isLargeSelected = !!(existing && largeVariant && (existing.name === largeVariant.name || Number(existing.price) === Number(largeVariant.price)));
-            const displayName = isLargeSelected && largeVariant ? largeVariant.name : extra.name;
-            const displayPrice = isLargeSelected && largeVariant ? largeVariant.price : extra.price;
-            const upgradeDelta = (largeVariant ? (largeVariant.price - extra.price) : 0);
+            const displayName = extra.name;
+            const displayPrice = extra.price;
             menuExtrasContainer.innerHTML += `
                 <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200 ${isChecked ? 'bg-[#FFB300]/10 border-[#FFB300]' : ''}">
-                    <input type="checkbox" data-price="${displayPrice}" data-name="${displayName}" data-id="${extra.id}" data-size="${isLargeSelected ? 'large' : 'medium'}" class="menu-extra-checkbox form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]" ${isChecked}>
+                    <input type="checkbox" data-price="${displayPrice}" data-name="${displayName}" data-id="${extra.id}" class="menu-extra-checkbox form-checkbox h-5 w-5 text-[#FFB300] rounded focus:ring-[#FFA000]" ${isChecked}>
                     <div class="ml-3 flex-grow">
                         <span class="menu-extra-name font-semibold text-gray-800">${displayName}</span>
                         <div class="menu-extra-price text-sm text-gray-600">+${displayPrice.toFixed(0)}</div>
-                        ${largeVariant ? `
-                            <button type="button" class="make-large-btn mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-[#212121] border border-yellow-300 bg-yellow-50 hover:bg-yellow-100 transition-colors ${isChecked ? '' : 'hidden'}" data-extra-id="${extra.id}">
-                                <i class="fas ${isLargeSelected ? 'fa-undo' : 'fa-arrow-up'}"></i>
-                                ${isLargeSelected ? 'Volver a medianas' : `Hacer grandes +$${upgradeDelta.toFixed(0)}`}
-                            </button>
-                        ` : ''}
                     </div>
                     <div class="ml-2 ${isChecked ? '' : 'hidden'}" data-quantity-controls="${extra.id}">
                         <div class="flex items-center space-x-2">
@@ -4004,49 +4205,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </label>
             `;
-        });
-
-        // Bind upgrade buttons (Hacer grandes) for extras inside Personalizar
-        menuExtrasContainer.querySelectorAll('.make-large-btn').forEach(btn => {
-            if (btn._bound) return;
-            btn._bound = true;
-            btn.addEventListener('click', () => {
-                const label = btn.closest('label');
-                if (!label) return;
-                const checkbox = label.querySelector('.menu-extra-checkbox');
-                if (!checkbox) return;
-
-                const mediumId = parseInt(btn.dataset.extraId);
-                const largeId = EXTRA_LARGE_VARIANTS[mediumId];
-                if (!largeId) return;
-
-                const mediumItem = findItemById(mediumId);
-                const largeItem = findItemById(largeId);
-                if (!mediumItem || !largeItem) return;
-
-                const nameEl = label.querySelector('.menu-extra-name');
-                const priceEl = label.querySelector('.menu-extra-price');
-
-                const isLarge = checkbox.dataset.size === 'large';
-                if (!isLarge) {
-                    checkbox.dataset.size = 'large';
-                    checkbox.dataset.name = largeItem.name;
-                    checkbox.dataset.price = String(largeItem.price);
-                    if (nameEl) nameEl.textContent = largeItem.name;
-                    if (priceEl) priceEl.textContent = `+${largeItem.price.toFixed(0)}`;
-                    btn.innerHTML = '<i class="fas fa-undo"></i>Volver a medianas';
-                } else {
-                    checkbox.dataset.size = 'medium';
-                    checkbox.dataset.name = mediumItem.name;
-                    checkbox.dataset.price = String(mediumItem.price);
-                    if (nameEl) nameEl.textContent = mediumItem.name;
-                    if (priceEl) priceEl.textContent = `+${mediumItem.price.toFixed(0)}`;
-                    const delta = (largeItem.price - mediumItem.price);
-                    btn.innerHTML = `<i class=\"fas fa-arrow-up\"></i>Hacer grandes +$${delta.toFixed(0)}`;
-                }
-
-                updateCustomModalPrice();
-            });
         });
             
         // Actualizar selección de acompañamientos
@@ -4109,37 +4267,13 @@ document.addEventListener('DOMContentLoaded', () => {
         checkboxes.forEach(checkbox => {
             const label = checkbox.closest('label');
             const controls = label.querySelector(`[data-quantity-controls="${checkbox.dataset.id}"]`);
-            const upgradeBtn = label.querySelector('.make-large-btn');
             
             if (checkbox.checked) {
                 label.classList.add('bg-[#FFB300]/10', 'border-[#FFB300]');
                 if (controls) controls.classList.remove('hidden');
-                if (upgradeBtn) upgradeBtn.classList.remove('hidden');
             } else {
                 label.classList.remove('bg-[#FFB300]/10', 'border-[#FFB300]');
                 if (controls) controls.classList.add('hidden');
-                if (upgradeBtn) upgradeBtn.classList.add('hidden');
-
-                // Reset any upgraded item back to medium when unchecked
-                if (checkbox.dataset.size === 'large') {
-                    const mediumId = parseInt(checkbox.dataset.id);
-                    const largeId = EXTRA_LARGE_VARIANTS[mediumId];
-                    const mediumItem = findItemById(mediumId);
-                    const largeItem = largeId ? findItemById(largeId) : null;
-                    if (mediumItem && largeItem) {
-                        checkbox.dataset.size = 'medium';
-                        checkbox.dataset.name = mediumItem.name;
-                        checkbox.dataset.price = String(mediumItem.price);
-                        const nameEl = label.querySelector('.menu-extra-name');
-                        const priceEl = label.querySelector('.menu-extra-price');
-                        if (nameEl) nameEl.textContent = mediumItem.name;
-                        if (priceEl) priceEl.textContent = `+${mediumItem.price.toFixed(0)}`;
-                        if (upgradeBtn) {
-                            const delta = (largeItem.price - mediumItem.price);
-                            upgradeBtn.innerHTML = `<i class=\"fas fa-arrow-up\"></i>Hacer grandes +$${delta.toFixed(0)}`;
-                        }
-                    }
-                }
             }
         });
     }
@@ -4283,7 +4417,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4 class="font-bold text-lg mb-3">Hamburguesa ${i + 1}</h4>
                     <div class="burger-selector mb-4">
                         <div class="relative bg-gray-100 rounded-lg overflow-hidden">
-                            <img id="burger-img-${i}" src="${defaultBurger.image}" alt="${defaultBurger.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">
+                            ${(typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true)
+                                ? `<div class="w-full h-40 sm:h-48 md:h-52 bg-white rounded-lg"></div>`
+                                : `<img id="burger-img-${i}" src="${defaultBurger.image}" alt="${defaultBurger.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">`
+                            }
                             <div class="absolute inset-0 flex items-center justify-between px-3">
                                 <button class="prev-burger-btn bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-sm" data-choice-index="${i}">
                                     <i class="fas fa-chevron-left"></i>
@@ -4328,7 +4465,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4 class="font-bold text-lg mb-3">Hot Dog ${hotdogIndex + 1}</h4>
                         <div class="hotdog-selector mb-4">
                             <div class="relative bg-gray-100 rounded-lg overflow-hidden">
-                                <img id="hotdog-img-${hotdogIndex}" src="${defaultHotdog.image}" alt="${defaultHotdog.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">
+                                ${(typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true)
+                                    ? `<div class="w-full h-40 sm:h-48 md:h-52 bg-white rounded-lg"></div>`
+                                    : `<img id="hotdog-img-${hotdogIndex}" src="${defaultHotdog.image}" alt="${defaultHotdog.name}" class="w-full h-40 sm:h-48 md:h-52 object-contain bg-white rounded-lg" referrerpolicy="no-referrer" onerror="this.onerror=null;">`
+                                }
                                 <div class="absolute inset-0 flex items-center justify-between px-3">
                                     <button class="prev-hotdog-btn bg-black/60 hover:bg-black/80 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-sm" data-hotdog-index="${hotdogIndex}">
                                         <i class="fas fa-chevron-left"></i>
@@ -4928,6 +5068,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const phone = customerPhoneInput ? customerPhoneInput.value.trim() : '';
         const deliveryTypeElement = document.querySelector('input[name="delivery-type"]:checked');
         const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
+
+        // Sesión requerida para finalizar
+        const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
+        let isLoggedIn = false;
+        try {
+            isLoggedIn = !!(
+                (window.firebaseClientManager && typeof window.firebaseClientManager.getCurrentUser === 'function' && window.firebaseClientManager.getCurrentUser() && window.firebaseClientManager.getCurrentUser().uid) ||
+                (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.uid)
+            );
+        } catch (_) {
+            isLoggedIn = false;
+        }
+        if (isManualMode) isLoggedIn = true;
         
         if (!deliveryTypeElement || !paymentMethodElement) {
             return; // No se han seleccionado todas las opciones necesarias
@@ -4949,13 +5102,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const phoneValid = phoneDigits.length >= 8;
         
         // Validación de dirección sólo para entrega a domicilio
+        // MODO MANUAL: detectar si estamos en pedido-manual.html
         let locationValid = true;
-        if (deliveryTypeValue === 'delivery') {
+        
+        if (deliveryTypeValue === 'delivery' && !isManualMode) {
             const selectEl = document.getElementById('saved-address-select');
             const selectedOk = !!(selectEl && selectEl.value && selectEl.value !== '__select__');
             const priceOk = !!(userAddress && typeof userAddress.deliveryPrice === 'number' && isFinite(userAddress.deliveryPrice));
             const addrOk = !!(userAddress && userAddress.formatted_address);
             locationValid = selectedOk && priceOk && addrOk;
+        } else if (deliveryTypeValue === 'delivery' && isManualMode) {
+            // MODO MANUAL: validar campos manuales
+            const manualAddress = document.getElementById('manual-address')?.value.trim();
+            locationValid = !!(manualAddress && manualAddress.length > 0);
         }
         
         // Validación de pago efectivo
@@ -5017,15 +5176,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Determinar qué mensaje mostrar
-        if (!nameValid) {
+        if (!isLoggedIn) {
+            errorMsg.textContent = 'Debes iniciar sesión (Mi cuenta) para finalizar tu compra.';
+            errorMsg.classList.remove('hidden');
+        } else if (!nameValid) {
             errorMsg.textContent = "Por favor ingresa tu nombre";
             errorMsg.classList.remove('hidden');
         } else if (!phoneValid) {
             errorMsg.textContent = "Por favor ingresa un número de teléfono válido";
             errorMsg.classList.remove('hidden');
-        } else if (deliveryTypeValue === 'delivery' && !locationValid) {
-
+        } else if (deliveryTypeValue === 'delivery' && !locationValid && !isManualMode) {
             errorMsg.textContent = "Por favor selecciona una dirección guardada (Mi cuenta)";
+            errorMsg.classList.remove('hidden');
+        } else if (deliveryTypeValue === 'delivery' && !locationValid && isManualMode) {
+            errorMsg.textContent = "Por favor ingresa la dirección de entrega";
             errorMsg.classList.remove('hidden');
         } else if (paymentMethod === 'Efectivo' && !paymentValid && document.activeElement !== document.getElementById('cash-amount')) {
             errorMsg.textContent = "El monto de efectivo es insuficiente";
@@ -5035,7 +5199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Habilitar o deshabilitar botón de WhatsApp
-        const isFormValid = nameValid && phoneValid && locationValid && paymentValid;
+        const isFormValid = isLoggedIn && nameValid && phoneValid && locationValid && paymentValid;
         sendWhatsappBtn.disabled = !isFormValid;
     }
 
@@ -5271,29 +5435,44 @@ document.addEventListener('DOMContentLoaded', () => {
         let address = '';
         let addressDetails = '';
         if (deliveryTypeValue === 'delivery') {
-            address = (userAddress && userAddress.formatted_address)
-                ? String(userAddress.formatted_address)
-                : '';
-
-            // Link clickeable a la dirección (Google Maps)
-            try {
-                let mapsUrl = '';
-                if (userAddress && userAddress.coordinates && isFinite(userAddress.coordinates.lat) && isFinite(userAddress.coordinates.lng)) {
-                    const lat = Number(userAddress.coordinates.lat).toFixed(6);
-                    const lng = Number(userAddress.coordinates.lng).toFixed(6);
-                    mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}`;
-                } else if (address) {
-                    mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+            // MODO MANUAL: usar dirección manual si está disponible
+            const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
+            
+            if (isManualMode) {
+                const manualAddressEl = document.getElementById('manual-address');
+                address = manualAddressEl ? manualAddressEl.value.trim() : '';
+                
+                if (!address) {
+                    address = '—';
+                    addressDetails += '\n⚠️ *Falta ingresar dirección*';
                 }
-                if (mapsUrl) {
-                    addressDetails += `\n🗺️ Ver en mapa:\n${mapsUrl}`;
-                }
-            } catch (_) {}
+                // No hay coordenadas en modo manual, por lo que no generamos link de mapa
+            } else {
+                // Modo normal: usar dirección guardada
+                address = (userAddress && userAddress.formatted_address)
+                    ? String(userAddress.formatted_address)
+                    : '';
 
-            // Si no hay dirección guardada, avisar (esto no debería pasar si el formulario está validado)
-            if (!address) {
-                address = '—';
-                addressDetails += '\n⚠️ *Falta seleccionar dirección en Mi cuenta*';
+                // Link clickeable a la dirección (Google Maps)
+                try {
+                    let mapsUrl = '';
+                    if (userAddress && userAddress.coordinates && isFinite(userAddress.coordinates.lat) && isFinite(userAddress.coordinates.lng)) {
+                        const lat = Number(userAddress.coordinates.lat).toFixed(6);
+                        const lng = Number(userAddress.coordinates.lng).toFixed(6);
+                        mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}`;
+                    } else if (address) {
+                        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+                    }
+                    if (mapsUrl) {
+                        addressDetails += `\n🗺️ Ver en mapa:\n${mapsUrl}`;
+                    }
+                } catch (_) {}
+
+                // Si no hay dirección guardada, avisar (esto no debería pasar si el formulario está validado)
+                if (!address) {
+                    address = '—';
+                    addressDetails += '\n⚠️ *Falta seleccionar dirección en Mi cuenta*';
+                }
             }
         }
         
@@ -5926,6 +6105,390 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('cart');
         }
     }
+
+    async function handleMercadoPagoReturn() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const payment = (params.get('payment') || params.get('status') || params.get('collection_status') || '').trim().toLowerCase();
+            if (!payment) return;
+
+            const orderNumber = (params.get('order') || params.get('external_reference') || '').trim();
+            if (orderNumber) {
+                try { setLastOrderNumber(orderNumber); } catch (_) {}
+            }
+
+            if (payment === 'approved') {
+                showNotification(`✅ Tu pago ha sido acreditado con éxito${orderNumber ? ` • Orden #${orderNumber}` : ''}.`, 'success');
+
+                // Marcar como pagado en Firebase (si existe el pedido)
+                try {
+                    if (orderNumber) {
+                        await markFirebaseOrderPaidFromMercadoPago(orderNumber, null, params.get('payment_id') || params.get('payment') || null);
+                    }
+                } catch (_) {}
+
+                // Limpiar estado pendiente de Mercado Pago (si existía)
+                try { localStorage.removeItem('mp_pending_order'); } catch (_) {}
+
+                // Limpiar carrito al volver del pago aprobado
+                try { localStorage.removeItem('cart'); } catch (_) {}
+                try { cart = []; updateCart(); } catch (_) {}
+
+                // Mostrar modal con número de orden y acceso a rastreo
+                const successModal = document.getElementById('order-success-modal');
+                if (successModal) {
+                    try {
+                        const titleEl = successModal.querySelector('h3');
+                        const descEl = successModal.querySelector('p');
+                        if (titleEl) titleEl.textContent = 'Tu pago ha sido acreditado con éxito';
+                        if (descEl) descEl.textContent = 'Guarda tu número de orden para rastrear tu pedido:';
+                    } catch (_) {}
+                    successModal.classList.add('flex');
+                    successModal.classList.remove('hidden');
+                    try { updateOrderSuccessWhatsAppLink(orderNumber); } catch (_) {}
+                    const closeBtn = document.getElementById('close-order-success');
+                    if (closeBtn) {
+                        closeBtn.onclick = () => {
+                            successModal.classList.add('hidden');
+                            successModal.classList.remove('flex');
+                        };
+                    }
+                }
+
+                // Llevar al usuario al menú
+                try {
+                    const menu = document.getElementById('menu');
+                    if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (_) {}
+            } else if (payment === 'pending') {
+                showNotification(`⏳ Pago pendiente${orderNumber ? ` • Orden #${orderNumber}` : ''}. Si ya pagaste, espera confirmación.`, 'warning');
+                try {
+                    const menu = document.getElementById('menu');
+                    if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (_) {}
+            } else if (payment === 'failure') {
+                showNotification('❌ Pago cancelado o fallido. Puedes intentar de nuevo o elegir otro método.', 'error');
+
+                // Limpiar estado pendiente si falló
+                try { localStorage.removeItem('mp_pending_order'); } catch (_) {}
+            }
+
+            // Limpiar parámetros para que no se repita el mensaje al recargar
+            try {
+                const clean = window.location.pathname + (window.location.hash || '');
+                window.history.replaceState({}, document.title, clean);
+            } catch (_) {}
+        } catch (e) {
+            console.warn('No se pudo procesar retorno de Mercado Pago:', e);
+        }
+    }
+
+    function applyPaymentApprovedUI(orderNumber) {
+        try {
+            if (orderNumber) {
+                try { setLastOrderNumber(orderNumber); } catch (_) {}
+            }
+
+            // Limpiar carrito
+            try { localStorage.removeItem('cart'); } catch (_) {}
+            try { cart = []; updateCart(); } catch (_) {}
+
+            // Limpiar estado pendiente de Mercado Pago
+            try { localStorage.removeItem('mp_pending_order'); } catch (_) {}
+
+            // Cerrar checkout si está abierto
+            try {
+                if (checkoutModal) {
+                    checkoutModal.classList.add('hidden');
+                    checkoutModal.classList.remove('flex');
+                }
+            } catch (_) {}
+
+            // Mostrar modal de éxito
+            const successModal = document.getElementById('order-success-modal');
+            if (successModal) {
+                try {
+                    const titleEl = successModal.querySelector('h3');
+                    const descEl = successModal.querySelector('p');
+                    if (titleEl) titleEl.textContent = 'Tu pago ha sido acreditado con éxito';
+                    if (descEl) descEl.textContent = 'Guarda tu número de orden para rastrear tu pedido:';
+                } catch (_) {}
+                successModal.classList.add('flex');
+                successModal.classList.remove('hidden');
+                try { updateOrderSuccessWhatsAppLink(orderNumber); } catch (_) {}
+                const closeBtn = document.getElementById('close-order-success');
+                if (closeBtn) {
+                    closeBtn.onclick = () => {
+                        successModal.classList.add('hidden');
+                        successModal.classList.remove('flex');
+                    };
+                }
+            }
+
+            // Llevar al usuario al menú
+            try {
+                const menu = document.getElementById('menu');
+                if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (_) {}
+        } catch (e) {
+            console.warn('No se pudo aplicar UI de pago aprobado:', e);
+        }
+    }
+
+    async function markFirebaseOrderPaidFromMercadoPago(orderNumber, orderId, paymentId) {
+        try {
+            if (!window.firebaseOrderManager) return;
+
+            let targetId = orderId ? String(orderId) : '';
+            if (!targetId && orderNumber && typeof window.firebaseOrderManager.findOrderByNumber === 'function') {
+                const found = await window.firebaseOrderManager.findOrderByNumber(orderNumber);
+                if (found && found.id) targetId = String(found.id);
+            }
+            if (!targetId || typeof window.firebaseOrderManager.updateOrder !== 'function') return;
+
+            const updatePayload = {
+                paid: true,
+                paidAtIso: new Date().toISOString(),
+            };
+            if (paymentId != null && String(paymentId).trim()) {
+                updatePayload.mpPaymentId = String(paymentId).trim();
+            }
+
+            await window.firebaseOrderManager.updateOrder(targetId, updatePayload);
+        } catch (e) {
+            console.warn('No se pudo marcar como pagado en Firebase:', e);
+        }
+    }
+
+    function setPendingMpOrder(orderNumber, orderId) {
+        try {
+            if (!orderNumber) return;
+            // whatsappUrl es opcional; se usa para mostrar un botón "Enviar por WhatsApp" al aprobar pago.
+            const whatsappUrl = arguments.length >= 3 ? arguments[2] : null;
+            localStorage.setItem('mp_pending_order', JSON.stringify({ orderNumber, orderId: orderId || null, startedAt: Date.now(), whatsappUrl: whatsappUrl || null }));
+        } catch (_) {}
+    }
+
+    function getPendingMpOrder() {
+        try {
+            const raw = localStorage.getItem('mp_pending_order');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            const orderNumber = parsed && parsed.orderNumber ? String(parsed.orderNumber) : '';
+            const orderId = parsed && parsed.orderId ? String(parsed.orderId) : null;
+            const startedAt = parsed && parsed.startedAt ? Number(parsed.startedAt) : 0;
+            const whatsappUrl = parsed && parsed.whatsappUrl ? String(parsed.whatsappUrl) : null;
+            if (!orderNumber) return null;
+            // Expirar pendientes muy viejos (24h)
+            if (startedAt && Date.now() - startedAt > 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('mp_pending_order');
+                return null;
+            }
+            return { orderNumber, orderId, startedAt, whatsappUrl };
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function updateOrderSuccessWhatsAppLink(orderNumber) {
+        try {
+            const waBtn = document.getElementById('order-wa-link');
+            if (!waBtn) return;
+
+            let url = null;
+            try {
+                const pending = getPendingMpOrder();
+                if (pending && pending.orderNumber && String(pending.orderNumber) === String(orderNumber) && pending.whatsappUrl) {
+                    url = pending.whatsappUrl;
+                }
+            } catch (_) {}
+
+            if (!url) {
+                try { url = localStorage.getItem('sr_last_whatsapp_url'); } catch (_) { url = null; }
+            }
+
+            if (url && /^https?:\/\//i.test(url)) {
+                waBtn.href = url;
+                waBtn.classList.remove('hidden');
+            } else {
+                waBtn.classList.add('hidden');
+            }
+        } catch (_) {}
+    }
+
+    function stopMercadoPagoStatusPolling() {
+        try {
+            const st = window.__mpPollingState;
+            if (st && st.timer) clearInterval(st.timer);
+        } catch (_) {}
+        try { window.__mpPollingState = null; } catch (_) {}
+    }
+
+    function startMercadoPagoStatusPolling(orderNumber, orderId) {
+        try {
+            if (!orderNumber) return;
+
+            // Evitar múltiples pollings
+            try {
+                const st = window.__mpPollingState;
+                if (st && st.orderNumber === orderNumber && st.timer) return;
+            } catch (_) {}
+            stopMercadoPagoStatusPolling();
+
+            setPendingMpOrder(orderNumber, orderId);
+
+            const startedAt = Date.now();
+            const timeoutMs = 10 * 60 * 1000; // 10 min
+            let lastToast = '';
+
+            const tick = async () => {
+                try {
+                    if (Date.now() - startedAt > timeoutMs) {
+                        stopMercadoPagoStatusPolling();
+                        try { showNotification('⏳ No pudimos confirmar el pago todavía. Si ya pagaste, espera unos minutos y vuelve a esta página.', 'warning'); } catch (_) {}
+                        return;
+                    }
+
+                    const url = `${API_BASE}/api/mercadopago/payment-status?order=${encodeURIComponent(orderNumber)}`;
+                    const r = await fetch(url);
+                    const j = await r.json().catch(() => null);
+                    if (!r.ok || !j || !j.ok) return;
+
+                    const status = String(j.status || '').toLowerCase();
+                    if (status === 'approved') {
+                        stopMercadoPagoStatusPolling();
+                        try { showNotification(`✅ Tu pago ha sido acreditado con éxito • Orden #${orderNumber}.`, 'success'); } catch (_) {}
+                        try { await markFirebaseOrderPaidFromMercadoPago(orderNumber, orderId, j && j.paymentId); } catch (_) {}
+                        applyPaymentApprovedUI(orderNumber);
+                        return;
+                    }
+                    if (status === 'failure') {
+                        stopMercadoPagoStatusPolling();
+                        try { showNotification('❌ El pago fue rechazado/cancelado. Puedes intentar de nuevo.', 'error'); } catch (_) {}
+                        try { localStorage.removeItem('mp_pending_order'); } catch (_) {}
+                        return;
+                    }
+                    if ((status === 'pending' || status === 'in_process') && lastToast !== 'pending') {
+                        lastToast = 'pending';
+                        try { showNotification('⏳ Pago pendiente. En cuanto se apruebe te mostramos la confirmación aquí.', 'warning'); } catch (_) {}
+                    }
+                } catch (_) {
+                    // Ignorar errores transitorios
+                }
+            };
+
+            const timer = setInterval(tick, 4000);
+            window.__mpPollingState = { orderNumber, orderId: orderId || null, timer };
+            tick();
+        } catch (e) {
+            console.warn('No se pudo iniciar polling de Mercado Pago:', e);
+        }
+    }
+
+    function resumeMercadoPagoPollingIfPending() {
+        try {
+            const pending = getPendingMpOrder();
+            if (!pending || !pending.orderNumber) return;
+            startMercadoPagoStatusPolling(pending.orderNumber, pending.orderId || null);
+        } catch (_) {}
+    }
+
+    function applyPaymentApprovedUI_legacy(orderNumber) {
+        try {
+            if (orderNumber) {
+                try { setLastOrderNumber(orderNumber); } catch (_) {}
+            }
+
+            // Limpiar carrito
+            try { localStorage.removeItem('cart'); } catch (_) {}
+            try { cart = []; updateCart(); } catch (_) {}
+
+            // Cerrar checkout si está abierto
+            try {
+                if (checkoutModal) {
+                    checkoutModal.classList.add('hidden');
+                    checkoutModal.classList.remove('flex');
+                }
+            } catch (_) {}
+
+            // Mostrar modal de éxito
+            const successModal = document.getElementById('order-success-modal');
+            if (successModal) {
+                try {
+                    const titleEl = successModal.querySelector('h3');
+                    const descEl = successModal.querySelector('p');
+                    if (titleEl) titleEl.textContent = 'Tu pago ha sido acreditado con éxito';
+                    if (descEl) descEl.textContent = 'Guarda tu número de orden para rastrear tu pedido:';
+                } catch (_) {}
+                successModal.classList.add('flex');
+                successModal.classList.remove('hidden');
+                const closeBtn = document.getElementById('close-order-success');
+                if (closeBtn) {
+                    closeBtn.onclick = () => {
+                        successModal.classList.add('hidden');
+                        successModal.classList.remove('flex');
+                    };
+                }
+            }
+
+            // Llevar al usuario al menú
+            try {
+                const menu = document.getElementById('menu');
+                if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (_) {}
+        } catch (e) {
+            console.warn('No se pudo aplicar UI de pago aprobado:', e);
+        }
+    }
+
+    function startMercadoPagoStatusPolling_legacy(orderNumber) {
+        try {
+            if (!orderNumber) return;
+
+            const startedAt = Date.now();
+            const timeoutMs = 10 * 60 * 1000; // 10 min
+            let lastToast = '';
+
+            const tick = async () => {
+                try {
+                    if (Date.now() - startedAt > timeoutMs) {
+                        clearInterval(timer);
+                        try { showNotification('⏳ No pudimos confirmar el pago todavía. Si ya pagaste, espera unos minutos y recarga.', 'warning'); } catch (_) {}
+                        return;
+                    }
+
+                    const url = `${API_BASE}/api/mercadopago/payment-status?order=${encodeURIComponent(orderNumber)}`;
+                    const r = await fetch(url);
+                    const j = await r.json().catch(() => null);
+                    if (!r.ok || !j || !j.ok) return;
+
+                    const status = String(j.status || '').toLowerCase();
+                    if (status === 'approved') {
+                        clearInterval(timer);
+                        try { showNotification(`✅ Tu pago ha sido acreditado con éxito • Orden #${orderNumber}.`, 'success'); } catch (_) {}
+                        applyPaymentApprovedUI(orderNumber);
+                        return;
+                    }
+                    if (status === 'failure') {
+                        clearInterval(timer);
+                        try { showNotification('❌ El pago fue rechazado/cancelado. Puedes intentar de nuevo.', 'error'); } catch (_) {}
+                        return;
+                    }
+                    if (status === 'pending' && lastToast !== 'pending') {
+                        lastToast = 'pending';
+                        try { showNotification('⏳ Pago pendiente. En cuanto se apruebe te mostramos la confirmación aquí.', 'warning'); } catch (_) {}
+                    }
+                } catch (_) {
+                    // Ignorar errores transitorios
+                }
+            };
+
+            const timer = setInterval(tick, 4000);
+            tick();
+        } catch (e) {
+            console.warn('No se pudo iniciar polling de Mercado Pago:', e);
+        }
+    }
     
     // Initialize everything when page loads
     function initialize() {
@@ -6037,6 +6600,25 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCart();
         updateCart();
 
+        // Retorno de pago (Mercado Pago): mostrar confirmación y volver al menú
+        handleMercadoPagoReturn();
+
+        // Si Mercado Pago no redirige (común en localhost/LAN), reanudar verificación al volver a esta pestaña.
+        try {
+            resumeMercadoPagoPollingIfPending();
+            window.addEventListener('focus', () => {
+                try { resumeMercadoPagoPollingIfPending(); } catch (_) {}
+            });
+            window.addEventListener('pageshow', () => {
+                try { resumeMercadoPagoPollingIfPending(); } catch (_) {}
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    try { resumeMercadoPagoPollingIfPending(); } catch (_) {}
+                }
+            });
+        } catch (_) {}
+
         // Deep link: abrir carrito automáticamente (ej. desde cliente.html)
         try {
             const params = new URLSearchParams(window.location.search || '');
@@ -6053,8 +6635,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
+                const href = String(this.getAttribute('href') || '');
+                // Si el href cambió dinámicamente a una URL (ej. WhatsApp), no interceptar.
+                if (!href.startsWith('#') || href.length < 2) return;
                 e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+
+                let target = null;
+                try {
+                    target = document.querySelector(href);
+                } catch (_) {
+                    target = null;
+                }
                 if (target) {
                     target.scrollIntoView({
                         behavior: 'smooth',
@@ -7882,6 +8473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const copyBtn = document.getElementById('copy-order-number');
         if (span && orderNumber) span.textContent = orderNumber;
         if (link && orderNumber) link.href = `tuenvio.html?order=${encodeURIComponent(orderNumber)}`;
+        try { updateOrderSuccessWhatsAppLink(orderNumber); } catch (_) {}
         if (copyBtn && orderNumber) {
             copyBtn.onclick = () => {
                 navigator.clipboard.writeText(orderNumber).then(() => {

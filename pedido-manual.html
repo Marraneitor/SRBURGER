@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es" class="scroll-smooth sr-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
@@ -20,7 +20,9 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="preload" as="image" href="https://i.imgur.com/TSTuaNr.jpg">
+    <!-- Nota: en pedido-manual usamos modo rápido (sin fotos) -->
+    <link rel="stylesheet" href="styles/sr-ui.css">
+    <script src="js/sr-shell.js" defer></script>
     <script>
         // Theme toggle (light/dark) - bind after DOM exists
         window.addEventListener('DOMContentLoaded', () => {
@@ -93,41 +95,11 @@
         html.dark #faq .text-gray-600 {
             color: #CBD5E1 !important;
         }
-        html.dark #inicio .text-gray-500,
-        html.dark #menu .text-gray-500,
-        html.dark #nosotros .text-gray-500,
-        html.dark #faq .text-gray-500 {
-            color: rgba(203, 213, 225, 0.92) !important;
-        }
-        html.dark #inicio .text-gray-400,
-        html.dark #menu .text-gray-400,
-        html.dark #nosotros .text-gray-400,
-        html.dark #faq .text-gray-400 {
-            color: rgba(203, 213, 225, 0.78) !important;
-        }
         html.dark #inicio .bg-white,
         html.dark #menu .bg-white,
         html.dark #nosotros .bg-white,
         html.dark #faq .bg-white {
             background-color: rgba(15, 23, 42, 0.96) !important;
-        }
-
-        html.dark #menu .bg-gray-50,
-        html.dark #menu .bg-gray-100,
-        html.dark #menu .bg-gray-200 {
-            background-color: rgba(2, 6, 23, 0.55) !important;
-        }
-
-        /* Dark mode: kill “white slabs” from high-opacity bg-white/XX utilities
-           (only when the element does NOT already specify a dark:bg-* override) */
-        html.dark [class*="bg-white/95"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/90"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/80"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/70"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/60"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/50"]:not([class*="dark:bg-"]),
-        html.dark [class*="bg-white/40"]:not([class*="dark:bg-"]) {
-            background-color: rgba(15, 23, 42, 0.74) !important;
         }
 
         * {
@@ -234,14 +206,6 @@
             box-shadow: var(--shadow-soft);
             border: 1px solid var(--border-light);
             transition: var(--transition);
-        }
-
-        html.dark .card-modern {
-            background: rgba(2, 6, 23, 0.60);
-            border-color: rgba(255, 255, 255, 0.10);
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
         }
 
         .card-modern:hover {
@@ -595,6 +559,28 @@
                 cursor: pointer !important;
                 touch-action: manipulation !important;
             }
+
+            /* Pedido manual (tarjetas rápidas): el botón NO debe ocupar todo el ancho */
+            body.sr-manual-fast .sr-fast-card .add-to-cart-btn,
+            body.sr-manual-fast .sr-fast-card .customize-btn,
+            body.sr-manual-fast .sr-fast-card .choose-combo-btn {
+                width: 48px !important;
+                min-height: 48px !important;
+                height: 48px !important;
+                padding: 0 !important;
+                border-radius: 12px !important;
+                box-shadow: none !important;
+            }
+
+            /* POS: no forzar width 100% dentro del card */
+            body.sr-manual-fast .sr-pos-card .add-to-cart-btn,
+            body.sr-manual-fast .sr-pos-card .customize-btn,
+            body.sr-manual-fast .sr-pos-card .choose-combo-btn {
+                width: auto !important;
+                min-height: unset !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
             
             .touch-device .add-to-cart-btn:active, 
             .touch-device .customize-btn:active, 
@@ -862,10 +848,99 @@
             flex: 0 0 min(320px, 85vw);
         }
 
+        /* Pedido manual: cards más grandes para leer nombres completos */
+        body.sr-manual-fast .menu-grid-horizontal .menu-card-mobile {
+            flex: 0 0 min(420px, 92vw);
+        }
+
+        /* === POS (pedido manual): grid uniforme y simétrico === */
+        body.sr-manual-fast .menu-grid-pos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            body.sr-manual-fast .menu-grid-pos {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 14px;
+            }
+        }
+
+        body.sr-manual-fast .sr-pos-card {
+            position: relative;
+            background: #0B1220;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 16px;
+            padding: 12px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+        }
+
+        body.sr-manual-fast .sr-pos-name {
+            width: 100%;
+            color: #F8FAFC;
+            font-weight: 800;
+            font-size: 0.92rem;
+            line-height: 1.12;
+            min-height: 2.4em; /* fija altura visual para alinear precios */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            hyphens: auto;
+            overflow-wrap: anywhere;
+            padding: 2px 2px 0;
+        }
+
+        body.sr-manual-fast .sr-pos-price {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            color: #34D399;
+            font-weight: 900;
+            font-size: 1.05rem;
+            letter-spacing: 0.2px;
+        }
+
+        body.sr-manual-fast .sr-pos-action {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #10B981;
+            color: #FFFFFF;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(16,185,129,0.25);
+            border: 0;
+        }
+        body.sr-manual-fast .sr-pos-action:active {
+            transform: scale(0.97);
+        }
+        body.sr-manual-fast .sr-pos-action i {
+            pointer-events: none;
+            font-size: 16px;
+        }
+
         @media (min-width: 1024px) {
             .menu-grid-horizontal .menu-card,
             .menu-grid-horizontal .menu-card-mobile {
                 flex: 0 0 30%;
+            }
+
+            body.sr-manual-fast .menu-grid-horizontal .menu-card-mobile {
+                flex: 0 0 42%;
             }
         }
 
@@ -1205,26 +1280,6 @@
         .pac-matched {
             font-weight: 700;
             color: #f59e0b;
-        }
-
-        html.dark .pac-container {
-            background-color: rgba(2, 6, 23, 0.96);
-            border-color: rgba(251, 191, 36, 0.85);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.35);
-        }
-        html.dark .pac-item {
-            color: #E5E7EB;
-            border-bottom-color: rgba(255, 255, 255, 0.08);
-        }
-        html.dark .pac-item:hover,
-        html.dark .pac-item-selected {
-            background-color: rgba(255, 255, 255, 0.08) !important;
-        }
-        html.dark .pac-item-query {
-            color: #F8FAFC;
-        }
-        html.dark .pac-matched {
-            color: #FDE68A;
         }
         
         .pac-icon {
@@ -2131,8 +2186,12 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100">
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 sr-manual-fast">
 
+    <script>
+        // Flag for shared checkout logic: manual orders should NOT redirect to WhatsApp.
+        window.__MANUAL_MODE = true;
+    </script>
     <header id="inicio" class="glass-effect shadow-lg sticky top-0 z-50 border-b border-white/20">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-24">
@@ -2160,7 +2219,7 @@
                         Contacto
                         <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-500 transition-all duration-300 group-hover:w-full"></span>
                     </a>
-                    <a href="cliente.html" data-sr-auth-open="1" class="text-gray-700 hover:text-yellow-600 transition-all duration-300 font-medium relative group flex items-center gap-2" aria-label="Mi cuenta (abrir inicio de sesión)">
+                    <a href="cliente.html" class="text-gray-700 hover:text-yellow-600 transition-all duration-300 font-medium relative group flex items-center gap-2">
                         <span id="nav-account-text">Mi cuenta</span>
                         <span id="nav-session-indicator" class="hidden text-xs font-semibold text-green-500 bg-green-50/90 border border-green-200 px-2 py-0.5 rounded-full">
                             Sesión iniciada
@@ -2181,7 +2240,7 @@
                         <i class="fas fa-moon text-gray-700 dark:hidden"></i>
                         <i class="fas fa-sun text-yellow-300 hidden dark:inline"></i>
                     </button>
-                    <a href="cliente.html" id="mobile-account-btn" data-sr-auth-open="1" class="lg:hidden p-2 sm:p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Mi cuenta / Iniciar sesión">
+                    <a href="cliente.html" id="mobile-account-btn" class="lg:hidden p-2 sm:p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Mi cuenta / Iniciar sesión">
                         <i class="fas fa-user text-gray-700 text-sm sm:text-base"></i>
                     </a>
                     <button id="open-cart-btn" class="btn-primary flex items-center space-x-2 sm:space-x-3 shadow-lg text-sm sm:text-base px-3 py-2 sm:px-6 sm:py-3">
@@ -2217,7 +2276,7 @@
 
             <!-- Navegación del menú móvil -->
             <nav class="space-y-4">
-                <a href="cliente.html" data-sr-auth-open="1" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                <a href="cliente.html" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
                     <i class="fas fa-user text-gray-600 group-hover:text-yellow-600"></i>
                     <span class="text-gray-800 font-medium group-hover:text-yellow-600">Mi cuenta / Iniciar sesión</span>
                 </a>
@@ -2247,6 +2306,10 @@
             <div class="mt-8 pt-8 border-t border-gray-200">
                 <div class="space-y-3">
                     <div class="flex items-center space-x-3 text-sm text-gray-600">
+                        <i class="fas fa-clock"></i>
+                        <span>Entrega: 25-35 min</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-sm text-gray-600">
                         <i class="fas fa-phone"></i>
                         <span>WhatsApp: +52 922 159 3688</span>
                     </div>
@@ -2262,8 +2325,7 @@
     <!-- Overlay para el menú móvil -->
     <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
 
-    <section class="hero-bg text-white min-h-[70vh] sm:min-h-[80vh] flex items-center relative overflow-hidden">
-        <img src="https://i.imgur.com/TSTuaNr.jpg" alt="" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer">
+    <section class="hero-bg text-white min-h-[70vh] sm:min-h-[80vh] flex items-center relative overflow-hidden hidden">
         <div class="absolute inset-0 bg-black/10"></div>
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <div class="max-w-4xl mx-auto">
@@ -2347,25 +2409,18 @@
         </div>
     </main>
 
-    <section id="nosotros" class="py-20 bg-white dark:bg-gray-950 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-yellow-50/50 to-orange-50/50 dark:from-slate-950/70 dark:to-slate-900/30"></div>
-        <div class="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-yellow-400/15 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-28 -left-28 w-96 h-96 rounded-full bg-orange-500/15 blur-3xl"></div>
+    <section id="nosotros" class="py-20 bg-white relative overflow-hidden hidden">
+        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-yellow-50/50 to-orange-50/50"></div>
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="flex flex-col lg:flex-row items-center gap-16">
                 <div class="lg:w-1/2">
                     <div class="relative">
                         <div class="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl blur opacity-20"></div>
-                    <img src="https://i.imgur.com/mCzOds3.jpg" alt="Logo de Sr. y Sra. Burger" 
-                        class="relative w-full h-auto max-w-md mx-auto rounded-2xl shadow-2xl sr-img-init"
-                        data-sr-img="1" loading="lazy" decoding="async" fetchpriority="low"
-                        referrerpolicy="no-referrer"
-                        onerror="this.onerror=null;this.style.display='none';">
+                    <!-- Imagen removida en pedido-manual para cargar más rápido -->
                     </div>
                 </div>
                 <div class="lg:w-1/2 text-center lg:text-left">
-                    <span class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 dark:bg-white/10 dark:text-yellow-200 dark:border dark:border-white/10 rounded-full text-sm font-semibold mb-4">
-                        <i class="fas fa-sparkles"></i>
+                    <span class="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold mb-4">
                         NUESTRA HISTORIA
                     </span>
                     <h2 class="text-4xl md:text-5xl font-bold font-poppins mb-6 text-gray-900">
@@ -2379,52 +2434,12 @@
                             Más que solo comida, ofrecemos una experiencia deliciosa que nace de nuestro esfuerzo y dedicación. Gracias por apoyarnos y ser parte de nuestra historia.
                         </p>
                     </div>
-
-                    <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="card-modern flex items-start gap-3 p-4">
-                            <div class="w-10 h-10 rounded-2xl bg-yellow-400/20 text-yellow-500 flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-900 dark:text-white">Dirección con mapa</div>
-                                <div class="text-sm text-gray-600 dark:text-slate-300/80">Verifica tu ubicación moviendo el pin.</div>
-                            </div>
-                        </div>
-                        <div class="card-modern flex items-start gap-3 p-4">
-                            <div class="w-10 h-10 rounded-2xl bg-green-400/20 text-green-500 flex items-center justify-center">
-                                <i class="fas fa-sliders-h"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-900 dark:text-white">Personaliza tu pedido</div>
-                                <div class="text-sm text-gray-600 dark:text-slate-300/80">Combos y productos se pueden ajustar.</div>
-                            </div>
-                        </div>
-                        <div class="card-modern flex items-start gap-3 p-4">
-                            <div class="w-10 h-10 rounded-2xl bg-blue-400/20 text-blue-500 flex items-center justify-center">
-                                <i class="fas fa-shipping-fast"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-900 dark:text-white">Domicilio o recoger</div>
-                                <div class="text-sm text-gray-600 dark:text-slate-300/80">Elige tu forma de entrega al pagar.</div>
-                            </div>
-                        </div>
-                        <div class="card-modern flex items-start gap-3 p-4">
-                            <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-500 flex items-center justify-center">
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <div>
-                                <div class="font-bold text-gray-900 dark:text-white">Puntos por compra</div>
-                                <div class="text-sm text-gray-600 dark:text-slate-300/80">Inicia sesión para acumular y verlos.</div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="mt-8 flex flex-col sm:flex-row gap-4">
                         <a href="#nosotros" class="btn-primary inline-flex items-center justify-center">
                             <i class="fas fa-heart mr-2"></i>
                             Conoce Más
                         </a>
-                        <a href="#contacto" class="px-6 py-3 border-2 border-gray-300 dark:border-white/15 text-gray-700 dark:text-slate-100 rounded-full hover:border-yellow-500 hover:text-yellow-600 transition-all duration-300 font-semibold inline-flex items-center justify-center">
+                        <a href="#contacto" class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-full hover:border-yellow-500 hover:text-yellow-600 transition-all duration-300 font-semibold inline-flex items-center justify-center">
                             <i class="fas fa-phone mr-2"></i>
                             Contáctanos
                         </a>
@@ -2434,7 +2449,7 @@
         </div>
     </section>
 
-    <section id="contacto" class="py-12 sm:py-20 bg-gradient-to-b from-gray-800 to-gray-900">
+    <section id="contacto" class="py-12 sm:py-20 bg-gradient-to-b from-gray-800 to-gray-900 hidden">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8 sm:mb-16">
                 <span class="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold mb-4">
@@ -2449,66 +2464,55 @@
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6 max-w-6xl mx-auto">
-                <a href="tel:9221593688" class="card-modern text-center group hover:bg-white/10 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
+                <a href="tel:9221593688" class="card-modern text-center group hover:bg-yellow-50 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-phone text-white text-lg sm:text-2xl"></i>
                     </div>
                     <h3 class="font-bold text-white mb-1 sm:mb-2 text-sm sm:text-base">Teléfono</h3>
-                    <p class="text-white/80 font-semibold text-xs sm:text-sm">922 159 3688</p>
+                    <p class="text-white font-semibold text-xs sm:text-sm">922 159 3688</p>
                 </a>
                 
-                <a href="https://wa.me/5219221593688" target="_blank" class="card-modern text-center group hover:bg-white/10 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
+                <a href="https://wa.me/5219221593688" target="_blank" class="card-modern text-center group hover:bg-green-50 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <i class="fab fa-whatsapp text-white text-lg sm:text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-white mb-1 sm:mb-2 text-sm sm:text-base">WhatsApp</h3>
-                    <p class="text-white/75 font-semibold text-xs sm:text-sm">Mensaje directo</p>
+                    <h3 class="font-bold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">WhatsApp</h3>
+                    <p class="text-gray-600 font-semibold text-xs sm:text-sm">Mensaje directo</p>
                 </a>
                 
-                <a href="https://www.facebook.com/profile.php?id=61570144580225" target="_blank" class="card-modern text-center group hover:bg-white/10 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
+                <a href="https://www.facebook.com/profile.php?id=61570144580225" target="_blank" class="card-modern text-center group hover:bg-blue-50 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <i class="fab fa-facebook text-white text-lg sm:text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-white mb-1 sm:mb-2 text-sm sm:text-base">Facebook</h3>
-                    <p class="text-white/75 font-semibold text-xs sm:text-sm">Síguenos</p>
+                    <h3 class="font-bold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">Facebook</h3>
+                    <p class="text-gray-600 font-semibold text-xs sm:text-sm">Síguenos</p>
                 </a>
                 
-                <a href="https://www.instagram.com/srysraburger/" target="_blank" class="card-modern text-center group hover:bg-white/10 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
+                <a href="https://www.instagram.com/srysraburger/" target="_blank" class="card-modern text-center group hover:bg-pink-50 transition-all duration-300 min-h-[120px] flex flex-col justify-center">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <i class="fab fa-instagram text-white text-lg sm:text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-white mb-1 sm:mb-2 text-sm sm:text-base">Instagram</h3>
-                    <p class="text-white/75 font-semibold text-xs sm:text-sm">@srysraburger</p>
+                    <h3 class="font-bold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">Instagram</h3>
+                    <p class="text-gray-600 font-semibold text-xs sm:text-sm">@srysraburger</p>
                 </a>
                 
-                <a href="https://www.tiktok.com/@srsra.burger" target="_blank" class="card-modern text-center group hover:bg-white/10 transition-all duration-300 min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
+                <a href="https://www.tiktok.com/@srsra.burger" target="_blank" class="card-modern text-center group hover:bg-gray-50 transition-all duration-300 min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
                     <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <i class="fab fa-tiktok text-white text-lg sm:text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-white mb-1 sm:mb-2 text-sm sm:text-base">TikTok</h3>
-                    <p class="text-white/75 font-semibold text-xs sm:text-sm">@srsra.burger</p>
+                    <h3 class="font-bold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">TikTok</h3>
+                    <p class="text-gray-600 font-semibold text-xs sm:text-sm">@srsra.burger</p>
                 </a>
             </div>
         </div>
     </section>
 
     <!-- FAQ / Preguntas frecuentes -->
-    <section id="faq" class="py-16 bg-white dark:bg-gray-950 relative overflow-hidden">
-        <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[42rem] h-[42rem] rounded-full bg-yellow-400/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-28 left-8 w-96 h-96 rounded-full bg-orange-500/10 blur-3xl"></div>
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl relative z-10">
-            <div class="text-center mb-10 sm:mb-14">
-                <span class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 dark:bg-white/10 dark:text-yellow-200 dark:border dark:border-white/10 rounded-full text-sm font-semibold mb-4">
-                    <i class="fas fa-circle-question"></i>
-                    AYUDA RÁPIDA
-                </span>
-                <h2 class="text-3xl sm:text-5xl font-extrabold text-center text-gray-900 font-poppins">
-                    Preguntas frecuentes
-                </h2>
-                <p class="mt-3 text-base sm:text-lg text-gray-600 dark:text-slate-300/80 max-w-3xl mx-auto">
-                    Todo lo importante para pedir rápido: personalización, dirección en mapa, envío, pagos y seguimiento.
-                </p>
-            </div>
+    <section id="faq" class="py-16 bg-white hidden">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-center text-gray-900 mb-10 sm:mb-14 font-poppins">
+                ¿Necesitas alguna razón más?
+            </h2>
 
             <!-- Estilos mínimos para el acordeón -->
             <style>
@@ -2517,137 +2521,64 @@
                 details[open] .faq-chevron{transform:rotate(180deg)}
             </style>
 
-            <div class="divide-y divide-gray-200 dark:divide-white/10 bg-white dark:bg-slate-900/35 rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div class="divide-y divide-gray-200 bg-white rounded-2xl border border-gray-200">
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-yellow-400/15 text-yellow-500 flex items-center justify-center"><i class="fas fa-credit-card"></i></span>
-                            ¿Qué medios de pago aceptan?
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">¿Qué medios de pago aceptan?</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        En el checkout puedes elegir: efectivo (al recibir), tarjeta (terminal), transferencia o pago en línea con Mercado Pago (tarjeta/débito, etc.).
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Aceptamos: Efectivo, Tarjeta (en terminal), y Transferencia. Puedes indicarlo al confirmar tu pedido.
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center"><i class="fas fa-ban"></i></span>
-                            ¿Cómo puedo cancelar o cambiar mi pedido?
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">¿Cómo puedo cancelar mi pedido?</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        Escríbenos por WhatsApp lo antes posible con tu número de orden. Si el pedido aún no entra a preparación, podemos ayudarte a corregirlo, cambiarlo o cancelarlo.
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Escríbenos por WhatsApp lo antes posible con tu número de orden. Si aún no iniciamos la preparación, podremos cancelarlo o reprogramarlo.
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-green-500/15 text-green-400 flex items-center justify-center"><i class="fas fa-cart-shopping"></i></span>
-                            ¿Cómo hago un pedido desde la web?
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Seguimiento del estado de mi pedido</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        1) Toca “Mostrar menú”. 2) Abre una categoría. 3) Presiona “Personalizar” y configura tu producto/extra. 4) Abre “Carrito” y completa tus datos en el checkout.
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Conserva tu número de orden. Podrás consultar el estado por WhatsApp o desde este enlace <a href="tuenvio.html" class="text-blue-600 underline">aquí</a>. Tiempo estimado: 25–35 min zona 1, 35–45 min zona 2.
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center"><i class="fas fa-sliders-h"></i></span>
-                            ¿Puedo personalizar combos y productos?
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Mi pedido no llegó como esperaba</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        Sí. En el menú verás el botón “Personalizar” (también en combos). Ahí eliges opciones y extras antes de agregar al carrito.
-                    </div>
-                </details>
-
-                <details class="group">
-                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-400 flex items-center justify-center"><i class="fas fa-map-pin"></i></span>
-                            ¿Cómo verifico mi dirección para envío?
-                        </span>
-                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
-                    </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        En el checkout selecciona “Domicilio” y verifica en el mapa: puedes escribir tu dirección o mover el pin. La dirección se actualiza según la ubicación del pin. Si eliges “Recoger”, no necesitas mapa.
-                    </div>
-                </details>
-
-                <details class="group">
-                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center"><i class="fas fa-route"></i></span>
-                            ¿Cómo doy seguimiento a mi pedido?
-                        </span>
-                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
-                    </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        Conserva tu número de orden (se muestra al finalizar). Puedes consultar el estado por WhatsApp o desde <a href="tuenvio.html" class="text-blue-600 dark:text-sky-300 underline">tuenvio.html</a>.
-                    </div>
-                </details>
-
-                <details class="group">
-                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center"><i class="fas fa-face-sad-tear"></i></span>
-                            Mi pedido no llegó como esperaba
-                        </span>
-                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
-                    </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
                         Queremos que ames tu comida. Repórtalo en menos de 15 minutos tras recibirlo y compártenos fotos o detalles; encontraremos la mejor solución.
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-slate-500/15 text-slate-300 flex items-center justify-center"><i class="fas fa-circle-exclamation"></i></span>
-                            Mi tarjeta fue rechazada
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Mi tarjeta ha sido rechazada</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        Si fue tarjeta en terminal: verifica fondos, conexión y que permita compras presenciales.
-                        Si fue pago en línea: intenta nuevamente con Mercado Pago o elige transferencia/efectivo al recibir.
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Verifica fondos, conexión y que tu tarjeta permita compras presenciales. Si persiste, elige Transferencia o Efectivo al recibir.
                     </div>
                 </details>
 
                 <details class="group">
                     <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center"><i class="fas fa-receipt"></i></span>
-                            ¿Cómo confirmo mi compra y guardo mi número de orden?
-                        </span>
+                        <span class="text-base sm:text-lg text-gray-800 font-medium">Confirmación de compra</span>
                         <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
                     </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        Al finalizar verás tu número de orden en el mensaje de éxito. Guárdalo para seguimiento en tuenvio y para cualquier aclaración por WhatsApp.
-                    </div>
-                </details>
-
-                <details class="group">
-                    <summary class="cursor-pointer select-none py-4 px-4 sm:px-6 flex items-center justify-between">
-                        <span class="flex items-center gap-3 text-base sm:text-lg text-gray-800 dark:text-white font-semibold">
-                            <span class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center"><i class="fas fa-user"></i></span>
-                            ¿Necesito cuenta para comprar y cómo gano puntos?
-                        </span>
-                        <i class="faq-chevron fas fa-chevron-down text-gray-500"></i>
-                    </summary>
-                    <div class="px-4 sm:px-6 pb-5 text-gray-600 dark:text-slate-300/80 text-sm sm:text-base">
-                        No necesitas iniciar sesión para hacer un pedido.
-                        Pero sí necesitas iniciar sesión en “Mi cuenta” para guardar tu dirección y para ganar puntos.
-                        Los puntos se suman automáticamente cuando compras con la sesión iniciada (aprox. 1 punto por cada $10).
+                    <div class="px-4 sm:px-6 pb-5 text-gray-600 text-sm sm:text-base">
+                        Te mostraremos en pantalla tu número de orden y lo enviaremos por WhatsApp si lo solicitas. Úsalo para cualquier consulta o seguimiento.
                     </div>
                 </details>
             </div>
@@ -2720,12 +2651,48 @@
                 <span class="text-lg font-semibold">Total:</span>
                 <span id="cart-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span>
             </div>
+            <button id="open-customers-page-btn" type="button" class="w-full mb-2 bg-slate-800 text-white font-bold py-2 rounded-xl hover:bg-slate-700 transition duration-300">
+                <i class="fas fa-address-book mr-2"></i>Clientes
+            </button>
             <button id="checkout-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-xl hover:bg-[#FFA000] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
                 <i class="fas fa-receipt mr-2"></i>Finalizar Pedido
             </button>
         </div>
     </div>
     <div id="cart-overlay" class="fixed top-0 left-0 w-full h-full bg-black/50 z-40 hidden"></div>
+
+    <!-- Modal: Seleccionar cliente (Firebase) -->
+    <div id="customer-picker-modal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
+            <div class="p-4 border-b flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="text-lg font-bold font-poppins truncate">Seleccionar cliente</div>
+                    <div class="text-xs text-gray-600 truncate">Se sincroniza desde Firebase</div>
+                </div>
+                <button id="customer-picker-close" type="button" class="text-gray-500 hover:text-gray-900">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto modal-scrollbar">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input id="customer-picker-search" type="text" class="w-full pl-9 pr-3 py-2 border rounded-xl text-sm" placeholder="Buscar por nombre o teléfono" />
+                    </div>
+                    <button id="customer-picker-refresh" type="button" class="px-3 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+                <div id="customer-picker-empty" class="text-sm text-gray-600 py-6 text-center hidden">No hay clientes guardados.</div>
+                <div id="customer-picker-list" class="space-y-2"></div>
+            </div>
+            <div class="p-4 border-t bg-gray-50">
+                <button id="customer-picker-add" type="button" class="w-full bg-yellow-500 text-slate-900 font-extrabold py-3 rounded-xl hover:bg-yellow-400">
+                    <i class="fas fa-user-plus mr-2"></i>Agregar cliente
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="combo-modal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
@@ -2829,8 +2796,8 @@
             
             <!-- Header compacto -->
             <div class="checkout-header p-4 pb-3 border-b">
-                <h3 class="text-xl font-bold font-poppins text-center">Confirmar Pedido</h3>
-                <p class="text-xs text-gray-600 text-center mt-1">⏱️ Llega en 25-35 min</p>
+                <h3 class="text-xl font-bold font-poppins text-center">🛠️ Pedido Manual (WhatsApp)</h3>
+                <p class="text-xs text-gray-600 text-center mt-1">Ingresa los datos del cliente manualmente</p>
             </div>
             
             <!-- Contenido scrolleable -->
@@ -2844,8 +2811,18 @@
                     <div class="space-y-4">
                         <!-- Información del cliente -->
                         <div class="checkout-panel p-3 rounded-xl border bg-white/70">
-                            <h4 class="font-semibold text-base flex items-center mb-3">
-                                <i class="fas fa-user text-blue-600 mr-2"></i>Información del Cliente
+                            <h4 class="font-semibold text-base flex items-center justify-between gap-2 mb-3">
+                                <span class="flex items-center">
+                                    <i class="fas fa-user text-blue-600 mr-2"></i>Información del Cliente
+                                </span>
+                                <span class="flex items-center gap-2">
+                                    <button id="open-customer-picker-btn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700">
+                                        <i class="fas fa-address-book mr-1"></i>Cliente
+                                    </button>
+                                    <button id="open-customers-page-btn2" type="button" class="w-9 h-9 rounded-lg bg-yellow-500 text-slate-900 font-black hover:bg-yellow-400" title="Agregar cliente">
+                                        +
+                                    </button>
+                                </span>
                             </h4>
                             <div class="space-y-3">
                                 <div>
@@ -2877,40 +2854,35 @@
                                     <input type="radio" name="delivery-type" value="delivery" class="form-radio text-[#FFB300]">
                                     <div class="ml-2 flex-1">
                                         <div class="font-medium text-gray-800 text-sm">🚗 Envío a domicilio</div>
-                                        <div id="delivery-option-fee" class="text-xs text-[#FFB300] font-semibold">Calculando…</div>
+                                        <div id="delivery-option-fee" class="text-xs text-[#FFB300] font-semibold">Ingresa manualmente</div>
                                     </div>
                                 </label>
                             </div>
                         </div>
-                        <!-- Dirección (cuando se selecciona delivery) -->
+                        <!-- Dirección Manual (cuando se selecciona delivery) -->
                         <div id="location-section" class="checkout-panel hidden p-3 rounded-xl border bg-white/70">
-                            <div class="space-y-2">
-                                <div id="saved-addresses-section">
-                                    <label for="saved-address-select" class="block font-medium mb-2 text-sm">
-                                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>Selecciona tu dirección guardada:
-                                    </label>
-                                    <select id="saved-address-select" class="w-full p-2 border rounded-lg text-sm bg-white/70">
-                                        <option value="__select__" selected>Selecciona una dirección…</option>
-                                    </select>
-                                    <div id="delivery-address-error" class="mt-1 text-xs text-red-600 hidden"></div>
-                                    <div id="saved-addresses-hint" class="text-[11px] text-gray-500 mt-1"></div>
-                                    <a id="manage-addresses-btn" href="cliente.html" class="mt-2 inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
-                                        <i class="fas fa-user mr-2"></i>
-                                        Agregar / editar direcciones (Mi cuenta)
-                                    </a>
-
-                                    <div class="mt-3 text-xs text-gray-600">
-                                        <strong>Dirección seleccionada:</strong>
+                            <h4 class="font-semibold text-base flex items-center mb-3">
+                                <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>Dirección de Entrega
+                            </h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="manual-address" class="block text-sm font-medium mb-1">Dirección completa:</label>
+                                    <textarea id="manual-address" rows="3" placeholder="Calle, número, colonia, referencias..." class="w-full p-2 border rounded-md text-sm focus:ring-1 focus:ring-yellow-300 focus:border-yellow-400 bg-white"></textarea>
+                                    <div id="manual-address-error" class="mt-1 text-xs text-red-600 hidden"></div>
+                                </div>
+                                <div>
+                                    <label for="manual-delivery-cost" class="block text-sm font-medium mb-1">Costo de envío (ingresa manualmente):</label>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg font-bold text-gray-700">$</span>
+                                        <input type="number" id="manual-delivery-cost" placeholder="0" min="0" step="1" value="0" class="flex-1 p-2 border rounded-md text-sm focus:ring-1 focus:ring-yellow-300 focus:border-yellow-400 bg-white">
                                     </div>
-                                    <div id="selected-address" class="text-sm text-gray-800">—</div>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Ingresa el costo de envío que calculaste ($8/km, máx 12km)
+                                    </p>
+                                    <div id="manual-delivery-cost-error" class="mt-1 text-xs text-red-600 hidden"></div>
                                 </div>
                             </div>
-                            <p id="maps-help-text" class="text-xs text-gray-700 mt-3 p-3 bg-yellow-50/30 backdrop-blur-sm border border-yellow-200 rounded">
-                                <i class="fas fa-info-circle mr-1 text-yellow-500"></i>
-                                El envío se calcula a 8 pesos por KM (máximo 12 km, redondeo al entero más cercano). El costo se guarda en tu cuenta.
-                            </p>
-
-                            <div id="delivery-live-info" class="text-xs text-gray-700 mt-2 p-3 bg-white/60 backdrop-blur-sm border border-gray-200 rounded hidden"></div>
                         </div>
                     </div>
                     <!-- Columna derecha: Resumen y pago -->
@@ -2926,6 +2898,48 @@
                                     <span class="text-gray-600">Subtotal:</span>
                                     <span id="checkout-subtotal" class="font-semibold">$0.00</span>
                                 </div>
+                                
+                                <!-- Sección de descuento manual -->
+                                <div class="border rounded-lg p-2 bg-yellow-50/50">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <label for="manual-discount-input" class="text-xs font-medium text-gray-700 flex-shrink-0">
+                                            <i class="fas fa-tag text-yellow-600 mr-1"></i>Descuento:
+                                        </label>
+                                        <span class="text-xs text-gray-500">$</span>
+                                        <input 
+                                            type="number" 
+                                            id="manual-discount-input" 
+                                            placeholder="0.00" 
+                                            min="0" 
+                                            step="10" 
+                                            class="w-24 px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-yellow-300"
+                                        >
+                                        <button 
+                                            id="apply-discount-btn" 
+                                            class="ml-auto px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-md transition-colors duration-200 font-medium"
+                                        >
+                                            Aplicar
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label for="manual-discount-reason" class="text-xs font-medium text-gray-700 flex-shrink-0">
+                                            <i class="fas fa-pen text-yellow-600 mr-1"></i>Razón:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="manual-discount-reason"
+                                            placeholder="Opcional (ej. Cliente frecuente, error, cortesía)"
+                                            class="flex-1 px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-yellow-300"
+                                        >
+                                    </div>
+                                    <div id="manual-discount-error" class="text-xs text-red-600 hidden"></div>
+                                </div>
+                                
+                                <div id="checkout-discount-row" class="flex justify-between items-center hidden">
+                                    <span class="text-gray-600">Descuento:</span>
+                                    <span id="checkout-discount" class="font-semibold text-green-600">-$0.00</span>
+                                </div>
+                                
                                 <div id="checkout-delivery-fee" class="flex justify-between items-center hidden">
                                     <span class="text-gray-600">Envío:</span>
                                     <span class="font-semibold text-orange-600">+$40.00</span>
@@ -2985,14 +2999,6 @@
                                     <div class="ml-2 flex-grow">
                                         <div class="font-medium text-gray-800 text-sm">💳 Tarjeta</div>
                                         <div class="text-xs text-gray-600">Terminal</div>
-                                    </div>
-                                </label>
-
-                                <label class="checkout-option flex items-center p-2 border-2 rounded-xl cursor-pointer hover:bg-white/60 transition-all duration-200 bg-white/40 backdrop-blur-md">
-                                    <input type="radio" name="payment" value="Pago en linea" class="form-radio text-[#FFB300]">
-                                    <div class="ml-2 flex-grow">
-                                        <div class="font-medium text-gray-800 text-sm">🌐 Pago en línea</div>
-                                        <div class="text-xs text-gray-600">Mercado Pago (tarjeta, débito, etc.)</div>
                                     </div>
                                 </label>
                                 
@@ -3189,9 +3195,6 @@
                 </div>
                 <a id="track-order-link" href="tuenvio.html" class="mt-4 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold">
                     <i class="fas fa-location-dot mr-2"></i> RASTREA TU PEDIDO
-                </a>
-                <a id="order-wa-link" href="#" target="_blank" rel="noopener noreferrer" class="mt-3 hidden inline-flex items-center justify-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-extrabold">
-                    <i class="fab fa-whatsapp mr-2"></i> ENVIAR POR WHATSAPP
                 </a>
             </div>
             <div class="p-4 bg-gray-50">
@@ -3540,121 +3543,6 @@
         </div>
     </div>
 
-    <!-- Modal: Iniciar sesión / Registrarse (sin salir de la página) -->
-    <div id="sr-auth-modal" class="fixed inset-0 bg-black/60 z-[80] hidden items-center justify-center p-4">
-        <div id="sr-auth-panel" class="w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-slate-950/95 to-slate-900/95 text-white">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-                        <i class="fas fa-user text-slate-900"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-lg">Mi cuenta</div>
-                        <div class="text-xs text-white/70">Inicia sesión o crea tu cuenta</div>
-                    </div>
-                </div>
-                <button id="sr-auth-close" class="p-2 rounded-xl hover:bg-white/10" aria-label="Cerrar">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="px-5 pt-4">
-                <div class="grid grid-cols-2 gap-2 bg-white/5 p-1 rounded-2xl">
-                    <button id="sr-auth-tab-login" type="button" class="px-3 py-2 rounded-xl text-sm font-bold bg-white/10">Iniciar sesión</button>
-                    <button id="sr-auth-tab-register" type="button" class="px-3 py-2 rounded-xl text-sm font-bold bg-white/5">Crear cuenta</button>
-                </div>
-            </div>
-
-            <div class="p-5">
-                <!-- Vista: Sesión iniciada -->
-                <div id="sr-auth-view-loggedin" class="hidden">
-                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <div class="text-sm text-white/70">Sesión iniciada como</div>
-                        <div id="sr-auth-loggedin-name" class="text-lg font-black">—</div>
-                        <div class="mt-3 flex flex-col sm:flex-row gap-2">
-                            <a href="cliente.html" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 font-bold">
-                                <i class="fas fa-id-card"></i>
-                                Ir a Mi cuenta (direcciones)
-                            </a>
-                            <button id="sr-auth-logout-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 font-bold">
-                                <i class="fas fa-right-from-bracket"></i>
-                                Cerrar sesión
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Login -->
-                <div id="sr-auth-view-login">
-                    <form id="sr-auth-login-form" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-white/70 mb-1">Correo</label>
-                            <input id="sr-auth-login-correo" type="email" autocomplete="email" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="correo@ejemplo.com" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-white/70 mb-1">Contraseña</label>
-                            <input id="sr-auth-login-pass" type="password" autocomplete="current-password" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="••••••••" />
-                        </div>
-                        <p id="sr-auth-login-error" class="hidden text-xs text-red-300"></p>
-                        <div class="flex flex-col sm:flex-row gap-2 pt-1">
-                            <button id="sr-auth-login-submit" type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 font-black">
-                                Entrar
-                                <span id="sr-auth-login-spinner" class="hidden w-4 h-4 border-2 border-slate-900/40 border-t-slate-900 rounded-full animate-spin"></span>
-                            </button>
-                            <button id="sr-auth-forgot-btn" type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 font-bold">
-                                Olvidé mi contraseña
-                                <span id="sr-auth-forgot-spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                            </button>
-                        </div>
-                        <p id="sr-auth-forgot-success" class="hidden text-xs text-green-300"></p>
-                        <div class="text-xs text-white/60 pt-2">
-                            ¿Necesitas direcciones guardadas? Puedes usar <a href="cliente.html" class="underline hover:text-white">Mi cuenta</a> para administrar direcciones.
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Registro -->
-                <div id="sr-auth-view-register" class="hidden">
-                    <form id="sr-auth-reg-form" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-white/70 mb-1">Nombre completo</label>
-                            <input id="sr-auth-reg-nombre" type="text" autocomplete="name" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="Tu nombre" />
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-white/70 mb-1">Correo</label>
-                                <input id="sr-auth-reg-correo" type="email" autocomplete="email" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="correo@ejemplo.com" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-white/70 mb-1">Teléfono</label>
-                                <input id="sr-auth-reg-telefono" type="tel" autocomplete="tel" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="9221234567" />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-white/70 mb-1">Contraseña</label>
-                                <input id="sr-auth-reg-pass" type="password" autocomplete="new-password" minlength="6" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="Mínimo 6 caracteres" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-white/70 mb-1">Confirmar</label>
-                                <input id="sr-auth-reg-pass2" type="password" autocomplete="new-password" minlength="6" required class="w-full rounded-2xl px-4 py-3 bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-yellow-400/60" placeholder="Repite tu contraseña" />
-                            </div>
-                        </div>
-                        <p id="sr-auth-reg-error" class="hidden text-xs text-red-300"></p>
-                        <p id="sr-auth-reg-success" class="hidden text-xs text-green-300"></p>
-                        <button id="sr-auth-reg-submit" type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 font-black">
-                            Crear cuenta
-                            <span id="sr-auth-reg-spinner" class="hidden w-4 h-4 border-2 border-slate-900/40 border-t-slate-900 rounded-full animate-spin"></span>
-                        </button>
-                        <div class="text-xs text-white/60 pt-2">
-                            Al registrarte, tu cuenta se usa para guardar tu historial y direcciones.
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal de ayuda -->
     <div id="help-modal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
@@ -3714,7 +3602,6 @@
 
         <!-- Firebase Configuration -->
         <script type="module" src="js/firebase-config.js"></script>
-        <script src="js/sr-auth-modal.js" defer></script>
         <script>
             // Para entorno local con server.js no forzamos API_BASE; se usará same-origin
             // window.__API_BASE = 'https://pagina-v3-actual-copia1.vercel.app';
@@ -3776,7 +3663,552 @@
                 });
             })();
         </script>
-        <script src="js/script.js.backup?v=2026-01-20b"></script>
+
+        <!-- Flags de modo manual (deben estar ANTES del script principal) -->
+        <script>
+            window.__MANUAL_MODE = true;
+            window.__MANUAL_FAST_MODE = true;
+        </script>
+        <script src="js/script.js.backup?v=2026-01-15b"></script>
+
+        <!-- Script personalizado para entrada manual -->
+        <script>
+
+            // IMPORTANT: `js/script.js.backup` can call `window.placeOrder()` immediately in manual mode.
+            // Define a safe stub right away so clicks during initial load still save the order.
+            window.__manualPlaceOrderImpl = null;
+            window.__originalPlaceOrderFunction = window.__originalPlaceOrderFunction || window.placeOrder || null;
+            window.placeOrder = async function() {
+                if (typeof window.__manualPlaceOrderImpl === 'function') {
+                    return await window.__manualPlaceOrderImpl();
+                }
+
+                const startedAt = Date.now();
+                const timeoutMs = 2500;
+                while (Date.now() - startedAt < timeoutMs) {
+                    await new Promise(r => setTimeout(r, 50));
+                    if (typeof window.__manualPlaceOrderImpl === 'function') {
+                        return await window.__manualPlaceOrderImpl();
+                    }
+                }
+
+                alert('El sistema todavía está cargando. Intenta de nuevo en un momento.');
+            };
+            
+            // Modo manual: actualizar costos cuando cambia el input de envío
+            // Esperar a que el script principal cargue completamente
+            setTimeout(() => {
+                console.log('🛠️ Modo Pedido Manual activado');
+
+                // Si está el modo rápido, retirar secciones que no se usan para capturar pedidos
+                try {
+                    if (window.__MANUAL_FAST_MODE) {
+                        document.querySelectorAll('.hero-bg, #nosotros, #contacto, #faq').forEach(el => {
+                            try { el.remove(); } catch (_) {}
+                        });
+                        // Asegurar que la sección de especificaciones no se use
+                        const notesSection = document.getElementById('custom-notes-section');
+                        const notesDivider = document.getElementById('custom-notes-divider');
+                        const notesInput = document.getElementById('custom-notes-input');
+                        if (notesSection) notesSection.classList.add('hidden');
+                        if (notesDivider) notesDivider.classList.add('hidden');
+                        if (notesInput) notesInput.value = '';
+                    }
+                } catch (_) {}
+
+                // Clientes (Firebase): selector para rellenar Nombre/Teléfono/Dirección
+                const customersPageUrl = 'clientes.html';
+                const openCustomersBtnCart = document.getElementById('open-customers-page-btn');
+                const openCustomersBtnCheckout = document.getElementById('open-customers-page-btn2');
+                const openPickerBtn = document.getElementById('open-customer-picker-btn');
+
+                const pickerModal = document.getElementById('customer-picker-modal');
+                const pickerClose = document.getElementById('customer-picker-close');
+                const pickerAdd = document.getElementById('customer-picker-add');
+                const pickerRefresh = document.getElementById('customer-picker-refresh');
+                const pickerSearch = document.getElementById('customer-picker-search');
+                const pickerList = document.getElementById('customer-picker-list');
+                const pickerEmpty = document.getElementById('customer-picker-empty');
+
+                let pickerCustomers = [];
+
+                function normalizeDigits(v) {
+                    return String(v || '').replace(/\D/g, '');
+                }
+
+                function openCustomersPage() {
+                    try { window.open(customersPageUrl, '_blank'); } catch (_) { window.location.href = customersPageUrl; }
+                }
+
+                if (openCustomersBtnCart) openCustomersBtnCart.addEventListener('click', openCustomersPage);
+                if (openCustomersBtnCheckout) openCustomersBtnCheckout.addEventListener('click', openCustomersPage);
+
+                function showPicker() {
+                    if (!pickerModal) return;
+                    pickerModal.classList.remove('hidden');
+                    pickerModal.classList.add('flex');
+                    if (pickerSearch) pickerSearch.value = '';
+                    loadPickerCustomers();
+                }
+
+                function hidePicker() {
+                    if (!pickerModal) return;
+                    pickerModal.classList.add('hidden');
+                    pickerModal.classList.remove('flex');
+                }
+
+                if (pickerClose) pickerClose.addEventListener('click', hidePicker);
+                if (pickerAdd) pickerAdd.addEventListener('click', () => {
+                    hidePicker();
+                    openCustomersPage();
+                });
+                if (pickerRefresh) pickerRefresh.addEventListener('click', () => loadPickerCustomers(true));
+                if (openPickerBtn) openPickerBtn.addEventListener('click', showPicker);
+
+                if (pickerModal) {
+                    pickerModal.addEventListener('click', (e) => {
+                        if (e.target === pickerModal) hidePicker();
+                    });
+                }
+
+                async function waitForManualCustomerManager(timeoutMs = 6000) {
+                    const started = Date.now();
+                    while (Date.now() - started < timeoutMs) {
+                        if (window.firebaseManualCustomerManager) return window.firebaseManualCustomerManager;
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+                    return null;
+                }
+
+                async function loadPickerCustomers(force = false) {
+                    // Cache local: por si Firebase tarda o está offline
+                    const CACHE_KEY = 'sr_manual_customers';
+
+                    const mgr = await waitForManualCustomerManager();
+                    if (mgr) {
+                        try {
+                            const list = await mgr.getCustomers({ limitCount: 500 });
+                            pickerCustomers = (Array.isArray(list) ? list : []).map(c => ({
+                                id: c.id,
+                                name: c.name || '',
+                                phone: c.phone || (c.phoneDigits || ''),
+                                address: c.address || ''
+                            }));
+                            try { localStorage.setItem(CACHE_KEY, JSON.stringify(pickerCustomers)); } catch (_) {}
+                            renderPicker();
+                            return;
+                        } catch (e) {
+                            console.warn('Picker: no se pudo leer Firebase manual_customers:', e);
+                        }
+                    }
+
+                    // Fallback a cache local
+                    if (!force) {
+                        try {
+                            const raw = localStorage.getItem(CACHE_KEY);
+                            const parsed = raw ? JSON.parse(raw) : [];
+                            pickerCustomers = Array.isArray(parsed) ? parsed : [];
+                        } catch (_) {
+                            pickerCustomers = [];
+                        }
+                    }
+                    renderPicker();
+                }
+
+                function renderPicker() {
+                    if (!pickerList || !pickerEmpty) return;
+
+                    const q = String((pickerSearch && pickerSearch.value) || '').trim().toLowerCase();
+                    const filtered = pickerCustomers.filter(c => {
+                        const n = String(c.name || '').toLowerCase();
+                        const p = normalizeDigits(c.phone);
+                        return !q || n.includes(q) || p.includes(normalizeDigits(q));
+                    });
+
+                    pickerList.innerHTML = '';
+                    pickerEmpty.classList.toggle('hidden', filtered.length > 0);
+
+                    filtered.forEach(c => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'w-full text-left p-3 rounded-2xl border border-gray-200 hover:border-yellow-400 hover:bg-yellow-50 transition';
+                        btn.innerHTML = `
+                            <div class="font-bold text-gray-900 truncate">${escapeHtml(c.name || '(Sin nombre)')}</div>
+                            <div class="text-xs text-gray-600">${escapeHtml(c.phone || '')}</div>
+                            <div class="text-xs text-gray-700 mt-1 whitespace-pre-wrap">${escapeHtml(c.address || '')}</div>
+                        `;
+                        btn.addEventListener('click', () => {
+                            const nameEl = document.getElementById('customer-name');
+                            const phoneEl = document.getElementById('customer-phone');
+                            const addrEl = document.getElementById('manual-address');
+                            if (nameEl) nameEl.value = c.name || '';
+                            if (phoneEl) phoneEl.value = c.phone || '';
+                            if (addrEl && c.address) addrEl.value = c.address;
+                            hidePicker();
+                        });
+                        pickerList.appendChild(btn);
+                    });
+                }
+
+                function escapeHtml(s) {
+                    return String(s ?? '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#039;');
+                }
+
+                if (pickerSearch) pickerSearch.addEventListener('input', renderPicker);
+                
+                const deliveryCostInput = document.getElementById('manual-delivery-cost');
+                
+                // Variable para almacenar el descuento aplicado (cantidad fija)
+                let manualDiscountAmount = 0;
+                let manualDiscountReason = '';
+                
+                // Listener para el botón de aplicar descuento
+                const applyDiscountBtn = document.getElementById('apply-discount-btn');
+                const discountInput = document.getElementById('manual-discount-input');
+                const discountReasonInput = document.getElementById('manual-discount-reason');
+                const discountError = document.getElementById('manual-discount-error');
+
+                function readManualDiscountState() {
+                    const raw = discountInput ? parseFloat(discountInput.value) : 0;
+                    const value = isFinite(raw) ? raw : 0;
+                    const reason = discountReasonInput ? String(discountReasonInput.value || '').trim() : '';
+                    return { value, reason };
+                }
+
+                function syncDiscountStateFromInputs() {
+                    const { value, reason } = readManualDiscountState();
+                    if (value < 0) {
+                        if (discountError) {
+                            discountError.textContent = 'El descuento no puede ser negativo';
+                            discountError.classList.remove('hidden');
+                        }
+                        return false;
+                    }
+                    if (discountError) discountError.classList.add('hidden');
+                    manualDiscountAmount = value;
+                    manualDiscountReason = reason;
+                    return true;
+                }
+                
+                if (applyDiscountBtn && discountInput) {
+                    applyDiscountBtn.addEventListener('click', function() {
+                        if (!syncDiscountStateFromInputs()) return;
+                        
+                        // Actualizar totales con el descuento
+                        const deliveryCost = deliveryCostInput ? (parseFloat(deliveryCostInput.value) || 0) : 0;
+                        updateManualCheckoutTotals(deliveryCost);
+
+                        const { value } = readManualDiscountState();
+                        console.log(`✅ Descuento aplicado: $${(Number(value) || 0).toFixed(2)}`);
+                    });
+                }
+
+                // Recalcular al escribir (no depender del botón Aplicar)
+                if (discountInput) {
+                    discountInput.addEventListener('input', function() {
+                        if (!syncDiscountStateFromInputs()) return;
+                        const deliveryCost = deliveryCostInput ? (parseFloat(deliveryCostInput.value) || 0) : 0;
+                        updateManualCheckoutTotals(deliveryCost);
+                    });
+                }
+                if (discountReasonInput) {
+                    discountReasonInput.addEventListener('input', function() {
+                        syncDiscountStateFromInputs();
+                    });
+                }
+                
+                // Listener para actualizar totales cuando cambia el costo de envío
+                if (deliveryCostInput) {
+                    deliveryCostInput.addEventListener('input', function() {
+                        const deliveryCost = parseFloat(this.value) || 0;
+                        updateManualCheckoutTotals(deliveryCost);
+                    });
+                }
+                
+                // Listener para mostrar/ocultar sección de dirección manual
+                const deliveryRadios = document.querySelectorAll('input[name="delivery-type"]');
+                deliveryRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const locationSection = document.getElementById('location-section');
+                        const deliveryOptionFee = document.getElementById('delivery-option-fee');
+                        
+                        if (this.value === 'delivery') {
+                            if (locationSection) locationSection.classList.remove('hidden');
+                            if (deliveryOptionFee) deliveryOptionFee.textContent = 'Ingresa manualmente';
+                        } else {
+                            if (locationSection) locationSection.classList.add('hidden');
+                            if (deliveryOptionFee) deliveryOptionFee.textContent = 'Calculando…';
+                            // Resetear costo de envío si cambia a pickup
+                            if (deliveryCostInput) {
+                                deliveryCostInput.value = '0';
+                                updateManualCheckoutTotals(0);
+                            }
+                        }
+                    });
+                });
+                
+                // Función para actualizar los totales del checkout
+                function updateManualCheckoutTotals(deliveryCost) {
+                    const subtotalEl = document.getElementById('checkout-subtotal');
+                    const discountRowEl = document.getElementById('checkout-discount-row');
+                    const discountEl = document.getElementById('checkout-discount');
+                    const deliveryFeeEl = document.getElementById('checkout-delivery-fee');
+                    const totalEl = document.getElementById('checkout-total');
+                    const stickyDeliveryEl = document.getElementById('checkout-sticky-delivery');
+                    const stickyTotalEl = document.getElementById('checkout-sticky-total');
+                    
+                    if (!subtotalEl) return;
+                    
+                    const subtotal = parseFloat(subtotalEl.textContent.replace('$', '').replace(',', '')) || 0;
+                    
+                    // Aplicar descuento (cantidad fija)
+                    const discountAmount = Math.min(manualDiscountAmount, subtotal); // No puede ser mayor al subtotal
+                    const subtotalAfterDiscount = subtotal - discountAmount;
+                    
+                    // Mostrar/ocultar fila de descuento
+                    if (manualDiscountAmount > 0) {
+                        if (discountRowEl) discountRowEl.classList.remove('hidden');
+                        if (discountEl) discountEl.textContent = '-$' + discountAmount.toFixed(2);
+                    } else {
+                        if (discountRowEl) discountRowEl.classList.add('hidden');
+                    }
+                    
+                    // Calcular total
+                    const total = subtotalAfterDiscount + deliveryCost;
+                    
+                    // Mostrar/ocultar fila de envío
+                    if (deliveryCost > 0) {
+                        if (deliveryFeeEl) {
+                            deliveryFeeEl.classList.remove('hidden');
+                            const feeSpan = deliveryFeeEl.querySelector('span');
+                            if (feeSpan) feeSpan.textContent = '+$' + deliveryCost.toFixed(2);
+                        }
+                        if (stickyDeliveryEl) stickyDeliveryEl.textContent = '$' + deliveryCost.toFixed(2);
+                    } else {
+                        if (deliveryFeeEl) deliveryFeeEl.classList.add('hidden');
+                        if (stickyDeliveryEl) stickyDeliveryEl.textContent = 'Gratis';
+                    }
+                    
+                    // Actualizar total
+                    if (totalEl) totalEl.textContent = '$' + total.toFixed(2);
+                    if (stickyTotalEl) stickyTotalEl.textContent = '$' + total.toFixed(2);
+                }
+                
+                // Implementación real del guardado del pedido manual (la llama el stub de `window.placeOrder`).
+                function readUnifiedCartForManual() {
+                    // El sistema principal (script.js / script.js.backup) usa localStorage['cart'].
+                    // Algunas versiones viejas usaban 'sr_burger_cart'. Aquí hacemos fallback + migración.
+                    const tryRead = (key) => {
+                        try {
+                            const raw = localStorage.getItem(key);
+                            if (!raw) return null;
+                            const parsed = JSON.parse(raw);
+                            return Array.isArray(parsed) ? parsed : null;
+                        } catch (_) {
+                            return null;
+                        }
+                    };
+
+                    const primary = tryRead('cart');
+                    if (primary && primary.length) return primary;
+
+                    const legacy = tryRead('sr_burger_cart');
+                    if (legacy && legacy.length) {
+                        try { localStorage.setItem('cart', JSON.stringify(legacy)); } catch (_) {}
+                        return legacy;
+                    }
+
+                    // Último recurso: si existe un array global (por otras integraciones)
+                    try {
+                        if (Array.isArray(window.cart) && window.cart.length) return window.cart;
+                    } catch (_) {}
+
+                    return primary || legacy || [];
+                }
+
+                window.__manualPlaceOrderImpl = async function() {
+                    console.log('📝 Validación manual de pedido');
+                    
+                    // Obtener valores
+                    const name = document.getElementById('customer-name').value.trim();
+                    const phone = document.getElementById('customer-phone').value.trim();
+                    const deliveryType = document.querySelector('input[name="delivery-type"]:checked')?.value || 'pickup';
+                    const payment = document.querySelector('input[name="payment"]:checked')?.value || 'Efectivo';
+                    
+                    let hasErrors = false;
+                    
+                    // Validar nombre
+                    const nameError = document.getElementById('customer-name-error');
+                    if (!name) {
+                        if (nameError) {
+                            nameError.textContent = 'El nombre es obligatorio';
+                            nameError.classList.remove('hidden');
+                        }
+                        hasErrors = true;
+                    } else {
+                        if (nameError) nameError.classList.add('hidden');
+                    }
+                    
+                    // Validar teléfono
+                    const phoneError = document.getElementById('customer-phone-error');
+                    if (!phone) {
+                        if (phoneError) {
+                            phoneError.textContent = 'El teléfono es obligatorio';
+                            phoneError.classList.remove('hidden');
+                        }
+                        hasErrors = true;
+                    } else {
+                        if (phoneError) phoneError.classList.add('hidden');
+                    }
+                    
+                    let address = '';
+                    let deliveryCost = 0;
+                    
+                    // Si es delivery, validar dirección y costo
+                    if (deliveryType === 'delivery') {
+                        address = document.getElementById('manual-address')?.value.trim() || '';
+                        deliveryCost = parseFloat(document.getElementById('manual-delivery-cost')?.value || 0) || 0;
+                        
+                        const addressError = document.getElementById('manual-address-error');
+                        if (!address) {
+                            if (addressError) {
+                                addressError.textContent = 'La dirección es obligatoria para envío a domicilio';
+                                addressError.classList.remove('hidden');
+                            }
+                            hasErrors = true;
+                        } else {
+                            if (addressError) addressError.classList.add('hidden');
+                        }
+                        
+                        const costError = document.getElementById('manual-delivery-cost-error');
+                        if (deliveryCost < 0) {
+                            if (costError) {
+                                costError.textContent = 'Ingresa un costo válido';
+                                costError.classList.remove('hidden');
+                            }
+                            hasErrors = true;
+                        } else {
+                            if (costError) costError.classList.add('hidden');
+                        }
+                    }
+                    
+                    if (hasErrors) {
+                        alert('Por favor completa todos los campos obligatorios');
+                        return;
+                    }
+                    
+                    const cart = readUnifiedCartForManual();
+                    if (cart.length === 0) {
+                        alert('El carrito está vacío');
+                        return;
+                    }
+
+                    // Tomar descuento desde el input para asegurar que se guarde aunque no se haya presionado "Aplicar".
+                    const { value: discountValueRaw, reason: discountReasonRaw } = readManualDiscountState();
+                    const discountValue = (isFinite(discountValueRaw) && discountValueRaw > 0) ? discountValueRaw : 0;
+                    manualDiscountAmount = discountValue;
+                    manualDiscountReason = discountReasonRaw;
+                    let subtotal = 0;
+                    cart.forEach((item, index) => {
+                        const itemTotal = item.price * item.quantity;
+                        subtotal += itemTotal;
+                    });
+                    
+                    // Aplicar descuento (cantidad fija)
+                    const discountAmount = Math.min(discountValue, subtotal);
+                    const subtotalAfterDiscount = subtotal - discountAmount;
+                    const total = subtotalAfterDiscount + deliveryCost;
+                    const discountReason = String(discountReasonRaw || '').trim();
+                    
+                    // Guardar el pedido en Firebase (para que aparezca en Control de Envíos y en el ticket)
+                    let createdOrderNumber = null;
+                    try {
+                        const orderItems = cart.map((ci) => {
+                            const qty = Number(ci.quantity || 1) || 1;
+                            const unit = Number(ci.price || 0);
+                            const base = ci.baseItem || {};
+                            const baseId = Number(base.id || base.productId || 0) || 0;
+                            const name = String(base.name || ci.name || 'Producto').trim();
+
+                            const parts = [];
+                            if (Array.isArray(ci.customizations) && ci.customizations.length) {
+                                ci.customizations.forEach(c => {
+                                    const n = String(c && c.name ? c.name : '').trim();
+                                    if (n) parts.push(n);
+                                });
+                            }
+                            if (Array.isArray(ci.extras) && ci.extras.length) {
+                                ci.extras.forEach(e => {
+                                    const n = String(e || '').trim();
+                                    if (n) parts.push(n);
+                                });
+                            }
+                            if (ci.fries && ci.fries.type) parts.push(`Papas: ${ci.fries.type}`);
+                            if (ci.onionRings) parts.push('Aros de Cebolla');
+                            if (Array.isArray(ci.menuExtras) && ci.menuExtras.length) {
+                                ci.menuExtras.forEach(ex => {
+                                    const q = Number(ex.quantity || 1) || 1;
+                                    const n = String(ex.name || '').trim();
+                                    if (n) parts.push(`${q}x ${n}`);
+                                });
+                            }
+
+                            return {
+                                id: baseId,
+                                productId: baseId,
+                                name,
+                                quantity: qty,
+                                unitPrice: isFinite(unit) ? Number(unit.toFixed(2)) : 0,
+                                price: isFinite(unit) ? Number((unit * qty).toFixed(2)) : 0,
+                                customizations: parts.join(', ')
+                            };
+                        });
+
+                        const orderData = {
+                            customer: { name, phone, address: (deliveryType === 'delivery' ? address : 'Recoger en local - SR & SRA BURGER'), coordinates: null },
+                            items: orderItems,
+                            subtotal: Number(subtotal.toFixed(2)),
+                            subtotalAfterDiscount: Number(subtotalAfterDiscount.toFixed(2)),
+                            deliveryFee: Number(deliveryCost.toFixed(2)),
+                            total: Number(total.toFixed(2)),
+                            notes: manualDiscountAmount > 0 ? `Descuento manual: -$${discountAmount.toFixed(2)}${discountReason ? ` (${discountReason})` : ''}` : '',
+                            deliveryType: deliveryType,
+                            paymentMethod: payment,
+                            discountAmount: Number(discountAmount.toFixed(2)),
+                            discountReason: discountReason
+                        };
+
+                        if (window.firebaseOrderManager && typeof window.firebaseOrderManager.addOrder === 'function') {
+                            const res = await window.firebaseOrderManager.addOrder(orderData);
+                            createdOrderNumber = res && res.orderNumber ? res.orderNumber : null;
+                            console.log('✅ Pedido manual guardado. No. Orden:', createdOrderNumber);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ No se pudo guardar el pedido manual en Firebase:', e);
+                    }
+
+                    // Pedido manual: no enviar WhatsApp automáticamente.
+                    const orderLabel = createdOrderNumber ? `\n\nNúmero de orden: ${createdOrderNumber}` : '';
+                    alert(`✅ Pedido guardado correctamente.${orderLabel}`);
+                    
+                    // Preguntar si desea vaciar el carrito
+                    setTimeout(() => {
+                        if (confirm('¿Deseas vaciar el carrito después de guardar el pedido?')) {
+                            try { localStorage.removeItem('cart'); } catch (_) {}
+                            try { localStorage.removeItem('sr_burger_cart'); } catch (_) {}
+                            location.reload();
+                        }
+                    }, 500);
+                };
+                
+                console.log('✅ Implementación de placeOrder manual lista');
+            }, 1000);
+        </script>
 
 </body>
 </html>

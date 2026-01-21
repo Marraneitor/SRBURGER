@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Productos y costos - SR &amp; SRA BURGER</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Productos (recetas y costos) - SR &amp; SRA BURGER</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="styles/sr-ui.css" />
+  <script src="js/sr-shell.js" defer></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-50">
   <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-800">
@@ -30,21 +32,44 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-6">
-    <div id="status" class="mb-4 text-sm text-slate-300"></div>
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+    <div id="status" class="text-sm text-slate-300"></div>
 
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700">
-        <i class="fas fa-filter text-amber-300 text-xs"></i>
-        <div class="flex flex-col">
-          <span class="text-[11px] font-semibold text-slate-300 leading-tight">Filtrar por sección</span>
-          <select id="category-filter" class="mt-1 text-xs bg-transparent border-0 text-slate-100 focus:ring-0 p-0">
-            <option value="all">Todas las secciones</option>
-          </select>
+    <section class="rounded-2xl bg-slate-900/70 border border-slate-800 p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700">
+          <i class="fas fa-filter text-amber-300 text-xs"></i>
+          <div class="flex flex-col">
+            <span class="text-[11px] font-semibold text-slate-300 leading-tight">Filtrar por sección</span>
+            <select id="category-filter" class="mt-1 text-xs bg-transparent border-0 text-slate-100 focus:ring-0 p-0">
+              <option value="all">Todas las secciones</option>
+              <option value="with_recipe">Solo con receta</option>
+              <option value="missing_recipe">Sin receta</option>
+            </select>
+          </div>
         </div>
+
+        <div class="flex-1 min-w-[220px]">
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input id="search" type="text" placeholder="Buscar producto..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/50 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
+        </div>
+
+        <input id="import-file" type="file" accept="application/json" class="hidden" />
+        <button id="import-btn" type="button" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-sm font-extrabold text-slate-950 inline-flex items-center gap-2">
+          <i class="fas fa-file-import"></i>
+          Importar recetas JSON
+        </button>
+        <button id="export-btn" type="button" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold text-slate-100 inline-flex items-center gap-2">
+          <i class="fas fa-file-export"></i>
+          Exportar recetas JSON
+        </button>
       </div>
-      <p class="text-xs text-slate-400">Tip: usa esta vista para definir tus costos internos sin que el cliente los vea.</p>
-    </div>
+      <div class="mt-2 text-xs text-slate-400">
+        Esta página usa los productos reales del admin. En importación, si un producto no coincide por nombre, se ignora.
+      </div>
+    </section>
 
     <div id="productos-container" class="space-y-6"></div>
   </main>
@@ -88,8 +113,15 @@
         ]
       };
 
+      const FIREBASE_ING_KEY = 'ingredientsCatalog';
+      const FIREBASE_RECIPES_KEY = 'productsRecipes';
+
       let firebaseSettings = null;
       let productionCosts = {};
+      let ingredientsCatalog = [];
+      let productsRecipes = {};
+
+      let saveTimer = null;
 
       function setStatus(msg, type) {
         const el = document.getElementById('status');
@@ -98,6 +130,87 @@
         const color = type === 'error' ? 'text-rose-300' : type === 'success' ? 'text-emerald-300' : 'text-slate-300';
         el.className = base + ' ' + color;
         el.textContent = msg || '';
+      }
+
+      function safeText(v) {
+        return v == null ? '' : String(v);
+      }
+
+      function normText(s) {
+        return safeText(s)
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function toNumber(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function formatMoney(n) {
+        const v = Number(n || 0);
+        if (!Number.isFinite(v)) return '$0';
+        return '$' + v.toFixed(2);
+      }
+
+      function debounceSave(fn) {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(fn, 600);
+      }
+
+      function computeIngredientUnitCost(ing) {
+        const p = Number(ing?.pricePerPack ?? 0);
+        const u = Number(ing?.unitsPerPack ?? 0);
+        if (!Number.isFinite(p) || !Number.isFinite(u) || u <= 0) return 0;
+        return p / u;
+      }
+
+      function getIngredientIndex(catalog) {
+        const byId = new Map();
+        const byName = new Map();
+        (Array.isArray(catalog) ? catalog : []).forEach((ing) => {
+          if (!ing) return;
+          const id = safeText(ing.id).trim();
+          const name = safeText(ing.name).trim();
+          if (id) byId.set(id, ing);
+          if (name) byName.set(normText(name), ing);
+        });
+        return { byId, byName };
+      }
+
+      function computeRecipeCost(recipe, catalogIndex) {
+        const lines = Array.isArray(recipe?.ingredients) ? recipe.ingredients : [];
+        let total = 0;
+        const details = [];
+
+        lines.forEach((ln) => {
+          if (!ln) return;
+          const qty = Number(ln.qty ?? ln.quantity ?? 0);
+          if (!Number.isFinite(qty) || qty <= 0) return;
+
+          const ing = (ln.ingredientId && catalogIndex.byId.get(String(ln.ingredientId)))
+            || (ln.name && catalogIndex.byName.get(normText(ln.name)))
+            || null;
+
+          const unitCost = ing ? computeIngredientUnitCost(ing) : 0;
+          const lineCost = unitCost * qty;
+          total += lineCost;
+
+          details.push({
+            name: safeText(ln.name || ing?.name || 'Ingrediente'),
+            qty,
+            unit: safeText(ln.unit || ing?.unit || ''),
+            unitCost,
+            lineCost,
+            missing: !ing
+          });
+        });
+
+        return { total, details };
       }
 
       function buildProductsList(filterCategory) {
@@ -150,12 +263,314 @@
         return all;
       }
 
+      function getValidProductsByName(allProducts) {
+        const map = new Map();
+        (allProducts || []).forEach((p) => {
+          const key = normText(p.name);
+          if (key) map.set(key, p);
+        });
+        return map;
+      }
+
+      function parseImportedRecipesPayload(parsed) {
+        const list = Array.isArray(parsed)
+          ? parsed
+          : (Array.isArray(parsed?.productos) ? parsed.productos
+            : (Array.isArray(parsed?.products) ? parsed.products
+              : (Array.isArray(parsed?.data) ? parsed.data
+                : null)));
+        if (!Array.isArray(list)) return [];
+        return list;
+      }
+
+      function normalizeRecipeLine(line) {
+        if (!line || typeof line !== 'object') return null;
+        const qty = toNumber(line.cantidad ?? line.qty ?? line.quantity ?? line.amount);
+        if (qty == null || qty <= 0) return null;
+
+        const ingredientId = safeText(line.ingredienteId ?? line.ingredientId ?? line.id ?? '').trim() || null;
+        const name = safeText(line.nombre ?? line.name ?? line.ingrediente ?? '').trim() || null;
+        const unit = safeText(line.unidad ?? line.unit ?? '').trim() || null;
+
+        if (!ingredientId && !name) return null;
+        return { ingredientId, name, unit, qty };
+      }
+
+      function normalizeImportedProductRecipe(raw, validByName, catalogIndex) {
+        if (!raw || typeof raw !== 'object') return null;
+        const name = safeText(raw.nombre ?? raw.name ?? raw.producto ?? raw.productName ?? raw.titulo ?? raw.title ?? '').trim();
+        if (!name) return null;
+
+        const match = validByName.get(normText(name));
+        if (!match) return { ignored: true, name };
+
+        const section = safeText(raw.seccion ?? raw.section ?? raw.categoria ?? raw.category ?? raw.clasificacion ?? '').trim();
+
+        const rawLines = Array.isArray(raw.ingredientes)
+          ? raw.ingredientes
+          : (Array.isArray(raw.receta) ? raw.receta
+            : (Array.isArray(raw.ingredients) ? raw.ingredients : []));
+
+        const ingredients = rawLines.map(normalizeRecipeLine).filter(Boolean).map((ln) => {
+          // Resolver a ingrediente real (por id o nombre)
+          const ing = (ln.ingredientId && catalogIndex.byId.get(String(ln.ingredientId)))
+            || (ln.name && catalogIndex.byName.get(normText(ln.name)))
+            || null;
+
+          return {
+            ingredientId: ing?.id || ln.ingredientId || null,
+            name: ing?.name || ln.name || 'Ingrediente',
+            unit: ing?.unit || ln.unit || '',
+            qty: ln.qty
+          };
+        });
+
+        return {
+          ignored: false,
+          productId: match.id,
+          productName: match.name,
+          section: section || match.category,
+          ingredients
+        };
+      }
+
+      function openEditModal(product, recipe) {
+        const catalogIndex = getIngredientIndex(ingredientsCatalog);
+        const current = recipe || { section: product.category, ingredients: [] };
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4';
+
+        const options = (ingredientsCatalog || [])
+          .slice()
+          .sort((a, b) => safeText(a.name).localeCompare(safeText(b.name), 'es'))
+          .map((i) => `<option value="${String(i.id)}">${escapeHtml(i.name)} (${escapeHtml(i.unit || '')})</option>`)
+          .join('');
+
+        function lineRow(idx, line) {
+          const idVal = safeText(line?.ingredientId || '').trim();
+          const qtyVal = (line?.qty != null ? String(line.qty) : '');
+          return `
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center" data-line="${idx}">
+              <div class="sm:col-span-7">
+                <select class="w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400" data-field="ing">
+                  <option value="">Selecciona ingrediente</option>
+                  ${options}
+                </select>
+              </div>
+              <div class="sm:col-span-3">
+                <input type="number" min="0" step="0.0001" class="w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Cantidad" data-field="qty" value="${escapeHtmlAttr(qtyVal)}" />
+              </div>
+              <div class="sm:col-span-2 flex justify-end">
+                <button type="button" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-200 text-xs font-semibold" data-action="remove">Quitar</button>
+              </div>
+            </div>
+          `;
+        }
+
+        modal.innerHTML = `
+          <div class="w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+            <div class="px-4 py-3 flex items-center justify-between bg-slate-950/60 border-b border-slate-800">
+              <div>
+                <div class="text-xs text-slate-400">Editar receta</div>
+                <div class="text-sm font-extrabold text-slate-100">${escapeHtml(product.name)}</div>
+                <div class="text-[11px] text-slate-500">ID: ${product.id} · Sección: ${escapeHtml(current.section || product.category)}</div>
+              </div>
+              <button type="button" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700" data-action="close">
+                <i class="fas fa-times text-slate-200"></i>
+              </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+              <div>
+                <label class="text-xs font-semibold text-slate-200">Sección</label>
+                <input type="text" class="mt-1 w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400" data-field="section" value="${escapeHtmlAttr(current.section || product.category)}" />
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-semibold text-slate-200">Ingredientes</label>
+                  <button type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold" data-action="add">
+                    <i class="fas fa-plus mr-1"></i>Agregar
+                  </button>
+                </div>
+                <div class="mt-2 space-y-2" id="lines">
+                  ${current.ingredients.length ? current.ingredients.map((ln, idx) => lineRow(idx, ln)).join('') : '<div class="text-xs text-slate-400">Sin ingredientes. Agrega al menos uno.</div>'}
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-2">
+                <button type="button" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-sm font-extrabold text-slate-950" data-action="save">Guardar receta</button>
+                <button type="button" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-sm font-extrabold text-slate-950" data-action="apply">Guardar y aplicar costo</button>
+                <div class="flex-1"></div>
+                <button type="button" class="px-4 py-2 rounded-xl bg-transparent hover:bg-slate-800 text-sm font-semibold text-rose-300" data-action="clear">Borrar receta</button>
+              </div>
+              <div class="text-xs text-slate-400">Las cantidades deben estar en la misma unidad del ingrediente (g, pz, unidad, etc.).</div>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Preseleccionar selects
+        const setSelectValues = () => {
+          const rows = modal.querySelectorAll('[data-line]');
+          rows.forEach((row, idx) => {
+            const select = row.querySelector('select[data-field="ing"]');
+            const idVal = safeText(current.ingredients[idx]?.ingredientId || '').trim();
+            if (select && idVal) select.value = idVal;
+          });
+        };
+        setSelectValues();
+
+        function collectRecipeFromModal() {
+          const section = safeText(modal.querySelector('[data-field="section"]')?.value).trim() || product.category;
+          const linesWrap = modal.querySelector('#lines');
+          const rows = linesWrap ? Array.from(linesWrap.querySelectorAll('[data-line]')) : [];
+          const lines = [];
+          rows.forEach((row) => {
+            const ingId = safeText(row.querySelector('[data-field="ing"]')?.value).trim();
+            const qty = toNumber(row.querySelector('[data-field="qty"]')?.value);
+            if (!ingId || qty == null || qty <= 0) return;
+            const ing = catalogIndex.byId.get(ingId);
+            if (!ing) return;
+            lines.push({ ingredientId: ing.id, name: ing.name, unit: ing.unit, qty });
+          });
+          return { section, ingredients: lines };
+        }
+
+        async function saveRecipe(nextRecipe, applyCost) {
+          try {
+            const settings = firebaseSettings || (await window.firebaseManager.getSettings());
+            const next = { ...(settings || {}) };
+            const all = { ...(next[FIREBASE_RECIPES_KEY] || {}) };
+
+            if (!nextRecipe || !Array.isArray(nextRecipe.ingredients) || !nextRecipe.ingredients.length) {
+              delete all[String(product.id)];
+            } else {
+              all[String(product.id)] = {
+                section: nextRecipe.section || product.category,
+                ingredients: nextRecipe.ingredients,
+                updatedAt: new Date().toISOString()
+              };
+            }
+
+            next[FIREBASE_RECIPES_KEY] = all;
+
+            if (applyCost) {
+              const idx = getIngredientIndex(ingredientsCatalog);
+              const { total } = computeRecipeCost(all[String(product.id)], idx);
+              const prodCosts = { ...(next.productionCosts || {}) };
+              prodCosts[String(product.id)] = Number(total.toFixed(2));
+              next.productionCosts = prodCosts;
+            }
+
+            await window.firebaseManager.saveSettings(next);
+            firebaseSettings = next;
+            productsRecipes = next[FIREBASE_RECIPES_KEY] || {};
+            productionCosts = next.productionCosts || {};
+            setStatus('Receta guardada.', 'success');
+          } catch (e) {
+            console.error(e);
+            setStatus('No se pudo guardar la receta en Firebase.', 'error');
+          }
+        }
+
+        modal.addEventListener('click', async (e) => {
+          const btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          if (action === 'close') {
+            modal.remove();
+            return;
+          }
+          if (action === 'add') {
+            const lines = modal.querySelector('#lines');
+            const rowCount = lines ? lines.querySelectorAll('[data-line]').length : 0;
+            if (lines) {
+              if (lines.textContent.includes('Sin ingredientes')) lines.innerHTML = '';
+              lines.insertAdjacentHTML('beforeend', lineRow(rowCount, {}));
+            }
+            return;
+          }
+          if (action === 'remove') {
+            const row = btn.closest('[data-line]');
+            if (row) row.remove();
+            return;
+          }
+          if (action === 'clear') {
+            const ok = confirm('¿Borrar la receta de este producto?');
+            if (!ok) return;
+            await saveRecipe(null, false);
+            modal.remove();
+            render(document.getElementById('category-filter')?.value || 'all');
+            return;
+          }
+          if (action === 'save') {
+            const r = collectRecipeFromModal();
+            await saveRecipe(r, false);
+            modal.remove();
+            render(document.getElementById('category-filter')?.value || 'all');
+            return;
+          }
+          if (action === 'apply') {
+            const r = collectRecipeFromModal();
+            await saveRecipe(r, true);
+            modal.remove();
+            render(document.getElementById('category-filter')?.value || 'all');
+            return;
+          }
+        });
+      }
+
+      function escapeHtml(s) {
+        return safeText(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function escapeHtmlAttr(s) {
+        return escapeHtml(s).replace(/`/g, '&#96;');
+      }
+
       function render(filterCategory) {
         const container = document.getElementById('productos-container');
         const select = document.getElementById('category-filter');
         if (!container || !select) return;
 
-        const all = buildProductsList(filterCategory);
+        const query = normText(document.getElementById('search')?.value || '');
+
+        const baseAll = buildProductsList('all');
+        const catalogIndex = getIngredientIndex(ingredientsCatalog);
+        const recipes = productsRecipes || {};
+
+        const all = baseAll
+          .map((p) => {
+            const recipe = recipes[String(p.id)] || null;
+            const calc = recipe ? computeRecipeCost(recipe, catalogIndex) : { total: null, details: [] };
+            return {
+              ...p,
+              recipe,
+              recipeSection: safeText(recipe?.section || p.category).trim() || p.category,
+              calcCost: (calc && calc.total != null) ? calc.total : null,
+              calcDetails: calc.details || []
+            };
+          })
+          .filter((p) => {
+            if (query && !normText(p.name).includes(query)) return false;
+
+            if (filterCategory === 'with_recipe') return Boolean(p.recipe && Array.isArray(p.recipe.ingredients) && p.recipe.ingredients.length);
+            if (filterCategory === 'missing_recipe') return !(p.recipe && Array.isArray(p.recipe.ingredients) && p.recipe.ingredients.length);
+            if (filterCategory && filterCategory !== 'all') return p.recipeSection === filterCategory;
+            return true;
+          })
+          .sort((a, b) => {
+            if (a.recipeSection === b.recipeSection) return a.name.localeCompare(b.name, 'es');
+            return a.recipeSection.localeCompare(b.recipeSection, 'es');
+          });
+
         if (!all.length) {
           container.innerHTML = '<div class="text-center py-12 text-slate-400">No se encontraron productos. Revisa tu panel de admin.</div>';
           return;
@@ -163,7 +578,8 @@
 
         // Rellenar opciones de filtro una sola vez
         if (select.options.length <= 1) {
-          const cats = Array.from(new Set(all.map(p => p.category)));
+          const cats = Array.from(new Set(baseAll.map(p => safeText((productsRecipes[String(p.id)]?.section) || p.category).trim() || p.category)));
+          cats.sort((a, b) => a.localeCompare(b, 'es'));
           cats.forEach((cat) => {
             const opt = document.createElement('option');
             opt.value = cat;
@@ -175,17 +591,55 @@
         // Agrupar por categoría
         const byCat = new Map();
         all.forEach((p) => {
-          if (!byCat.has(p.category)) byCat.set(p.category, []);
-          byCat.get(p.category).push(p);
+          const sec = p.recipeSection || p.category;
+          if (!byCat.has(sec)) byCat.set(sec, []);
+          byCat.get(sec).push(p);
         });
 
         const sections = [];
         byCat.forEach((items, cat) => {
           const rows = items.map((p) => {
             const price = Number.isFinite(p.price) ? p.price : 0;
-            const cost = p.cost != null ? p.cost : '';
-            const margin = p.cost != null ? Math.max(0, price - p.cost) : null;
-            const marginText = margin != null ? `$${margin.toFixed(0)}` : '—';
+            const storedCost = (() => {
+              const v = p.cost;
+              if (v == null) return null;
+              const n = Number(v);
+              return Number.isFinite(n) ? n : null;
+            })();
+
+            const calcCost = p.calcCost;
+            const hasRecipe = Boolean(p.recipe && Array.isArray(p.recipe.ingredients) && p.recipe.ingredients.length);
+
+            const margin = (calcCost != null) ? (price - calcCost) : (storedCost != null ? (price - storedCost) : null);
+            const marginText = margin != null ? '$' + Math.max(0, margin).toFixed(0) : '—';
+
+            const missingCount = (p.calcDetails || []).filter(d => d.missing).length;
+            const missingBadge = missingCount
+              ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 border border-rose-500/40 text-rose-200">${missingCount} faltan</span>`
+              : '';
+
+            const costBadge = hasRecipe
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-200">Calc: ${formatMoney(calcCost)}</span>`
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 border border-slate-700 text-slate-300">Sin receta</span>`;
+
+            const storedBadge = storedCost != null
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">Guardado: ${formatMoney(storedCost)}</span>`
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 border border-slate-700 text-slate-400">Guardado: —</span>`;
+
+            const details = hasRecipe
+              ? `
+                <div class="mt-2 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+                  <div class="text-[11px] font-semibold text-slate-300 mb-2">Ingredientes (${p.recipe.ingredients.length})</div>
+                  <div class="space-y-1">
+                    ${(p.calcDetails || []).map((d) => {
+                      const warn = d.missing ? 'text-rose-200' : 'text-slate-200';
+                      const tag = d.missing ? '<span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-200">No existe</span>' : '';
+                      return `<div class="flex items-center justify-between gap-2 text-xs ${warn}"><div class="min-w-0 truncate">${escapeHtml(d.name)}${tag}</div><div class="text-right whitespace-nowrap">${d.qty} ${escapeHtml(d.unit || '')} · ${formatMoney(d.lineCost)}</div></div>`;
+                    }).join('')}
+                  </div>
+                </div>
+              `
+              : '';
 
             return `
               <tr class="border-b border-slate-800/60">
@@ -193,15 +647,27 @@
                   <div class="text-sm font-semibold text-slate-100">${p.name}</div>
                   <div class="text-[11px] text-slate-400">ID: ${p.id}</div>
                   <div class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">${p.description || ''}</div>
+                  <div class="mt-1 flex flex-wrap items-center gap-2">${costBadge}${storedBadge}${missingBadge}</div>
+                  ${details}
                 </td>
                 <td class="px-3 py-2 align-top text-sm text-amber-300 font-semibold whitespace-nowrap">$${price.toFixed(0)}</td>
                 <td class="px-3 py-2 align-top">
-                  <div class="flex items-center gap-2">
-                    <span class="text-slate-400 text-xs">$</span>
-                    <input type="number" min="0" step="1" value="${cost !== '' ? cost : ''}" data-product-id="${p.id}" class="cost-input w-24 bg-slate-900/60 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:ring-amber-400 focus:border-amber-400" placeholder="0" />
-                    <button type="button" data-action="save-cost" data-product-id="${p.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[11px] font-semibold text-slate-950">
-                      <i class="fas fa-save"></i>
-                      Guardar
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-slate-400 text-xs">$</span>
+                      <input type="number" min="0" step="0.01" value="${storedCost != null ? String(storedCost) : ''}" data-product-id="${p.id}" class="cost-input w-24 bg-slate-900/60 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:ring-amber-400 focus:border-amber-400" placeholder="0" />
+                      <button type="button" data-action="save-cost" data-product-id="${p.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-[11px] font-semibold text-slate-950">
+                        <i class="fas fa-save"></i>
+                        Guardar
+                      </button>
+                    </div>
+                    <button type="button" data-action="edit-recipe" data-product-id="${p.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-semibold text-slate-100">
+                      <i class="fas fa-pen"></i>
+                      Receta
+                    </button>
+                    <button type="button" data-action="apply-cost" data-product-id="${p.id}" ${hasRecipe ? '' : 'disabled'} class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-[11px] font-extrabold text-slate-950">
+                      <i class="fas fa-calculator"></i>
+                      Aplicar costo
                     </button>
                   </div>
                 </td>
@@ -227,7 +693,7 @@
                     <tr>
                       <th class="px-3 py-2 text-left font-semibold">Producto</th>
                       <th class="px-3 py-2 text-left font-semibold">Precio venta</th>
-                      <th class="px-3 py-2 text-left font-semibold">Costo producción</th>
+                      <th class="px-3 py-2 text-left font-semibold">Receta</th>
                       <th class="px-3 py-2 text-left font-semibold">Utilidad aprox.</th>
                     </tr>
                   </thead>
@@ -243,34 +709,90 @@
         container.innerHTML = sections.join('');
 
         container.onclick = async (ev) => {
-          const btn = ev.target.closest('[data-action="save-cost"]');
+          const btn = ev.target.closest('[data-action]');
           if (!btn) return;
+          const action = btn.getAttribute('data-action');
           const pid = Number(btn.getAttribute('data-product-id'));
-          const input = container.querySelector(`input.cost-input[data-product-id="${pid}"]`);
-          if (!Number.isFinite(pid) || !input) return;
+          if (!Number.isFinite(pid)) return;
+          const product = baseAll.find(p => Number(p.id) === pid);
+          if (!product) return;
 
-          const raw = (input.value || '').trim();
-          let val = Number(raw);
-          if (!raw) {
-            delete productionCosts[pid];
-          } else if (!Number.isFinite(val) || val < 0) {
-            alert('Escribe un costo válido mayor o igual a 0.');
+          if (action === 'save-cost') {
+            const input = container.querySelector(`input.cost-input[data-product-id="${pid}"]`);
+            if (!input) return;
+            const raw = (input.value || '').trim();
+            if (!raw) {
+              // limpiar
+              try {
+                const settings = firebaseSettings || (await window.firebaseManager.getSettings());
+                const next = { ...(settings || {}) };
+                const prodCosts = { ...(next.productionCosts || {}) };
+                delete prodCosts[String(pid)];
+                next.productionCosts = prodCosts;
+                await window.firebaseManager.saveSettings(next);
+                firebaseSettings = next;
+                productionCosts = prodCosts;
+                setStatus('Costo eliminado y guardado.', 'success');
+                render(document.getElementById('category-filter')?.value || 'all');
+              } catch (e) {
+                console.error(e);
+                setStatus('No se pudo guardar el cambio de costo.', 'error');
+              }
+              return;
+            }
+
+            const val = Number(raw);
+            if (!Number.isFinite(val) || val < 0) {
+              alert('Escribe un costo válido mayor o igual a 0.');
+              return;
+            }
+
+            try {
+              const settings = firebaseSettings || (await window.firebaseManager.getSettings());
+              const next = { ...(settings || {}) };
+              const prodCosts = { ...(next.productionCosts || {}) };
+              prodCosts[String(pid)] = Number(val.toFixed(2));
+              next.productionCosts = prodCosts;
+              await window.firebaseManager.saveSettings(next);
+              firebaseSettings = next;
+              productionCosts = prodCosts;
+              setStatus('Costo guardado en Firebase.', 'success');
+              render(document.getElementById('category-filter')?.value || 'all');
+            } catch (e) {
+              console.error(e);
+              setStatus('No se pudo guardar el costo.', 'error');
+            }
             return;
-          } else {
-            productionCosts[pid] = val;
           }
 
-          try {
-            const settings = firebaseSettings || {};
-            settings.productionCosts = productionCosts;
-            if (window.firebaseManager && typeof window.firebaseManager.saveSettings === 'function') {
-              await window.firebaseManager.saveSettings(settings);
+          if (action === 'edit-recipe') {
+            const recipe = productsRecipes[String(pid)] || null;
+            openEditModal(product, recipe);
+            return;
+          }
+
+          if (action === 'apply-cost') {
+            const recipe = productsRecipes[String(pid)] || null;
+            if (!recipe) return;
+            const idx = getIngredientIndex(ingredientsCatalog);
+            const { total } = computeRecipeCost(recipe, idx);
+            const nextVal = Number(total.toFixed(2));
+
+            try {
+              const settings = firebaseSettings || (await window.firebaseManager.getSettings());
+              const next = { ...(settings || {}) };
+              const prodCosts = { ...(next.productionCosts || {}) };
+              prodCosts[String(pid)] = nextVal;
+              next.productionCosts = prodCosts;
+              await window.firebaseManager.saveSettings(next);
+              firebaseSettings = next;
+              productionCosts = prodCosts;
+              setStatus('Costo aplicado y guardado en Firebase.', 'success');
+              render(document.getElementById('category-filter')?.value || 'all');
+            } catch (e) {
+              console.error(e);
+              setStatus('No se pudo aplicar el costo.', 'error');
             }
-            firebaseSettings = settings;
-            setStatus('Costos actualizados correctamente.', 'success');
-          } catch (e) {
-            console.error('Error guardando costos:', e);
-            setStatus('No se pudieron guardar los costos. Revisa la consola.', 'error');
           }
         };
       }
@@ -285,7 +807,7 @@
 
       async function init() {
         try {
-          setStatus('Cargando productos y configuraciones...', 'info');
+          setStatus('Cargando productos, ingredientes y recetas...', 'info');
           if (!window.firebaseManager || typeof window.firebaseManager.getSettings !== 'function') {
             setStatus('Firebase no está disponible. No se pueden leer los productos del admin.', 'error');
             return;
@@ -293,7 +815,20 @@
           const settings = await window.firebaseManager.getSettings();
           firebaseSettings = settings || {};
           productionCosts = (firebaseSettings && firebaseSettings.productionCosts) || {};
-          setStatus('Productos listos. Edita los costos de producción y guarda.', 'success');
+          ingredientsCatalog = Array.isArray(firebaseSettings[FIREBASE_ING_KEY]) ? firebaseSettings[FIREBASE_ING_KEY] : [];
+          // fallback a localStorage usado por ingredientes.html
+          if (!ingredientsCatalog.length) {
+            try {
+              const raw = localStorage.getItem('sr_ingredients_v1');
+              const parsed = raw ? JSON.parse(raw) : [];
+              ingredientsCatalog = Array.isArray(parsed) ? parsed : [];
+            } catch (_) {
+              ingredientsCatalog = [];
+            }
+          }
+          productsRecipes = (firebaseSettings && firebaseSettings[FIREBASE_RECIPES_KEY]) || {};
+
+          setStatus('Listo. Puedes importar recetas o editar por producto.', 'success');
           render('all');
 
           const select = document.getElementById('category-filter');
@@ -301,6 +836,113 @@
             select.addEventListener('change', () => {
               const value = select.value || 'all';
               render(value);
+            });
+          }
+
+          const search = document.getElementById('search');
+          if (search) {
+            search.addEventListener('input', () => {
+              debounceSave(() => render(document.getElementById('category-filter')?.value || 'all'));
+            });
+          }
+
+          const importBtn = document.getElementById('import-btn');
+          const importFile = document.getElementById('import-file');
+          const exportBtn = document.getElementById('export-btn');
+
+          if (importBtn && importFile) {
+            importBtn.addEventListener('click', () => {
+              importFile.value = '';
+              importFile.click();
+            });
+
+            importFile.addEventListener('change', async () => {
+              const file = importFile.files && importFile.files[0];
+              if (!file) return;
+              try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                const list = parseImportedRecipesPayload(parsed);
+                const baseAll = buildProductsList('all');
+                const validByName = getValidProductsByName(baseAll);
+                const catalogIndex = getIngredientIndex(ingredientsCatalog);
+
+                let imported = 0;
+                let ignored = 0;
+                const nextRecipes = { ...(productsRecipes || {}) };
+
+                list.forEach((raw) => {
+                  const normalized = normalizeImportedProductRecipe(raw, validByName, catalogIndex);
+                  if (!normalized) return;
+                  if (normalized.ignored) {
+                    ignored += 1;
+                    return;
+                  }
+                  nextRecipes[String(normalized.productId)] = {
+                    section: normalized.section,
+                    ingredients: normalized.ingredients,
+                    importedAt: new Date().toISOString()
+                  };
+                  imported += 1;
+                });
+
+                const settings = firebaseSettings || (await window.firebaseManager.getSettings());
+                const next = { ...(settings || {}) };
+                next[FIREBASE_RECIPES_KEY] = nextRecipes;
+                await window.firebaseManager.saveSettings(next);
+                firebaseSettings = next;
+                productsRecipes = nextRecipes;
+
+                setStatus(`Importación lista. Recetas importadas: ${imported} · Ignoradas por nombre: ${ignored}`, 'success');
+                render(document.getElementById('category-filter')?.value || 'all');
+              } catch (e) {
+                console.error(e);
+                setStatus('No se pudo importar (JSON inválido o estructura no soportada).', 'error');
+              }
+            });
+          }
+
+          if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+              const baseAll = buildProductsList('all');
+              const out = baseAll.map((p) => {
+                const r = productsRecipes[String(p.id)] || null;
+                if (!r) return null;
+                return {
+                  nombre: p.name,
+                  seccion: r.section || p.category,
+                  receta: (r.ingredients || []).map((ln) => ({
+                    ingredienteId: ln.ingredientId || null,
+                    nombre: ln.name,
+                    unidad: ln.unit,
+                    cantidad: ln.qty
+                  }))
+                };
+              }).filter(Boolean);
+
+              const blob = new Blob([JSON.stringify({ version: '1.0', exportDate: new Date().toISOString(), productos: out }, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'productos_recetas.json';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              setStatus('Exportado productos_recetas.json', 'success');
+            });
+          }
+
+          // Listener realtime
+          if (window.firebaseManager && typeof window.firebaseManager.listenToSettings === 'function') {
+            window.firebaseManager.listenToSettings((s) => {
+              try {
+                firebaseSettings = s || {};
+                productionCosts = firebaseSettings.productionCosts || {};
+                ingredientsCatalog = Array.isArray(firebaseSettings[FIREBASE_ING_KEY]) ? firebaseSettings[FIREBASE_ING_KEY] : ingredientsCatalog;
+                productsRecipes = firebaseSettings[FIREBASE_RECIPES_KEY] || productsRecipes;
+                render(document.getElementById('category-filter')?.value || 'all');
+              } catch (_) {}
             });
           }
         } catch (e) {

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ingredientes - SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+  <script src="js/sr-shell.js" defer></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-500 text-slate-950 grid place-items-center">
+          <i class="fas fa-boxes-stacked"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-indigo-300 tracking-wide">SR &amp; SRA BURGER</div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Ingredientes</h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Crea, edita y exporta/importa tu catálogo de ingredientes.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="admin.html" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-100 border border-slate-700">
+          <i class="fas fa-arrow-left"></i>
+          Volver al admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+    <div id="status" class="text-xs text-slate-300"></div>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-extrabold text-slate-100">Nuevo ingrediente</h2>
+            <p class="text-xs text-slate-400 mt-1">Formato: nombre, unidad, precio por paquete y unidades por paquete.</p>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-400">Costo por unidad</div>
+            <div id="unit-cost" class="text-lg font-extrabold text-indigo-300">$0</div>
+          </div>
+        </div>
+
+        <form id="ingredient-form" class="mt-4 space-y-3" autocomplete="off">
+          <input type="hidden" id="edit-id" value="" />
+
+          <div>
+            <label class="text-xs font-semibold text-slate-200">Nombre</label>
+            <input id="name" type="text" placeholder="Queso, Tomate..." class="mt-1 w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-200">Unidad</label>
+            <input id="unit" list="units" type="text" placeholder="g, kg, L, unidad" class="mt-1 w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <datalist id="units">
+              <option value="g"></option>
+              <option value="kg"></option>
+              <option value="ml"></option>
+              <option value="L"></option>
+              <option value="unidad"></option>
+              <option value="pz"></option>
+            </datalist>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-200">Precio por paquete</label>
+              <input id="price" type="number" step="0.01" min="0" placeholder="0.00" class="mt-1 w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-slate-200">Unidades por paquete</label>
+              <input id="units-per-pack" type="number" step="0.0001" min="0" placeholder="1" class="mt-1 w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-2">
+            <button type="submit" id="save-btn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-sm font-extrabold text-slate-950 flex items-center gap-2">
+              <i class="fas fa-save"></i>
+              Guardar
+            </button>
+            <button type="button" id="cancel-edit-btn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sm font-semibold text-slate-100 border border-slate-700 hidden">
+              Cancelar edición
+            </button>
+
+            <div class="flex-1"></div>
+
+            <input id="import-file" type="file" accept="application/json" class="hidden" />
+
+            <button type="button" id="import-btn" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-sm font-extrabold text-slate-950 flex items-center gap-2">
+              <i class="fas fa-file-import"></i>
+              Importar JSON
+            </button>
+            <button type="button" id="export-btn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sm font-semibold text-slate-100 border border-slate-700 flex items-center gap-2">
+              <i class="fas fa-file-export"></i>
+              Exportar JSON
+            </button>
+            <button type="button" id="clear-all-btn" class="px-4 py-2 rounded-xl bg-transparent hover:bg-slate-900 text-sm font-semibold text-rose-300 border border-transparent flex items-center gap-2">
+              <i class="fas fa-trash"></i>
+              Limpiar todo
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-400">
+            Importación acepta arrays como: <span class="text-slate-300 font-semibold">[{"nombre":"Queso","unidad":"g","precio":120,"unidadesPorPaquete":1000}]</span> o también llaves en inglés.
+          </div>
+        </form>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900/80 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-extrabold text-slate-100">Lista</h2>
+            <p class="text-xs text-slate-400 mt-1">Puedes editar o borrar ingredientes existentes.</p>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-400">Total</div>
+            <div id="count" class="text-lg font-extrabold text-indigo-300">0</div>
+          </div>
+        </div>
+
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <div class="flex-1 min-w-[220px]">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input id="search" type="text" placeholder="Buscar por nombre..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950/60 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+          <button type="button" id="sort-btn" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-slate-100 border border-slate-700 flex items-center gap-2">
+            <i class="fas fa-arrow-down-a-z"></i>
+            Ordenar
+          </button>
+        </div>
+
+        <div class="mt-3 overflow-auto rounded-xl border border-slate-800">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-950/60 text-slate-300 text-xs">
+              <tr>
+                <th class="text-left px-3 py-2 font-semibold">Ingrediente</th>
+                <th class="text-left px-3 py-2 font-semibold">Unidad</th>
+                <th class="text-right px-3 py-2 font-semibold">$/paq</th>
+                <th class="text-right px-3 py-2 font-semibold">Unid/paq</th>
+                <th class="text-right px-3 py-2 font-semibold">$/unidad</th>
+                <th class="text-right px-3 py-2 font-semibold">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="rows" class="divide-y divide-slate-800 bg-slate-900/40"></tbody>
+          </table>
+        </div>
+
+        <div id="empty" class="hidden text-center py-10 text-slate-400 text-sm">
+          No hay ingredientes. Agrega uno o importa un JSON.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'sr_ingredients_v1';
+      const FIREBASE_SETTINGS_KEY = 'ingredientsCatalog';
+      const SEED_VERSION = '2026-01-20';
+
+      // Seed inicial (se aplica 1 sola vez en Firebase)
+      const DEFAULT_SEED = {
+        version: '1.0',
+        exportDate: '2026-01-20T19:44:19.373Z',
+        ingredientes: [
+          { nombre: 'Galletas Marbu', unidad: 'unidad', precioPaquete: 20, unidadesPaquete: 1 },
+          { nombre: 'Cocacola 600Ml', unidad: 'unidad', precioPaquete: 18, unidadesPaquete: 1 },
+          { nombre: 'Harina', unidad: 'g', precioPaquete: 20, unidadesPaquete: 1000 },
+          { nombre: 'BIMBOLLO', unidad: 'unidad', precioPaquete: 93.96, unidadesPaquete: 12 },
+          { nombre: 'TOCINO', unidad: 'unidad', precioPaquete: 75, unidadesPaquete: 20 },
+          { nombre: 'QUESO MANCHEGO', unidad: 'g', precioPaquete: 172, unidadesPaquete: 1000 },
+          { nombre: 'PAN HOTDOG', unidad: 'unidad', precioPaquete: 69.96, unidadesPaquete: 12 },
+          { nombre: 'Azucar Mascabada', unidad: 'g', precioPaquete: 80, unidadesPaquete: 2000 },
+          { nombre: 'Cocacola 1.75', unidad: 'unidad', precioPaquete: 39, unidadesPaquete: 1 },
+          { nombre: 'Crema lala 4L', unidad: 'g', precioPaquete: 264.4, unidadesPaquete: 3920 },
+          { nombre: 'Mantequilla Gloria', unidad: 'g', precioPaquete: 269.1, unidadesPaquete: 1170 },
+          { nombre: 'Cocoa', unidad: 'g', precioPaquete: 90, unidadesPaquete: 250 },
+          { nombre: 'Queso Crema', unidad: 'g', precioPaquete: 162, unidadesPaquete: 1360 },
+          { nombre: 'Maicena', unidad: 'g', precioPaquete: 30, unidadesPaquete: 300 },
+          { nombre: 'AROS DE CEBOLLA', unidad: 'unidad', precioPaquete: 272, unidadesPaquete: 100 },
+          { nombre: 'PAPAS GAJO', unidad: 'g', precioPaquete: 160, unidadesPaquete: 2000 },
+          { nombre: 'Crema Avellana', unidad: 'g', precioPaquete: 220, unidadesPaquete: 2000 },
+          { nombre: 'CHAROLA UNISEL', unidad: 'unidad', precioPaquete: 145, unidadesPaquete: 50 },
+          { nombre: 'PAPAS FRANCESAS', unidad: 'g', precioPaquete: 160, unidadesPaquete: 2000 },
+          { nombre: 'Catsup', unidad: 'unidad', precioPaquete: 144, unidadesPaquete: 200 },
+          { nombre: 'Costillas', unidad: 'g', precioPaquete: 150, unidadesPaquete: 1000 },
+          { nombre: 'QUESO NACHOS', unidad: 'g', precioPaquete: 200, unidadesPaquete: 4000 },
+          { nombre: 'QUESO AMERICANO', unidad: 'unidad', precioPaquete: 162.9, unidadesPaquete: 90 },
+          { nombre: 'Chispas de Chocolate', unidad: 'g', precioPaquete: 200, unidadesPaquete: 1000 },
+          { nombre: 'BOTECITO', unidad: 'unidad', precioPaquete: 100, unidadesPaquete: 100 },
+          { nombre: 'Queso Bola', unidad: 'g', precioPaquete: 494, unidadesPaquete: 1900 },
+          { nombre: 'AGUAS', unidad: 'unidad', precioPaquete: 86, unidadesPaquete: 18 },
+          { nombre: 'PAPEL GRADO ALIMENTICIO', unidad: 'unidad', precioPaquete: 300, unidadesPaquete: 1000 },
+          { nombre: 'Vegetales', unidad: 'unidad', precioPaquete: 8, unidadesPaquete: 1 },
+          { nombre: 'SALCHICHAS JUMBO', unidad: 'unidad', precioPaquete: 178, unidadesPaquete: 20 },
+          { nombre: 'MAYONESA', unidad: 'g', precioPaquete: 306, unidadesPaquete: 3400 },
+          { nombre: 'Pepinillos', unidad: 'g', precioPaquete: 140, unidadesPaquete: 2000 },
+          { nombre: 'Vegetales Hotdog', unidad: 'unidad', precioPaquete: 4, unidadesPaquete: 1 },
+          { nombre: 'CHAROLA PEQUEÑA', unidad: 'unidad', precioPaquete: 50, unidadesPaquete: 25 },
+          { nombre: 'CHILES', unidad: 'unidad', precioPaquete: 2, unidadesPaquete: 2 },
+          { nombre: 'Royal', unidad: 'g', precioPaquete: 30, unidadesPaquete: 500 },
+          { nombre: 'SALSA BBQ', unidad: 'g', precioPaquete: 42, unidadesPaquete: 600 },
+          { nombre: 'Ranch', unidad: 'mL', precioPaquete: 312, unidadesPaquete: 3780 },
+          { nombre: 'CARNE HAMBURGUESA', unidad: 'pz', precioPaquete: 125, unidadesPaquete: 10 },
+          { nombre: 'Cocacola 600 ml', unidad: 'pz', precioPaquete: 390, unidadesPaquete: 24 },
+          { nombre: 'Cocacola 3 L', unidad: 'pz', precioPaquete: 44, unidadesPaquete: 1 },
+          { nombre: 'azucar', unidad: 'g', precioPaquete: 20, unidadesPaquete: 1000 },
+          { nombre: 'Piña', unidad: 'PZ', precioPaquete: 121, unidadesPaquete: 24 },
+          { nombre: 'Kinder Delice', unidad: 'pz', precioPaquete: 160, unidadesPaquete: 15 },
+          { nombre: 'Chantiyi', unidad: 'g', precioPaquete: 130, unidadesPaquete: 2000 },
+          { nombre: 'Mermelada de Fresa', unidad: 'g', precioPaquete: 70, unidadesPaquete: 1000 },
+          { nombre: 'Crema lotus', unidad: 'g', precioPaquete: 160, unidadesPaquete: 400 },
+          { nombre: 'Galleta lotus', unidad: 'u', precioPaquete: 260, unidadesPaquete: 128 },
+          { nombre: 'Chorizo Argentino', unidad: 'pz', precioPaquete: 190, unidadesPaquete: 20 },
+          { nombre: 'Chistorra', unidad: 'g', precioPaquete: 210, unidadesPaquete: 1000 },
+          { nombre: 'Huevos', unidad: 'pz', precioPaquete: 100, unidadesPaquete: 30 },
+          { nombre: 'Nachos', unidad: 'grs', precioPaquete: 40, unidadesPaquete: 500 },
+          { nombre: 'empaque 3 Libras', unidad: 'pz', precioPaquete: 75, unidadesPaquete: 50 },
+          { nombre: 'BONELES', unidad: 'g', precioPaquete: 160, unidadesPaquete: 1000 },
+          { nombre: 'Salchicha Roja', unidad: 'unidad', precioPaquete: 50, unidadesPaquete: 8 },
+          { nombre: 'Guacamole', unidad: 'g', precioPaquete: 80, unidadesPaquete: 500 },
+          { nombre: 'parmesano', unidad: 'g', precioPaquete: 670, unidadesPaquete: 2000 },
+          { nombre: 'BBQ PICANTE', unidad: 'g', precioPaquete: 250, unidadesPaquete: 4000 },
+          { nombre: 'Dedos de queso', unidad: 'pz', precioPaquete: 290, unidadesPaquete: 40 }
+        ]
+      };
+
+      const el = {
+        status: document.getElementById('status'),
+        form: document.getElementById('ingredient-form'),
+        editId: document.getElementById('edit-id'),
+        name: document.getElementById('name'),
+        unit: document.getElementById('unit'),
+        price: document.getElementById('price'),
+        unitsPerPack: document.getElementById('units-per-pack'),
+        unitCost: document.getElementById('unit-cost'),
+        cancelEdit: document.getElementById('cancel-edit-btn'),
+        importBtn: document.getElementById('import-btn'),
+        exportBtn: document.getElementById('export-btn'),
+        clearAllBtn: document.getElementById('clear-all-btn'),
+        importFile: document.getElementById('import-file'),
+        search: document.getElementById('search'),
+        sortBtn: document.getElementById('sort-btn'),
+        rows: document.getElementById('rows'),
+        empty: document.getElementById('empty'),
+        count: document.getElementById('count')
+      };
+
+      let sortAsc = true;
+      let ingredients = [];
+      let firebaseReady = false;
+      let saveTimer = null;
+
+      function setStatus(msg, type) {
+        if (!el.status) return;
+        const color = type === 'error' ? 'text-rose-300' : type === 'success' ? 'text-emerald-300' : 'text-slate-300';
+        el.status.className = 'text-xs ' + color;
+        el.status.textContent = msg || '';
+      }
+
+      function normText(s) {
+        return String(s || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function makeId() {
+        return 'ing_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+      }
+
+      function toNumber(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function formatMoney(n) {
+        const v = Number(n || 0);
+        if (!Number.isFinite(v)) return '$0';
+        return '$' + v.toFixed(2);
+      }
+
+      function computeUnitCost(pricePerPack, unitsPerPack) {
+        const p = toNumber(pricePerPack);
+        const u = toNumber(unitsPerPack);
+        if (p == null || u == null || u <= 0) return null;
+        return p / u;
+      }
+
+      function parseIngredientRecord(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+
+        const name = String(
+          raw.nombre ?? raw.name ?? raw.Nombre ?? raw.Name ?? ''
+        ).trim();
+
+        const unit = String(
+          raw.unidad ?? raw.unit ?? raw.Unidad ?? raw.Unit ?? ''
+        ).trim();
+
+        const price = raw.precioPorPaquete ?? raw.precio_paquete ?? raw.precioPaquete ?? raw.precioPaquete ?? raw.precio ?? raw.pricePerPack ?? raw.price ?? raw.precioPorPack;
+        const unitsPerPack = raw.unidadesPorPaquete ?? raw.unidades_paquete ?? raw.unidadesPaquete ?? raw.unidadesPaquete ?? raw.unitsPerPack ?? raw.units_per_pack ?? raw.unidadesPorPack;
+
+        const p = toNumber(price);
+        const u = toNumber(unitsPerPack);
+
+        if (!name) return null;
+
+        const id = String(raw.id ?? raw.ingredientId ?? raw.ingredienteId ?? '').trim() || makeId();
+
+        return {
+          id,
+          name,
+          unit: unit || 'unidad',
+          pricePerPack: p != null && p >= 0 ? p : 0,
+          unitsPerPack: u != null && u > 0 ? u : 1
+        };
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return [];
+          return parsed.map(parseIngredientRecord).filter(Boolean);
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ingredients));
+      }
+
+      async function waitForFirebase(timeoutMs) {
+        const start = Date.now();
+        while ((!window.firebaseManager || !window.firebaseManager.getSettings) && (Date.now() - start) < (timeoutMs || 8000)) {
+          await new Promise(r => setTimeout(r, 100));
+        }
+        return Boolean(window.firebaseManager && window.firebaseManager.getSettings);
+      }
+
+      function getSeedRecords() {
+        const arr = Array.isArray(DEFAULT_SEED?.ingredientes) ? DEFAULT_SEED.ingredientes : [];
+        return arr.map(parseIngredientRecord).filter(Boolean);
+      }
+
+      async function loadFromFirebaseAndSeedIfNeeded() {
+        const ok = await waitForFirebase(8000);
+        if (!ok) {
+          setStatus('Firebase no disponible. Usando solo almacenamiento local.', 'error');
+          return;
+        }
+
+        try {
+          const settings = await window.firebaseManager.getSettings();
+          const remoteList = Array.isArray(settings?.[FIREBASE_SETTINGS_KEY]) ? settings[FIREBASE_SETTINGS_KEY] : [];
+          const remoteParsed = remoteList.map(parseIngredientRecord).filter(Boolean);
+
+          // Aplicar seed una sola vez (merge por nombre)
+          const seedApplied = String(settings?.ingredientsSeedVersion || '') === SEED_VERSION;
+          const seedRecords = getSeedRecords();
+
+          let nextList = remoteParsed;
+          let didSeed = false;
+          if (!seedApplied && seedRecords.length) {
+            // Reutilizar mergeImported para no duplicar por nombre
+            ingredients = remoteParsed.slice();
+            const { imported, updated } = mergeImported(seedRecords);
+            nextList = ingredients.slice();
+            didSeed = imported > 0 || updated > 0;
+
+            await window.firebaseManager.saveSettings({
+              ...settings,
+              [FIREBASE_SETTINGS_KEY]: nextList,
+              ingredientsSeedVersion: SEED_VERSION,
+              ingredientsSeedAppliedAt: new Date().toISOString()
+            });
+          }
+
+          // Si no se seed-eó, usar remoto tal cual
+          if (!didSeed) {
+            ingredients = remoteParsed;
+          } else {
+            ingredients = nextList;
+          }
+
+          firebaseReady = true;
+          save();
+          render();
+          setStatus('Ingredientes sincronizados con Firebase.', 'success');
+
+          // Mantener sincronización en tiempo real
+          if (window.firebaseManager.listenToSettings) {
+            window.firebaseManager.listenToSettings((newSettings) => {
+              try {
+                const list = Array.isArray(newSettings?.[FIREBASE_SETTINGS_KEY]) ? newSettings[FIREBASE_SETTINGS_KEY] : null;
+                if (!list) return;
+                const parsed = list.map(parseIngredientRecord).filter(Boolean);
+                ingredients = parsed;
+                save();
+                render();
+              } catch (_) {}
+            });
+          }
+        } catch (e) {
+          console.warn('No se pudieron cargar ingredientes desde Firebase:', e);
+          setStatus('No se pudieron cargar ingredientes desde Firebase. Usando local.', 'error');
+        }
+      }
+
+      function scheduleSaveToFirebase(reason) {
+        if (!firebaseReady) return;
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+          try {
+            const settings = await window.firebaseManager.getSettings();
+            await window.firebaseManager.saveSettings({
+              ...settings,
+              [FIREBASE_SETTINGS_KEY]: ingredients,
+              ingredientsCatalogUpdatedAt: new Date().toISOString(),
+              ingredientsCatalogUpdateReason: reason || 'update'
+            });
+          } catch (e) {
+            console.warn('No se pudo guardar en Firebase:', e);
+            setStatus('No se pudo guardar en Firebase (revisar internet).', 'error');
+          }
+        }, 600);
+      }
+
+      function resetForm() {
+        el.editId.value = '';
+        el.name.value = '';
+        el.unit.value = '';
+        el.price.value = '';
+        el.unitsPerPack.value = '';
+        el.cancelEdit.classList.add('hidden');
+        syncUnitCostPreview();
+      }
+
+      function setEditing(ing) {
+        el.editId.value = ing.id;
+        el.name.value = ing.name;
+        el.unit.value = ing.unit;
+        el.price.value = String(ing.pricePerPack ?? '');
+        el.unitsPerPack.value = String(ing.unitsPerPack ?? '');
+        el.cancelEdit.classList.remove('hidden');
+        syncUnitCostPreview();
+        el.name.focus();
+      }
+
+      function syncUnitCostPreview() {
+        const unitCost = computeUnitCost(el.price.value, el.unitsPerPack.value);
+        el.unitCost.textContent = unitCost == null ? '$0' : formatMoney(unitCost);
+      }
+
+      function getFilteredList() {
+        const q = normText(el.search.value);
+        const arr = (ingredients || []).slice();
+
+        if (q) {
+          return arr.filter(i => normText(i.name).includes(q));
+        }
+        return arr;
+      }
+
+      function render() {
+        const list = getFilteredList();
+        const sorted = list.sort((a, b) => {
+          const an = normText(a.name);
+          const bn = normText(b.name);
+          return sortAsc ? an.localeCompare(bn) : bn.localeCompare(an);
+        });
+
+        el.count.textContent = String(list.length);
+
+        if (!sorted.length) {
+          el.rows.innerHTML = '';
+          el.empty.classList.remove('hidden');
+          return;
+        }
+
+        el.empty.classList.add('hidden');
+        el.rows.innerHTML = sorted
+          .map((ing) => {
+            const unitCost = computeUnitCost(ing.pricePerPack, ing.unitsPerPack);
+            return `
+              <tr class="hover:bg-slate-950/40">
+                <td class="px-3 py-2 font-semibold text-slate-100">${escapeHtml(ing.name)}</td>
+                <td class="px-3 py-2 text-slate-300">${escapeHtml(ing.unit)}</td>
+                <td class="px-3 py-2 text-right text-slate-200">${formatMoney(ing.pricePerPack)}</td>
+                <td class="px-3 py-2 text-right text-slate-200">${Number(ing.unitsPerPack || 0).toString()}</td>
+                <td class="px-3 py-2 text-right text-indigo-200 font-semibold">${unitCost == null ? '-' : formatMoney(unitCost)}</td>
+                <td class="px-3 py-2">
+                  <div class="flex justify-end gap-2">
+                    <button data-action="edit" data-id="${escapeHtmlAttr(ing.id)}" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold">Editar</button>
+                    <button data-action="delete" data-id="${escapeHtmlAttr(ing.id)}" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-200 text-xs font-semibold">Borrar</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      function escapeHtml(s) {
+        return String(s || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function escapeHtmlAttr(s) {
+        return escapeHtml(s).replace(/`/g, '&#96;');
+      }
+
+      function upsertIngredient(record) {
+        const id = String(record.id || '').trim();
+        if (!id) return;
+
+        const idx = ingredients.findIndex(i => i.id === id);
+        if (idx >= 0) ingredients[idx] = record;
+        else ingredients.unshift(record);
+      }
+
+      function mergeImported(list) {
+        const before = ingredients.length;
+        const byNormName = new Map(ingredients.map(i => [normText(i.name), i]));
+
+        let imported = 0;
+        let updated = 0;
+        list.forEach((rec) => {
+          const n = normText(rec.name);
+          if (!n) return;
+
+          const existing = byNormName.get(n);
+          if (existing) {
+            // Actualizar manteniendo id existente
+            const next = {
+              ...existing,
+              name: rec.name || existing.name,
+              unit: rec.unit || existing.unit,
+              pricePerPack: Number.isFinite(rec.pricePerPack) ? rec.pricePerPack : existing.pricePerPack,
+              unitsPerPack: Number.isFinite(rec.unitsPerPack) ? rec.unitsPerPack : existing.unitsPerPack
+            };
+            const idx = ingredients.findIndex(i => i.id === existing.id);
+            if (idx >= 0) ingredients[idx] = next;
+            updated += 1;
+          } else {
+            upsertIngredient({ ...rec, id: rec.id || makeId() });
+            imported += 1;
+          }
+        });
+
+        const after = ingredients.length;
+        return { before, after, imported, updated };
+      }
+
+      function downloadJson(filename, obj) {
+        const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Events
+      el.price.addEventListener('input', syncUnitCostPreview);
+      el.unitsPerPack.addEventListener('input', syncUnitCostPreview);
+
+      el.form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = String(el.name.value || '').trim();
+        const unit = String(el.unit.value || '').trim();
+        const price = toNumber(el.price.value);
+        const upp = toNumber(el.unitsPerPack.value);
+
+        if (!name) {
+          setStatus('Escribe un nombre.', 'error');
+          return;
+        }
+
+        if (price == null || price < 0) {
+          setStatus('Precio por paquete inválido.', 'error');
+          return;
+        }
+
+        if (upp == null || upp <= 0) {
+          setStatus('Unidades por paquete debe ser mayor a 0.', 'error');
+          return;
+        }
+
+        const editingId = String(el.editId.value || '').trim();
+        const id = editingId || makeId();
+
+        const record = {
+          id,
+          name,
+          unit: unit || 'unidad',
+          pricePerPack: price,
+          unitsPerPack: upp
+        };
+
+        // Deduplicación por nombre si es nuevo
+        if (!editingId) {
+          const n = normText(name);
+          const exists = ingredients.some(i => normText(i.name) === n);
+          if (exists) {
+            setStatus('Ya existe un ingrediente con ese nombre (usa Editar).', 'error');
+            return;
+          }
+        }
+
+        upsertIngredient(record);
+        save();
+        scheduleSaveToFirebase('upsert');
+        render();
+        resetForm();
+        setStatus('Guardado.', 'success');
+      });
+
+      el.cancelEdit.addEventListener('click', () => {
+        resetForm();
+        setStatus('Edición cancelada.', 'info');
+      });
+
+      el.rows.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        const ing = ingredients.find(i => i.id === id);
+        if (!action || !id || !ing) return;
+
+        if (action === 'edit') {
+          setEditing(ing);
+          setStatus('Editando ingrediente.', 'info');
+          return;
+        }
+
+        if (action === 'delete') {
+          const ok = confirm(`¿Borrar "${ing.name}"?`);
+          if (!ok) return;
+          ingredients = ingredients.filter(i => i.id !== id);
+          save();
+          scheduleSaveToFirebase('delete');
+          render();
+          if (String(el.editId.value || '') === id) resetForm();
+          setStatus('Ingrediente borrado.', 'success');
+        }
+      });
+
+      el.search.addEventListener('input', render);
+
+      el.sortBtn.addEventListener('click', () => {
+        sortAsc = !sortAsc;
+        render();
+      });
+
+      el.exportBtn.addEventListener('click', () => {
+        const payload = (ingredients || [])
+          .slice()
+          .sort((a, b) => normText(a.name).localeCompare(normText(b.name)))
+          .map((i) => ({
+            nombre: i.name,
+            unidad: i.unit,
+            precioPaquete: Number(i.pricePerPack || 0),
+            unidadesPaquete: Number(i.unitsPerPack || 0)
+          }));
+        downloadJson('ingredientes.json', {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          ingredientes: payload
+        });
+        setStatus('Exportado ingredientes.json', 'success');
+      });
+
+      el.importBtn.addEventListener('click', () => {
+        el.importFile.value = '';
+        el.importFile.click();
+      });
+
+      el.importFile.addEventListener('change', async () => {
+        const file = el.importFile.files && el.importFile.files[0];
+        if (!file) return;
+
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const list = Array.isArray(parsed)
+            ? parsed
+            : (Array.isArray(parsed?.ingredientes) ? parsed.ingredientes : (Array.isArray(parsed?.ingredients) ? parsed.ingredients : null));
+
+          if (!Array.isArray(list)) {
+            setStatus('El JSON debe ser un array o un objeto con "ingredientes".', 'error');
+            return;
+          }
+
+          const normalized = list.map(parseIngredientRecord).filter(Boolean);
+          if (!normalized.length) {
+            setStatus('No se encontraron ingredientes válidos en el archivo.', 'error');
+            return;
+          }
+
+          const result = mergeImported(normalized);
+          save();
+          scheduleSaveToFirebase('import');
+          render();
+          setStatus(`Importación lista. Nuevos: ${result.imported} · Actualizados: ${result.updated}`, 'success');
+        } catch (e) {
+          console.error(e);
+          setStatus('No se pudo importar: JSON inválido.', 'error');
+        }
+      });
+
+      el.clearAllBtn.addEventListener('click', () => {
+        const ok = confirm('¿Eliminar TODOS los ingredientes guardados?');
+        if (!ok) return;
+        ingredients = [];
+        save();
+        scheduleSaveToFirebase('clear_all');
+        render();
+        resetForm();
+        setStatus('Lista limpiada.', 'success');
+      });
+
+      // Init
+      ingredients = load();
+      render();
+      syncUnitCostPreview();
+      setStatus('Listo. Conectando a Firebase...', 'info');
+      loadFromFirebaseAndSeedIfNeeded();
+    })();
+  </script>
+</body>
+</html>

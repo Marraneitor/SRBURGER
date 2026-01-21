@@ -10,41 +10,17 @@
   <link rel="stylesheet" href="styles/sr-ui.css">
 </head>
 <body class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-  <header class="bg-white shadow-sm sticky top-0 z-20">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
-          <i class="fas fa-hamburger text-white"></i>
-        </div>
-        <div>
-          <div class="font-bold text-lg">SR &amp; SRA <span class="text-yellow-600">BURGER</span></div>
-          <div class="text-xs text-gray-500">Mi cuenta</div>
-        </div>
-      </div>
-      <a href="paginaburger.html" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
-        <i class="fas fa-arrow-left"></i>
-        Volver al menú
-      </a>
+  <header class="sr-topbar">
+    <div class="sr-topbar__inner">
+      <a class="sr-brand" href="paginaburger.html" aria-label="Volver al menú">SR &amp; SRA <span>BURGER</span></a>
+      <div class="sr-topbar__meta">Mi cuenta</div>
+      <nav class="sr-topbar__nav" aria-label="Acciones">
+        <a class="sr-nav-link" href="paginaburger.html"><i class="fas fa-arrow-left"></i>&nbsp;Volver al menú</a>
+      </nav>
     </div>
   </header>
 
   <main class="max-w-4xl mx-auto px-4 py-8">
-    <section class="bg-white rounded-2xl shadow border border-gray-100 p-5 mb-8">
-      <h2 class="text-base font-black flex items-center gap-2">
-        <i class="fas fa-truck text-orange-600"></i>
-        ¿Cómo pedir a domicilio?
-      </h2>
-      <ol class="mt-2 text-sm text-gray-700 space-y-1">
-        <li><strong>1)</strong> Crea tu cuenta o inicia sesión.</li>
-        <li><strong>2)</strong> En <strong>Verificar dirección (mapa)</strong>, escribe tu dirección, pulsa <strong>Verificar</strong> y ajusta el pin si hace falta.</li>
-        <li><strong>3)</strong> Guarda la ubicación. Se guarda también la <strong>distancia</strong>, el <strong>tiempo</strong> y el <strong>costo del envío</strong>.</li>
-        <li><strong>4)</strong> Regresa al menú y en el carrito elige <strong>Envío a domicilio</strong> y selecciona tu dirección guardada.</li>
-      </ol>
-      <p class="mt-2 text-xs text-gray-500">
-        Nota: el envío se calcula a <strong>$8 por KM</strong> (máximo <strong>12 km</strong> desde Coahuila 36). El redondeo es al entero más cercano.
-      </p>
-    </section>
-
     <div id="auth-section" class="grid gap-6 md:grid-cols-2 mb-8">
       <!-- Registro -->
       <section class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
@@ -215,10 +191,84 @@
           <i class="fas fa-location-dot text-green-600"></i>
           Verificar dirección (mapa)
         </h2>
-        <p class="text-xs text-gray-500 mt-1">
-          Escribe tu dirección, pulsa <strong>Verificar</strong> y ajusta el pin en el minimapa.
-          Aquí mismo verás la distancia y el costo ($8 por KM, redondeo al entero más cercano).
-        </p>
+        <div class="mt-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500/25 to-sky-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
+              <i class="fas fa-map-location-dot text-emerald-200"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-base font-black text-slate-100">Pasos rápidos (te toma 10 segundos)</div>
+              <div class="text-sm text-slate-200/90 mt-0.5">Escribe tu dirección, verifica y ajusta el pin. Al soltar el pin, la dirección se corrige sola.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <div tabindex="0" class="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/0 p-3 hover:from-white/10 hover:to-white/0 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400/60 focus-visible:outline-offset-2">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 font-black">1</span>
+                <div class="font-black text-slate-100">Escribe tu dirección</div>
+              </div>
+              <div class="mt-1 text-sm text-slate-200/90">Calle + número + colonia. Entre más detalle, más exacto.</div>
+            </div>
+
+            <div tabindex="0" class="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/0 p-3 hover:from-white/10 hover:to-white/0 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400/60 focus-visible:outline-offset-2">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-200 font-black">2</span>
+                <div class="font-black text-slate-100">Pulsa “Verificar”</div>
+              </div>
+              <div class="mt-1 text-sm text-slate-200/90">Te ubica en el minimapa y calcula distancia + costo.</div>
+            </div>
+
+            <div tabindex="0" class="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/0 p-3 hover:from-white/10 hover:to-white/0 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400/60 focus-visible:outline-offset-2">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-200 font-black">3</span>
+                <div class="font-black text-slate-100">Ajusta el pin si hace falta</div>
+              </div>
+              <div class="mt-1 text-sm text-slate-200/90">Muévelo o da clic en el mapa. Al soltarlo, la <span class="text-amber-200 font-semibold">dirección se actualiza</span>.</div>
+            </div>
+
+            <div tabindex="0" class="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/0 p-3 hover:from-white/10 hover:to-white/0 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400/60 focus-visible:outline-offset-2">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 font-black">4</span>
+                <div class="font-black text-slate-100">Guarda tu ubicación</div>
+              </div>
+              <div class="mt-1 text-sm text-slate-200/90">Pulsa <span class="text-emerald-200 font-semibold">Agregar dirección</span> y listo. Se usará al pedir a domicilio.</div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center gap-2 text-sm">
+            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 font-semibold">
+              <i class="fas fa-circle-info"></i>
+              Costo: <span class="text-slate-100 font-black">$8 por km</span> (redondeo al entero más cercano)
+            </span>
+          </div>
+
+          <div class="mt-3 grid gap-2">
+            <details class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 open:bg-white/10 transition-all">
+              <summary class="cursor-pointer select-none font-black text-slate-100 flex items-center gap-2">
+                <i class="fas fa-lightbulb text-amber-200"></i>
+                Ejemplos de cómo escribir la dirección
+              </summary>
+              <div class="mt-2 text-sm text-slate-200/90 space-y-1">
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">“Coahuila 36, 10 de Mayo, Minatitlán, Veracruz”</div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">“Vicente Guerrero 19, Patria Libre, Minatitlán”</div>
+                <div class="text-xs text-slate-300">Tip: si tu colonia no sale, agrega una referencia cercana (parque/tienda).</div>
+              </div>
+            </details>
+
+            <details class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 open:bg-white/10 transition-all">
+              <summary class="cursor-pointer select-none font-black text-slate-100 flex items-center gap-2">
+                <i class="fas fa-triangle-exclamation text-red-300"></i>
+                Si el mapa no encuentra tu calle
+              </summary>
+              <div class="mt-2 text-sm text-slate-200/90 space-y-1">
+                <div>1) Agrega <strong>colonia</strong> y <strong>número</strong>.</div>
+                <div>2) Prueba con una <strong>referencia</strong> (“cerca de …”).</div>
+                <div>3) Verifica y después ajusta el pin manualmente.</div>
+              </div>
+            </details>
+          </div>
+        </div>
 
         <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto] items-end">
           <div>
@@ -239,13 +289,20 @@
           </button>
         </div>
 
-        <div class="mt-3 text-xs text-gray-600">
-          <strong>Dirección detectada:</strong> <span id="client-selected-address">—</span>
+        <div class="mt-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3">
+          <div class="text-xs font-black text-emerald-200 tracking-wide">DIRECCIÓN DETECTADA</div>
+          <div id="client-selected-address" class="mt-1 text-base font-black text-slate-100">—</div>
         </div>
 
         <div id="client-map-section" class="hidden mt-4">
-          <div class="text-xs text-gray-500 mb-2">
-            Tip: puedes mover el pin o dar clic en el mapa para ajustar tu ubicación.
+          <div class="text-sm text-slate-100 mb-2 rounded-2xl border border-sky-400/20 bg-sky-500/10 px-4 py-3">
+            <div class="font-black text-sky-200 flex items-center gap-2">
+              <i class="fas fa-hand-pointer"></i>
+              Ajuste fino
+            </div>
+            <div class="mt-1 text-slate-200/90">
+              Puedes <strong>mover el pin</strong> o dar <strong>clic</strong> en el mapa. Al soltar el pin, tu dirección se actualiza automáticamente.
+            </div>
           </div>
           <div id="client-mini-map" class="w-full rounded-xl border border-gray-200 overflow-hidden" style="height: 320px;"></div>
         </div>
@@ -254,18 +311,10 @@
 
         <div class="mt-3 flex flex-col md:flex-row md:items-center gap-3">
           <button
-            id="client-save-btn"
-            type="button"
-            disabled
-            class="sr-btn sr-btn-primary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-            <i class="fas fa-save"></i>
-            Aceptar y guardar ubicación
-          </button>
-          <button
             id="client-add-address-btn"
             type="button"
             disabled
-            class="sr-btn sr-btn-secondary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="sr-btn sr-btn-primary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
             <i class="fas fa-plus"></i>
             Agregar dirección
           </button>
@@ -281,6 +330,17 @@
           </h2>
           <span id="dash-count" class="text-xs text-gray-500"></span>
         </div>
+
+        <div id="dash-current-order" class="hidden mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="font-black text-amber-900">Pedido actual</div>
+              <div id="dash-current-order-meta" class="text-xs text-amber-800 mt-0.5"></div>
+            </div>
+            <a id="dash-current-order-track" href="tuenvio.html" class="sr-btn sr-btn-primary px-3 py-2 text-xs font-black">Rastrear</a>
+          </div>
+        </div>
+
         <div id="dash-empty" class="text-xs text-gray-500 py-6 hidden">
           Aún no hemos encontrado pedidos asociados a tu cuenta. Cuando compres desde el menú usando este correo, aparecerán aquí.
         </div>
@@ -289,6 +349,8 @@
             <thead class="bg-gray-50 text-gray-500">
               <tr>
                 <th class="px-3 py-2 text-left font-semibold">Fecha</th>
+                <th class="px-3 py-2 text-left font-semibold">Estado</th>
+                <th class="px-3 py-2 text-left font-semibold">Pago</th>
                 <th class="px-3 py-2 text-left font-semibold">Detalle</th>
                 <th class="px-3 py-2 text-right font-semibold">Total</th>
               </tr>
@@ -319,6 +381,16 @@
   <script>
     (function() {
       const byId = (id) => document.getElementById(id);
+
+      // Si venimos desde el checkout, mantener un enlace de regreso
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const next = (params.get('next') || '').trim();
+        if (next) {
+          const btn = byId('client-sticky-btn');
+          if (btn) btn.href = next;
+        }
+      } catch (_) {}
 
       function setText(id, value) {
         const el = byId(id);
@@ -968,16 +1040,15 @@
             }
 
             const telefonoFallback = cliente && cliente.telefono ? String(cliente.telefono).replace(/\D/g, '') : null;
-            const orders = await manager.getClientOrders(uid, telefonoFallback || null);
+            const rawOrders = await manager.getClientOrders(uid, telefonoFallback || null);
+            const allOrders = (Array.isArray(rawOrders) ? rawOrders : []);
 
-            // Acreditar puntos SOLO cuando el pedido está pagado.
-            // Esto se hace aquí (en la cuenta del cliente) porque es donde el usuario está autenticado y tiene permisos.
+            // Acreditar puntos automáticamente por pedido (SIN depender de "Pagado").
+            // Se ejecuta aquí (cuenta del cliente) porque el usuario está autenticado y tiene permisos.
             try {
-              if (orders && orders.length && window.firebaseOrderManager && typeof window.firebaseOrderManager.updateOrder === 'function') {
-                for (const o of orders) {
+              if (allOrders && allOrders.length && window.firebaseOrderManager && typeof window.firebaseOrderManager.updateOrder === 'function') {
+                for (const o of allOrders) {
                   if (!o) continue;
-                  const isPaid = !!o.paid;
-                  if (!isPaid) continue;
 
                   // Solo aplicar a pedidos nuevos (evita duplicar puntos de pedidos antiguos)
                   const hasPointsEarnedField = typeof o.pointsEarned === 'number';
@@ -1010,24 +1081,79 @@
               console.warn('No se pudieron acreditar puntos pendientes:', e);
             }
 
+            const orders = allOrders.filter((o) => String(o?.status || '').toLowerCase() !== 'delivered');
+
             if (!orders || !orders.length) {
               show(dashEmpty);
               setText('dash-count', '0 pedidos');
               ordersTbody.innerHTML = '';
+              const currentCard = byId('dash-current-order');
+              if (currentCard) currentCard.classList.add('hidden');
               return;
             }
 
             hide(dashEmpty);
             setText('dash-count', `${orders.length} pedido${orders.length === 1 ? '' : 's'}`);
+
+            // Pedido actual (el más reciente no entregado)
+            try {
+              const current = orders[0];
+              const currentCard = byId('dash-current-order');
+              const currentMeta = byId('dash-current-order-meta');
+              const currentTrack = byId('dash-current-order-track');
+
+              if (currentCard && current && currentMeta && currentTrack) {
+                const orderNumber = String(current.orderNumber || '').trim();
+                const statusKey = String(current.status || 'pending').toLowerCase();
+                const statusLabel = ({
+                  pending: 'Pendiente',
+                  preparing: 'Preparando',
+                  ready: 'Listo',
+                  delivering: 'En camino',
+                  delivered: 'Entregado'
+                })[statusKey] || statusKey;
+
+                const pm = String(current.paymentMethod || '').toLowerCase();
+                const isOnline = pm.includes('linea') || pm.includes('línea');
+                const paid = !!current.paid;
+                const payLabel = isOnline ? (paid ? 'Pagado' : 'Pago pendiente') : 'Se paga al recibir';
+
+                currentMeta.textContent = `${orderNumber ? `Orden #${orderNumber} · ` : ''}${statusLabel} · ${payLabel}`;
+                currentTrack.href = orderNumber ? `tuenvio.html?order=${encodeURIComponent(orderNumber)}` : 'tuenvio.html';
+                currentCard.classList.remove('hidden');
+              }
+            } catch (_) {}
+
             ordersTbody.innerHTML = orders.map((o) => {
               const fecha = formatDate(o.timestamp);
               const total = formatMoney(o.total);
               const detalle = Array.isArray(o.items)
                 ? o.items.map((it) => `${it.quantity || 1}x ${it.name || ''}`).join(', ')
                 : '';
+
+              const statusKey = String(o.status || 'pending').toLowerCase();
+              const statusLabel = ({
+                pending: 'Pendiente',
+                preparing: 'Preparando',
+                ready: 'Listo',
+                delivering: 'En camino',
+                delivered: 'Entregado'
+              })[statusKey] || statusKey;
+
+              const pm = String(o.paymentMethod || '').toLowerCase();
+              const isOnline = pm.includes('linea') || pm.includes('línea');
+              const paid = !!o.paid;
+              const payLabel = isOnline ? (paid ? 'Pagado' : 'Pago pendiente') : 'Se paga al recibir';
+
               return `
                 <tr class="hover:bg-gray-50">
                   <td class="px-3 py-2 align-top whitespace-nowrap">${fecha}</td>
+                  <td class="px-3 py-2 align-top whitespace-nowrap">
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700">${statusLabel}</span>
+                  </td>
+                  <td class="px-3 py-2 align-top whitespace-nowrap">
+                    <span class="inline-flex items-center rounded-full ${paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'} px-2 py-0.5 text-[11px] font-semibold">${payLabel}</span>
+                  </td>
                   <td class="px-3 py-2 align-top text-gray-700">${detalle || '—'}</td>
                   <td class="px-3 py-2 align-top text-right font-semibold">${total}</td>
                 </tr>`;

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/sr-ui.css">
+    <script src="js/sr-shell.js" defer></script>
     
     <style>
     /* Base font scaling for readability */
@@ -704,6 +705,9 @@
                 <a href="Historialdepedidos.html" class="filter-btn btn-info inline-flex items-center" data-filter="history">
                     <i class="fas fa-clock-rotate-left mr-2"></i>Historial
                 </a>
+                <a href="itemsvendidos.html" class="filter-btn btn-info inline-flex items-center" data-filter="sold-items">
+                    <i class="fas fa-chart-pie mr-2"></i>Items vendidos
+                </a>
             </div>
         </div>
 
@@ -945,8 +949,8 @@
                     type: 'familiar',
                     color: 'amber',
                     items: [
-                        { type: 'fries', name: 'Papas Grandes', quantity: 1, icon: '🍟' },
-                        { type: 'onion-rings', name: 'Aros XL', quantity: 1, icon: '🧅' },
+                        { type: 'fries', name: 'Papas Extragrandes', quantity: 1, icon: '🍟' },
+                        { type: 'onion-rings', name: 'Aros de Cebolla Extragrandes', quantity: 1, icon: '🧅' },
                         { type: 'drink', name: 'Coca-Cola 3L', quantity: 1, icon: '🥤' }
                     ]
                 },
@@ -966,7 +970,8 @@
                     color: 'red',
                     items: [
                         { type: 'burger', name: 'Hamburguesa', quantity: 1, icon: '🍔' },
-                        { type: 'boneles', name: 'Boneles 250g', quantity: 1, icon: '🍗' }
+                        { type: 'boneles', name: 'Boneles 250g', quantity: 1, icon: '🍗' },
+                        { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' }
                     ]
                 },
                 'combopareja': {
@@ -976,7 +981,7 @@
                     items: [
                         { type: 'burger', name: 'Hamburguesa', quantity: 2, icon: '🍔' },
                         { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
-                        { type: 'onion-rings', name: 'Aros de Cebolla', quantity: 1, icon: '🧅' }
+                        { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1, icon: '🧅' }
                     ]
                 },
                 'comboamigos': {
@@ -986,7 +991,7 @@
                     items: [
                         { type: 'burger', name: 'Hamburguesa', quantity: 3, icon: '🍔' },
                         { type: 'fries', name: 'Papas Medianas', quantity: 1, icon: '🍟' },
-                        { type: 'onion-rings', name: 'Aros Medianos', quantity: 1, icon: '🧅' }
+                        { type: 'onion-rings', name: 'Aros de Cebolla Medianas', quantity: 1, icon: '🧅' }
                     ]
                 },
                 'combodoblesdobles': {
@@ -1026,6 +1031,14 @@
             // Hotfix de combos aunque existan combos guardados antiguos en localStorage
             // (asegura que Control de Envíos y ticket muestren los aros correctos)
             (function enforceComboDefaults() {
+                function upsertFries(cfg, desiredName) {
+                    if (!cfg || !Array.isArray(cfg.items)) return;
+                    const idx = cfg.items.findIndex(it => (it && (it.type === 'fries' || /papas/i.test(String(it.name || '')))));
+                    const item = { type: 'fries', name: desiredName, quantity: 1, icon: '🍟' };
+                    if (idx >= 0) cfg.items[idx] = { ...cfg.items[idx], ...item };
+                    else cfg.items.push(item);
+                }
+
                 function upsertRings(cfg, desiredName) {
                     if (!cfg || !Array.isArray(cfg.items)) return;
                     const idx = cfg.items.findIndex(it => (it && (it.type === 'onion-rings' || /aros/i.test(String(it.name || '')))));
@@ -1034,8 +1047,17 @@
                     else cfg.items.push(item);
                 }
 
-                upsertRings(merged['comboamigos'], 'Aros Medianos');
-                upsertRings(merged['combofamiliar'], 'Aros XL');
+                // Papas: todos medianas excepto Familiar (extragrandes)
+                upsertFries(merged['comboduo'], 'Papas Medianas');
+                upsertFries(merged['combopareja'], 'Papas Medianas');
+                upsertFries(merged['comboamigos'], 'Papas Medianas');
+                upsertFries(merged['comboboneles'], 'Papas Medianas');
+                upsertFries(merged['combofamiliar'], 'Papas Extragrandes');
+
+                // Aros: Amigos medianas, Familiar extragrandes
+                upsertRings(merged['combopareja'], 'Aros de Cebolla Medianas');
+                upsertRings(merged['comboamigos'], 'Aros de Cebolla Medianas');
+                upsertRings(merged['combofamiliar'], 'Aros de Cebolla Extragrandes');
             })();
             comboConfigurations = merged;
         }
@@ -1062,7 +1084,7 @@
             return String(text || '').split(/\s*\|\s*/).filter(Boolean);
         }
         function parseChoiceText(choiceText) {
-            const res = { name: '', qty: 1, toppings: [], fries: null, sauce: null, onionRings: false, extras: [], includeLine: false, drinks: [] };
+            const res = { name: '', qty: 1, toppings: [], fries: null, sauce: null, onionRings: false, extras: [], includeLine: false, drinks: [], portionGrams: null };
             let t = String(choiceText || '').trim();
             const qtyMatch = t.match(/^(\d+)\s*x\s*/i);
             if (qtyMatch) { res.qty = parseInt(qtyMatch[1], 10) || 1; t = t.slice(qtyMatch[0].length).trim(); }
@@ -1071,6 +1093,13 @@
             if (/^Incluye\s*:/i.test(String(choiceText || ''))) {
                 res.includeLine = true;
             }
+
+            // Boneless: detectar gramaje para etiquetar papas correctamente (250g/500g/1000g)
+            try {
+                const mPort = String(choiceText || '').match(/Porci[oó]n\s*:\s*(\d+)\s*g/i);
+                if (mPort && mPort[1]) res.portionGrams = parseInt(mPort[1], 10) || null;
+            } catch (_) {}
+
             const topMatch = t.match(/\(\+\s*([^\)]+)\)/);
             if (topMatch && topMatch[1]) res.toppings = topMatch[1].split(/\s*,\s*/).filter(Boolean);
 
@@ -1100,6 +1129,45 @@
                 extraItems.forEach(e => { const m = e.match(/(\d+)x\s+(.+)/); if (m) res.extras.push({ quantity: parseInt(m[1], 10), name: m[2].trim() }); });
             }
             return res;
+        }
+
+        function isBonelessItem(itemOrName) {
+            const n = (typeof itemOrName === 'string') ? itemOrName : String(itemOrName && itemOrName.name || '');
+            return /boneles|boneless/i.test(n);
+        }
+        function cleanFriesType(raw) {
+            return String(raw || '').replace(/^Tipo\s+/i, '').trim();
+        }
+        function friesLabelForContext(itemOrName, friesRaw, portionGrams, opts) {
+            const friesType = cleanFriesType(friesRaw);
+            const grams = Number(portionGrams);
+            const boneless = isBonelessItem(itemOrName);
+
+            // Si es combo, SIEMPRE respetar tamaño de combo (sobre todo en Combo Boneles)
+            const comboKey = opts && opts.comboKey ? String(opts.comboKey) : '';
+            if (comboKey) {
+                const sizeLabel = comboKey.includes('combofamiliar') ? 'Papas Extragrandes' : 'Papas Medianas';
+                return friesType ? `${sizeLabel} (${friesType})` : sizeLabel;
+            }
+
+            if (boneless) {
+                const sizeLabel = (Number.isFinite(grams) && grams >= 1000)
+                    ? 'Papas Extragrandes'
+                    : (Number.isFinite(grams) && grams >= 500)
+                        ? 'Papas Medianas'
+                        : 'Papas Complemento';
+                return friesType ? `${sizeLabel} (${friesType})` : sizeLabel;
+            }
+
+            const lower = friesType.toLowerCase();
+            // Si ya trae tamaño explícito (mediana/grande/xl/complemento), respetarlo
+            if (/(complemento|mediana|medianas|grande|grandes|xl)/i.test(friesType)) {
+                return friesType.startsWith('Papas') ? friesType : `Papas ${friesType}`;
+            }
+
+            // Papas de $25 (hamburguesas/hotdogs): siempre son complemento
+            if (friesType) return `Papas Complemento (${friesType})`;
+            return 'Papas Complemento';
         }
 
         // Escapar texto para evitar inyectar HTML en nombres de productos/toppings
@@ -1136,7 +1204,11 @@
         }
 
         function parseSingleDetails(text) {
-            const res = { toppings: [], fries: null, sauce: null, onionRings: false, extras: [], hotdog: false };
+            const res = { toppings: [], fries: null, sauce: null, onionRings: false, extras: [], hotdog: false, portionGrams: null };
+            try {
+                const mPort = String(text || '').match(/Porci[oó]n\s*:\s*(\d+)\s*g/i);
+                if (mPort && mPort[1]) res.portionGrams = parseInt(mPort[1], 10) || null;
+            } catch (_) {}
             const parts = String(text || '').split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
             parts.forEach(p => {
                 if (/^\+\s*/.test(p)) {
@@ -1269,7 +1341,7 @@
                 const drinkBadges = [];
                 let hasOnion = false;
                 includePieces.forEach(ch => {
-                    if (ch.fries) friesBadges.push(`Tipo ${ch.fries}`);
+                    if (ch.fries) friesBadges.push(friesLabelForContext(item, ch.fries, ch.portionGrams, { comboKey: comboConfig && comboConfig.key }));
                     if (ch.sauce) sauceBadges.push(ch.sauce);
                     if (ch.drinks && ch.drinks.length) drinkBadges.push(...ch.drinks);
                     if (ch.onionRings) hasOnion = true;
@@ -1282,7 +1354,7 @@
                                 <div class="text-sm font-semibold text-gray-800">${ch.qty}x ${escapeHtml(ch.name)}</div>
                                 ${(shouldInlineComboSpecifications() && choiceSpecs[chIdx]) ? `<div class=\"mt-1 text-xs md:text-sm text-red-600 font-extrabold\">${escapeHtml(choiceSpecs[chIdx])}</div>` : ''}
                                 ${ch.toppings && ch.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(ch.toppings, 'amber', orderId, itemIndex, 'toppings_' + chIdx)}</div>` : ''}
-                                ${ch.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${ch.fries}`], 'blue', orderId, itemIndex, 'fries_' + chIdx)}</div>` : ''}
+                                ${ch.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([friesLabelForContext(item, ch.fries, ch.portionGrams, { comboKey: comboConfig && comboConfig.key })], 'blue', orderId, itemIndex, 'fries_' + chIdx)}</div>` : ''}
                                 ${ch.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([ch.sauce], 'pink', orderId, itemIndex, 'sauce_' + chIdx)}</div>` : ''}
                                 ${ch.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges([onionLabel], 'green', orderId, itemIndex, 'onion_' + chIdx)}</div>` : ''}
                                 ${ch.extras && ch.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(ch.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras_' + chIdx)}</div>` : ''}
@@ -1313,7 +1385,7 @@
             return `
                 <div class="mt-1">
                     ${d.toppings && d.toppings.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Toppings:</span>${renderBadges(d.toppings, 'amber', orderId, itemIndex, 'toppings')}</div>` : ''}
-                    ${d.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([`Tipo ${d.fries}`], 'blue', orderId, itemIndex, 'fries')}</div>` : ''}
+                    ${d.fries ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Papas:</span>${renderBadges([friesLabelForContext(item, d.fries, d.portionGrams, { comboKey: comboConfig && comboConfig.key })], 'blue', orderId, itemIndex, 'fries')}</div>` : ''}
                     ${d.sauce ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Salsa:</span>${renderBadges([d.sauce], 'pink', orderId, itemIndex, 'sauce')}</div>` : ''}
                     ${d.onionRings ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Acompañamientos:</span>${renderBadges(['Aros de Cebolla'], 'green', orderId, itemIndex, 'onion')}</div>` : ''}
                     ${d.extras && d.extras.length ? `<div class=\"text-xs text-gray-600 mt-1\"><span class=\"font-semibold\">Extras:</span>${renderBadges(d.extras.map(e => `${e.quantity}x ${e.name}`), 'amber', orderId, itemIndex, 'extras')}</div>` : ''}
@@ -1512,6 +1584,17 @@
             const customer = order && order.customer ? order.customer : {};
             const items = Array.isArray(order.items) ? order.items : [];
 
+            const paymentMethodRaw = String(order.paymentMethod || '').trim();
+            const isOnlinePay = /pago\s*en\s*l[ií]nea/i.test(paymentMethodRaw);
+            const isPaid = !!order.paid;
+            const paymentStatusText = isOnlinePay
+                ? (isPaid ? 'Pagado' : 'Pago pendiente')
+                : (isPaid ? 'Pagado' : 'Pendiente de cobro');
+            const paymentBadgeClass = isPaid
+                ? 'bg-emerald-950 border-emerald-500/40 text-emerald-200'
+                : (isOnlinePay ? 'bg-amber-950 border-amber-500/40 text-amber-200' : 'bg-slate-900 border-slate-600/40 text-slate-200');
+            const paymentMethodText = paymentMethodRaw || (isOnlinePay ? 'Pago en línea' : '—');
+
             return `
                 <div class="order-card card-modern ${priorityClass}" data-order-id="${order.id}" data-status="${order.status}">
                     <button class="order-delete-btn" onclick="deleteOrder('${order.id}')" title="Eliminar pedido">
@@ -1579,9 +1662,91 @@
                                     }).join('')}
                                 </div>
                                 <div class="mt-3 pt-3 border-t border-gray-700">
+                                    ${(() => {
+                                        const subtotal = Number(order.subtotal || 0);
+                                        const subtotalAfterDiscount = Number(order.subtotalAfterDiscount || 0);
+                                        const deliveryFee = Number(order.deliveryFee || order.deliveryCost || 0);
+                                        const storedTotal = Number(order.total || 0);
+
+                                        let discountAmount = Number(order.discountAmount || 0);
+                                        if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(subtotalAfterDiscount) && subtotalAfterDiscount > 0 && subtotalAfterDiscount < subtotal) {
+                                            discountAmount = Number((subtotal - subtotalAfterDiscount).toFixed(2));
+                                        }
+                                        if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(storedTotal) && storedTotal > 0) {
+                                            const inferred = (subtotal + deliveryFee) - storedTotal;
+                                            if (isFinite(inferred) && inferred > 0.01) discountAmount = Number(inferred.toFixed(2));
+                                        }
+                                        if (!isFinite(discountAmount) || discountAmount < 0) discountAmount = 0;
+                                        discountAmount = Math.min(discountAmount, isFinite(subtotal) ? subtotal : discountAmount);
+
+                                        const discountReason = String(order.discountReason || order.rewardLabel || '').trim();
+                                        const effectiveTotal = (isFinite(subtotal) && subtotal > 0)
+                                            ? Number((subtotal - discountAmount + deliveryFee).toFixed(2))
+                                            : (isFinite(storedTotal) ? storedTotal : 0);
+                                        let breakdown = '';
+                                        
+                                        if (subtotal > 0) {
+                                            breakdown += `
+                                                <div class="flex justify-between items-center text-sm mb-1">
+                                                    <span class="text-gray-300">Subtotal:</span>
+                                                    <span class="text-gray-100 font-medium">$${subtotal.toFixed(2)}</span>
+                                                </div>
+                                            `;
+                                        }
+                                        
+                                        if (discountAmount > 0) {
+                                            breakdown += `
+                                                <div class="flex justify-between items-center text-sm mb-1">
+                                                    <span class="text-green-300">Descuento${discountReason ? ` (${escapeHtml(discountReason)})` : ''}:</span>
+                                                    <span class="text-green-300 font-medium">-$${discountAmount.toFixed(2)}</span>
+                                                </div>
+                                            `;
+                                        }
+                                        
+                                        if (deliveryFee > 0) {
+                                            breakdown += `
+                                                <div class="flex justify-between items-center text-sm mb-2">
+                                                    <span class="text-gray-300">Envío:</span>
+                                                    <span class="text-gray-100 font-medium">$${deliveryFee.toFixed(2)}</span>
+                                                </div>
+                                            `;
+                                        }
+                                        
+                                        return breakdown;
+                                    })()}
                                     <div class="flex justify-between items-center">
                                         <span class="text-lg font-bold text-gray-100">Total:</span>
-                                        <span class="text-xl font-bold text-yellow-300 amount">$${Number(order.total || 0)}</span>
+                                        <span class="text-xl font-bold text-yellow-300 amount">$${(() => {
+                                            const subtotal = Number(order.subtotal || 0);
+                                            const subtotalAfterDiscount = Number(order.subtotalAfterDiscount || 0);
+                                            const deliveryFee = Number(order.deliveryFee || order.deliveryCost || 0);
+                                            const storedTotal = Number(order.total || 0);
+                                            let discountAmount = Number(order.discountAmount || 0);
+                                            if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(subtotalAfterDiscount) && subtotalAfterDiscount > 0 && subtotalAfterDiscount < subtotal) {
+                                                discountAmount = Number((subtotal - subtotalAfterDiscount).toFixed(2));
+                                            }
+                                            if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(storedTotal) && storedTotal > 0) {
+                                                const inferred = (subtotal + deliveryFee) - storedTotal;
+                                                if (isFinite(inferred) && inferred > 0.01) discountAmount = Number(inferred.toFixed(2));
+                                            }
+                                            if (!isFinite(discountAmount) || discountAmount < 0) discountAmount = 0;
+                                            discountAmount = Math.min(discountAmount, isFinite(subtotal) ? subtotal : discountAmount);
+                                            const effectiveTotal = (isFinite(subtotal) && subtotal > 0)
+                                                ? Number((subtotal - discountAmount + deliveryFee).toFixed(2))
+                                                : (isFinite(storedTotal) ? storedTotal : 0);
+                                            return effectiveTotal.toFixed(2);
+                                        })()}</span>
+                                    </div>
+
+                                    <div class="mt-3 pt-3 border-t border-gray-700">
+                                        <div class="flex items-center justify-between gap-3 text-sm">
+                                            <div class="text-gray-300">
+                                                <i class="fas fa-credit-card text-gray-300 mr-2"></i>
+                                                <span class="font-semibold">Pago:</span>
+                                                <span class="ml-1">${escapeHtml(paymentMethodText)}</span>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-bold ${paymentBadgeClass}">${escapeHtml(paymentStatusText)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1786,10 +1951,10 @@
                 extra.push(`${qty > 1 ? qty + 'x ' : ''}Boneles 250g`);
             }
             if (key.includes('comboamigos')) {
-                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros Medianos`);
+                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros de Cebolla Medianas`);
             }
             if (key.includes('combofamiliar')) {
-                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros XL`);
+                extra.push(`${qty > 1 ? qty + 'x ' : ''}Aros de Cebolla Extragrandes`);
             }
             return extra;
         }
@@ -1861,7 +2026,72 @@
                 return hasCents ? n.toFixed(2) : String(Math.round(n));
             };
 
-            const totalNumber = Number(order.total || 0);
+            const subtotalNumber = Number(order.subtotal || 0);
+            const subtotalAfterDiscountNumber = Number(order.subtotalAfterDiscount || 0);
+            const deliveryFeeNumber = Number(order.deliveryFee || order.deliveryCost || 0);
+            const storedTotalNumber = Number(order.total || 0);
+
+            let discountAmountNumber = Number(order.discountAmount || 0);
+            if ((!isFinite(discountAmountNumber) || discountAmountNumber <= 0) && isFinite(subtotalNumber) && subtotalNumber > 0 && isFinite(subtotalAfterDiscountNumber) && subtotalAfterDiscountNumber > 0 && subtotalAfterDiscountNumber < subtotalNumber) {
+                discountAmountNumber = Number((subtotalNumber - subtotalAfterDiscountNumber).toFixed(2));
+            }
+            if ((!isFinite(discountAmountNumber) || discountAmountNumber <= 0) && isFinite(subtotalNumber) && subtotalNumber > 0 && isFinite(storedTotalNumber) && storedTotalNumber > 0) {
+                const inferred = (subtotalNumber + deliveryFeeNumber) - storedTotalNumber;
+                if (isFinite(inferred) && inferred > 0.01) discountAmountNumber = Number(inferred.toFixed(2));
+            }
+            if (!isFinite(discountAmountNumber) || discountAmountNumber < 0) discountAmountNumber = 0;
+            discountAmountNumber = Math.min(discountAmountNumber, isFinite(subtotalNumber) ? subtotalNumber : discountAmountNumber);
+
+            const totalNumber = (isFinite(subtotalNumber) && subtotalNumber > 0)
+                ? Number((subtotalNumber - discountAmountNumber + deliveryFeeNumber).toFixed(2))
+                : (isFinite(storedTotalNumber) ? storedTotalNumber : 0);
+
+            const discountReason = String(order.discountReason || order.rewardLabel || '').trim();
+
+            // Determinar cómo interpretar precios en items (unitario vs total por línea)
+            // para evitar duplicar multiplicaciones (casos legacy / datos mezclados).
+            const ticketPriceMode = (() => {
+                if (!isFinite(subtotalNumber) || subtotalNumber <= 0 || !items.length) return 'AUTO';
+
+                let sumUnitTimesQty = 0;
+                let sumPriceTimesQty = 0;
+                let sumPriceIsLine = 0;
+                let sumUnitIsLine = 0;
+
+                items.forEach((it) => {
+                    const q = Number(it.quantity || 1) || 1;
+                    const p = Number(it.price || 0);
+                    const u = Number(it.unitPrice || 0);
+                    if (isFinite(u) && u > 0) {
+                        sumUnitTimesQty += u * q;
+                        sumUnitIsLine += u;
+                    }
+                    if (isFinite(p) && p > 0) {
+                        sumPriceTimesQty += p * q;
+                        sumPriceIsLine += p;
+                    }
+                });
+
+                const candidates = [
+                    { mode: 'UNIT_X_QTY', value: sumUnitTimesQty },
+                    { mode: 'PRICE_X_QTY', value: sumPriceTimesQty },
+                    { mode: 'PRICE_IS_LINE', value: sumPriceIsLine },
+                    { mode: 'UNIT_IS_LINE', value: sumUnitIsLine },
+                ].filter(c => isFinite(c.value) && c.value > 0);
+
+                if (!candidates.length) return 'AUTO';
+
+                candidates.sort((a, b) => {
+                    const da = Math.abs(a.value - subtotalNumber);
+                    const db = Math.abs(b.value - subtotalNumber);
+                    return da - db;
+                });
+
+                // Aceptar el mejor candidato si se aproxima razonablemente al subtotal.
+                const best = candidates[0];
+                const relErr = Math.abs(best.value - subtotalNumber) / Math.max(1, subtotalNumber);
+                return relErr <= 0.05 ? best.mode : 'AUTO'; // tolerancia 5%
+            })();
             const pointsGained = (() => {
                 const n = Number(totalNumber || 0);
                 if (!isFinite(n) || n <= 0) return 0;
@@ -1983,6 +2213,13 @@
                                 if (ch.onionRings) hasOnion = true;
                             });
 
+                            // Fallback: si el pedido es un combo conocido (por config) y no viene explícito en el texto,
+                            // de todos modos debe imprimirse que incluye aros.
+                            if (!hasOnion && comboConfig && Array.isArray(comboConfig.items)) {
+                                const hasOnionCfg = comboConfig.items.some(ci => ci && ci.type === 'onion-rings');
+                                if (hasOnionCfg) hasOnion = true;
+                            }
+
                             if (friesBadges.length || sauceBadges.length || hasOnion || drinkBadges.length) {
                                 lines.push('');
                                 lines.push('  ELEMENTOS DEL COMBO:');
@@ -2023,8 +2260,45 @@
                     }
 
                     // Ticket estándar (cliente): incluye precios y totales
-                    const unitPrice = Number(item.price || 0);
-                    const lineTotal = (isFinite(unitPrice) ? unitPrice : 0) * qty;
+                    // Elegimos por pedido cómo interpretar item.price/unitPrice para que NO se dupliquen.
+                    const p = Number(item.price || 0);
+                    const u = Number(item.unitPrice || 0);
+
+                    let lineTotal = 0;
+                    let unitPrice = 0;
+
+                    if (ticketPriceMode === 'UNIT_X_QTY') {
+                        const base = (isFinite(u) && u > 0) ? u : (isFinite(p) ? p : 0);
+                        unitPrice = base;
+                        lineTotal = base * qty;
+                    } else if (ticketPriceMode === 'PRICE_X_QTY') {
+                        const base = isFinite(p) ? p : 0;
+                        unitPrice = base;
+                        lineTotal = base * qty;
+                    } else if (ticketPriceMode === 'PRICE_IS_LINE') {
+                        lineTotal = isFinite(p) ? p : 0;
+                        unitPrice = qty > 0 ? (lineTotal / qty) : lineTotal;
+                    } else if (ticketPriceMode === 'UNIT_IS_LINE') {
+                        lineTotal = (isFinite(u) && u > 0) ? u : (isFinite(p) ? p : 0);
+                        unitPrice = qty > 0 ? (lineTotal / qty) : lineTotal;
+                    } else {
+                        // AUTO (fallback): preferir total por línea si coincide con subtotal del pedido; si no, usar unitario.
+                        const lineCandidate = isFinite(p) && p > 0 ? p : ((isFinite(u) && u > 0) ? u : 0);
+                        const unitCandidate = (isFinite(u) && u > 0) ? u : (isFinite(p) ? p : 0);
+
+                        // Heurística simple: si quantity>1 y lineCandidate/qty es "razonable" y unitCandidate*qty se ve inflado,
+                        // preferir lineCandidate.
+                        const unitTimesQty = unitCandidate * qty;
+                        if (qty > 1 && lineCandidate > 0 && unitTimesQty > 0) {
+                            const preferLine = lineCandidate <= unitTimesQty;
+                            lineTotal = preferLine ? lineCandidate : unitTimesQty;
+                        } else {
+                            lineTotal = unitTimesQty > 0 ? unitTimesQty : lineCandidate;
+                        }
+
+                        unitPrice = qty > 0 ? (lineTotal / qty) : lineTotal;
+                    }
+
                     const right = '$' + money(lineTotal);
 
                     const leftBase = `${qty}x ${name}`;
@@ -2037,6 +2311,11 @@
                         }
                     } else {
                         lines.push(lr(`${qty}x`, right));
+                    }
+
+                    // Si hay varias unidades, mostrar el precio por pieza para evitar confusiones.
+                    if (qty > 1 && isFinite(unitPrice) && unitPrice > 0) {
+                        wrap(`Precio c/u: $${money(unitPrice)}`, PAPER_CHARS).forEach(l => lines.push(l));
                     }
 
                     const itemKey = normalizeTicketName(name);
@@ -2054,12 +2333,12 @@
                         for (let i = details.length - 1; i >= 0; i--) {
                             if (/aros/i.test(details[i])) details.splice(i, 1);
                         }
-                        details.push('Aros XL');
+                        details.push('Aros de Cebolla Extragrandes');
                     } else if (itemKey.includes('comboamigos')) {
                         for (let i = details.length - 1; i >= 0; i--) {
                             if (/aros/i.test(details[i])) details.splice(i, 1);
                         }
-                        details.push('Aros Medianos');
+                        details.push('Aros de Cebolla Medianas');
                     }
 
                     // Extras de combos
@@ -2077,6 +2356,28 @@
             }
 
             if (mode !== 'kitchen') {
+                lines.push(SEP);
+                
+                // Mostrar desglose de totales
+                const subtotal = subtotalNumber;
+                const discountAmount = discountAmountNumber;
+                const deliveryFee = deliveryFeeNumber;
+                
+                if (subtotal > 0) {
+                    lines.push(lr('Subtotal', '$' + money(subtotal)));
+                }
+                
+                if (discountAmount > 0) {
+                    lines.push(lr('Descuento', '-$' + money(discountAmount)));
+                    if (discountReason) {
+                        wrap('Motivo: ' + discountReason, PAPER_CHARS).forEach(x => lines.push(x));
+                    }
+                }
+                
+                if (deliveryFee > 0) {
+                    lines.push(lr('Envio', '$' + money(deliveryFee)));
+                }
+                
                 lines.push(SEP);
                 lines.push(lr('TOTAL', '$' + money(totalNumber)));
                 lines.push(SEP);
@@ -2577,6 +2878,24 @@
         function deleteOrder(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
+
+            const subtotal = Number(order.subtotal || 0);
+            const subtotalAfterDiscount = Number(order.subtotalAfterDiscount || 0);
+            const deliveryFee = Number(order.deliveryFee || order.deliveryCost || 0);
+            const storedTotal = Number(order.total || 0);
+            let discountAmount = Number(order.discountAmount || 0);
+            if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(subtotalAfterDiscount) && subtotalAfterDiscount > 0 && subtotalAfterDiscount < subtotal) {
+                discountAmount = Number((subtotal - subtotalAfterDiscount).toFixed(2));
+            }
+            if ((!isFinite(discountAmount) || discountAmount <= 0) && isFinite(subtotal) && subtotal > 0 && isFinite(storedTotal) && storedTotal > 0) {
+                const inferred = (subtotal + deliveryFee) - storedTotal;
+                if (isFinite(inferred) && inferred > 0.01) discountAmount = Number(inferred.toFixed(2));
+            }
+            if (!isFinite(discountAmount) || discountAmount < 0) discountAmount = 0;
+            discountAmount = Math.min(discountAmount, isFinite(subtotal) ? subtotal : discountAmount);
+            const effectiveTotal = (isFinite(subtotal) && subtotal > 0)
+                ? Number((subtotal - discountAmount + deliveryFee).toFixed(2))
+                : (isFinite(storedTotal) ? storedTotal : 0);
             
             // Crear modal de confirmación
             const modal = document.createElement('div');
@@ -2589,7 +2908,7 @@
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 mb-2">¿Eliminar Pedido?</h3>
                         <p class="text-gray-600 mb-2">¿Estás seguro de que quieres eliminar el pedido #${order.id.slice(-6)}?</p>
-                        <p class="text-sm text-gray-500 mb-6">Cliente: ${order.customer.name} - Total: $${order.total}</p>
+                        <p class="text-sm text-gray-500 mb-6">Cliente: ${order.customer.name} - Total: $${effectiveTotal.toFixed(2)}</p>
                         <div class="flex space-x-3">
                             <button onclick="cancelDelete()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
                                 Cancelar
