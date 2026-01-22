@@ -421,7 +421,7 @@
   }
 
   async function handleSaveLocation() {
-    const btn = $('client-save-btn');
+    const btn = $('client-save-btn') || $('client-add-address-btn');
     if (!btn) return;
     if (!currentSelection) {
       setSaveMessage('Primero verifica tu dirección y ajusta el pin.', 'error');
@@ -481,7 +481,7 @@
       console.error('[cliente-location] save location error:', e);
       setSaveMessage(e && e.message ? e.message : 'No se pudo guardar. Intenta de nuevo.', 'error');
     } finally {
-      btn.classList.remove('cursor-wait');
+      btn.classList.remove('opacity-60', 'cursor-wait');
       updateSaveButtonState();
     }
   }

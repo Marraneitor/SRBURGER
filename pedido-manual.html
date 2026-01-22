@@ -2363,7 +2363,7 @@
                 </div>
                 <!-- Mensajes informativos para tipo de entrega (sin mapas) -->
                 <div class="mt-4 px-4">
-                    <div class="max-w-2xl mx-auto bg-white/90 backdrop-blur-sm border border-yellow-200 rounded-2xl p-4 shadow-sm text-sm text-gray-800" id="hero-delivery-info">
+                    <div class="max-w-2xl mx-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm border border-yellow-200 dark:border-white/10 rounded-2xl p-4 shadow-sm text-sm text-gray-800 dark:text-slate-100" id="hero-delivery-info">
                         <p class="font-semibold mb-1">🚗 Envío a domicilio</p>
                         <p>
                             El envío se calcula automáticamente a <strong>$8 por KM</strong> (máximo <strong>12 km</strong>, redondeo al entero más cercano).
@@ -2419,16 +2419,16 @@
                     <!-- Imagen removida en pedido-manual para cargar más rápido -->
                     </div>
                 </div>
-                <div class="lg:w-1/2 text-center lg:text-left">
+                <div class="lg:w-1/2 text-center lg:text-left bg-white/85 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-black/5 shadow-sm">
                     <span class="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold mb-4">
                         NUESTRA HISTORIA
                     </span>
                     <h2 class="text-4xl md:text-5xl font-bold font-poppins mb-6 text-gray-900">
                         Una Historia de <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">Amor</span> y <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">Sabor</span>
                     </h2>
-                    <div class="space-y-4 text-lg text-gray-600 leading-relaxed">
+                    <div class="space-y-4 text-lg text-gray-900 leading-relaxed">
                         <p>
-                            Bienvenidos a <strong class="text-gray-900">SR & SRA BURGER</strong>, donde cada hamburguesa es hecha con pasión y amor. Somos una pareja trabajando juntos para lograr nuestros sueños, trayéndote el mejor sabor en cada bocado.
+                            Bienvenidos a <strong class="text-red-600">SR & SRA BURGER</strong>, donde cada hamburguesa es hecha con pasión y amor. Somos una pareja trabajando juntos para lograr nuestros sueños, trayéndote el mejor sabor en cada bocado.
                         </p>
                         <p>
                             Más que solo comida, ofrecemos una experiencia deliciosa que nace de nuestro esfuerzo y dedicación. Gracias por apoyarnos y ser parte de nuestra historia.
@@ -3030,20 +3030,20 @@
 
     <!-- Modal: registro / bienvenida (solo usuarios SIN sesión) -->
     <div id="register-cta-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] hidden items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-yellow-200 bg-white/95">
+        <div class="glass-effect rounded-2xl shadow-2xl w-full max-w-md mx-auto border border-white/10 bg-slate-950/85 text-slate-100">
             <div class="p-4 border-b flex items-start justify-between gap-3">
                 <div>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">🎁 10% en tu primera compra</h3>
-                    <p class="text-base sm:text-lg text-gray-700 mt-1">Solo necesitas crear tu cuenta.</p>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-100 leading-tight">🎁 10% en tu primera compra</h3>
+                    <p class="text-base sm:text-lg text-slate-200 mt-1">Solo necesitas crear tu cuenta.</p>
                 </div>
-                <button id="register-cta-close" class="w-9 h-9 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center" aria-label="Cerrar">
-                    <i class="fas fa-times text-gray-700"></i>
+                <button id="register-cta-close" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center" aria-label="Cerrar">
+                    <i class="fas fa-times text-slate-200"></i>
                 </button>
             </div>
             <div class="p-4">
-                <div class="p-4 rounded-2xl border bg-yellow-50/40">
-                    <p class="text-lg font-extrabold text-gray-900">Activa tu descuento en 10 segundos</p>
-                    <div class="mt-2 space-y-1 text-sm sm:text-base text-gray-800">
+                <div class="p-4 rounded-2xl border border-white/10 bg-white/10">
+                    <p class="text-lg font-extrabold text-slate-100">Activa tu descuento en 10 segundos</p>
+                    <div class="mt-2 space-y-1 text-sm sm:text-base text-slate-100">
                         <p><span class="font-bold">1)</span> Toca <span class="font-bold">“Ir a Mi cuenta”</span></p>
                         <p><span class="font-bold">2)</span> Regístrate o inicia sesión</p>
                         <p><span class="font-bold">3)</span> Vuelve y se aplicará en tu primera compra</p>
@@ -3054,7 +3054,7 @@
                     <a id="register-cta-go" href="cliente.html" class="w-full bg-[#FFB300] text-[#212121] font-extrabold py-3 rounded-xl text-center hover:bg-[#FFA000] transition">
                         Ir a Mi cuenta
                     </a>
-                    <button id="register-cta-later" type="button" class="w-full bg-black/5 text-gray-800 font-bold py-3 rounded-xl hover:bg-black/10 transition">
+                    <button id="register-cta-later" type="button" class="w-full bg-white/10 text-slate-100 font-bold py-3 rounded-xl hover:bg-white/15 transition">
                         Ahora no
                     </button>
                 </div>
