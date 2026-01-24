@@ -759,12 +759,6 @@ if (false) {
             type: 'free_fries',
             description: 'PAPAS GRATIS CON HAMBURGUESA O HOTDOG',
             categories: ['Hamburguesas', 'Hot Dogs']
-        },
-        5: { // Viernes - Carne & tocino 50% (antes jueves)
-            type: 'meat_supreme',
-            extraMeatDiscount: 20, // Doble carne a 10 en lugar de 30
-            description: 'DOBLE CARNE POR SOLO 10',
-            categories: ['Hamburguesas']
         }
     };
 

@@ -726,10 +726,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Decide si mostrar campo de "Especificaciones" para un producto dado
     function shouldShowSpecificationsForItem(item) {
-        // Pedido manual (modo rápido): no usar especificaciones/notas libres
-        if (typeof window.__MANUAL_FAST_MODE !== 'undefined' && window.__MANUAL_FAST_MODE === true) {
-            return false;
-        }
         if (!item) return false;
         const id = Number(item.id);
         const rawOverride = specificationsOverridesFromFirebase && (specificationsOverridesFromFirebase[id] ?? specificationsOverridesFromFirebase[String(id)]);
@@ -1284,12 +1280,6 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'free_fries',
             description: 'PAPAS GRATIS CON HAMBURGUESA O HOTDOG',
             categories: ['Hamburguesas', 'Hot Dogs']
-        },
-        5: { // Viernes - Carne & tocino 50% (antes jueves)
-            type: 'meat_supreme',
-            extraMeatDiscount: 20, // Doble carne a 10 en lugar de 30
-            description: 'DOBLE CARNE POR SOLO 10',
-            categories: ['Hamburguesas']
         }
     };
 

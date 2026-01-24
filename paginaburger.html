@@ -1852,6 +1852,63 @@
             border-color: rgba(255, 199, 44, 0.22);
         }
 
+        /* ===== Combo modal (high contrast) ===== */
+        #combo-modal .combo-modal-card {
+            background: rgba(2, 6, 23, 0.90) !important;
+            border: 1px solid rgba(255, 255, 255, 0.10) !important;
+            color: #E5E7EB;
+        }
+        #combo-modal .border-b,
+        #combo-modal .border-t {
+            border-color: rgba(255, 255, 255, 0.10) !important;
+        }
+        #combo-modal #close-combo-modal-btn {
+            color: rgba(226, 232, 240, 0.9);
+        }
+        #combo-modal #close-combo-modal-btn:hover {
+            color: #FFFFFF;
+        }
+
+        /* Normalize Tailwind grays inside the combo modal for readability */
+        #combo-modal .text-gray-900,
+        #combo-modal .text-gray-800,
+        #combo-modal .text-gray-700 {
+            color: #F9FAFB !important;
+        }
+        #combo-modal .text-gray-600,
+        #combo-modal .text-gray-500 {
+            color: rgba(203, 213, 225, 0.92) !important;
+        }
+        #combo-modal .text-black {
+            color: #F9FAFB !important;
+        }
+
+        /* Darken common light backgrounds used by the combo templates */
+        #combo-modal .bg-white {
+            background-color: rgba(15, 23, 42, 0.92) !important;
+        }
+        #combo-modal .bg-gray-50,
+        #combo-modal .bg-gray-100,
+        #combo-modal .bg-gray-200 {
+            background-color: rgba(15, 23, 42, 0.78) !important;
+        }
+        #combo-modal .hover\:bg-gray-50:hover,
+        #combo-modal .hover\:bg-gray-300:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Buttons inside combo modal */
+        #combo-modal .combo-customize-btn,
+        #combo-modal .hotdog-customize-btn {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F9FAFB !important;
+        }
+        #combo-modal .combo-customize-btn:hover,
+        #combo-modal .hotdog-customize-btn:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+        }
+
         /* ===== Cart sidebar (premium) ===== */
         #cart-sidebar.cart-sidebar {
             background: rgba(255, 255, 255, 0.92);
@@ -2727,14 +2784,14 @@
     </div>
     <div id="cart-overlay" class="fixed top-0 left-0 w-full h-full bg-black/50 z-40 hidden"></div>
 
-    <div id="combo-modal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
+    <div id="combo-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="combo-modal-card glass-effect rounded-2xl shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
             <div class="p-4 border-b"><h3 id="combo-modal-title" class="text-2xl font-bold font-poppins text-center">Configura tu Combo</h3></div>
             <div id="combo-modal-body" class="p-6 overflow-y-auto modal-scrollbar space-y-6"></div>
-            <div class="p-4 border-t bg-gray-50 mt-auto">
+            <div class="p-4 border-t mt-auto">
                  <div class="flex justify-between items-center mb-4"><span class="text-lg font-semibold">Total del Combo:</span><span id="combo-modal-total" class="text-2xl font-bold text-[#FFB300]">$0.00</span></div>
-                <button id="add-combo-to-cart-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-lg hover:bg-[#FFA000] transition duration-300">Agregar Combo al Carrito</button>
-                <button id="close-combo-modal-btn" class="w-full text-center text-gray-600 mt-2 hover:text-black">Cancelar</button>
+                <button id="add-combo-to-cart-btn" class="w-full bg-[#FFB300] text-[#212121] font-bold py-3 rounded-xl hover:bg-[#FFA000] transition duration-300">Agregar Combo al Carrito</button>
+                <button id="close-combo-modal-btn" class="w-full text-center mt-2">Cancelar</button>
             </div>
         </div>
     </div>
@@ -3286,7 +3343,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Lista compacta de promociones diarias (martes-viernes) -->
+                                <!-- Lista compacta de promociones diarias (martes-jueves) -->
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -3321,16 +3378,6 @@
                                         <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-bold">JUEVES</span>
                                     </div>
                                     
-                                    <div class="promo-compact-card bg-white border border-gray-200 rounded-xl p-3 flex items-center space-x-3">
-                                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-plus-circle text-red-600"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-bold text-gray-900">Carne & Tocino</h4>
-                                            <p class="text-sm text-gray-600">50% descuento en carne extra y tocino</p>
-                                        </div>
-                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">VIERNES</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3460,29 +3507,6 @@
                             </div>
                         </div>
 
-                        <!-- VIERNES -->
-                        <div class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                            <div class="absolute top-4 right-4 bg-yellow-400 text-red-900 px-3 py-1 rounded-full text-xs font-black animate-pulse">
-                                50% OFF
-                            </div>
-                            <div class="relative p-6 text-center">
-                                <div class="mb-4">
-                                    <div class="w-16 h-16 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                                        <i class="fas fa-plus-circle text-2xl"></i>
-                                    </div>
-                                    <h4 class="text-sm font-bold text-red-200 mb-1">VIERNES</h4>
-                                    <h3 class="text-lg font-black mb-2">CARNE & TOCINO</h3>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <div class="text-3xl font-black text-yellow-300">50% OFF</div>
-                                    <p class="text-sm text-red-100">Carne extra + tocino</p>
-                                </div>
-                                <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold">
-                                    Viernes Carnívoros
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Sección "Nuestros combos" eliminada del modal de promociones para evitar duplicar ofertas.
@@ -3776,7 +3800,7 @@
                 });
             })();
         </script>
-        <script src="js/script.js.backup?v=2026-01-20b"></script>
+        <script src="js/script.js.backup?v=2026-01-23a"></script>
 
 </body>
 </html>
