@@ -2241,6 +2241,43 @@
             border-color: rgba(239, 68, 68, 0.28) !important;
             color: #FCA5A5 !important;
         }
+
+        /* Ajustes tipográficos específicos para pedido-manual (mejor en celulares) */
+        body.sr-manual-fast {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        @media (max-width: 640px) {
+            body.sr-manual-fast .text-5xl,
+            body.sr-manual-fast .text-4xl,
+            body.sr-manual-fast .text-3xl,
+            body.sr-manual-fast h1,
+            body.sr-manual-fast h2,
+            body.sr-manual-fast h3 {
+                font-size: 1.4rem !important;
+            }
+
+            body.sr-manual-fast .text-2xl,
+            body.sr-manual-fast .text-xl {
+                font-size: 1.1rem !important;
+            }
+
+            body.sr-manual-fast .text-lg {
+                font-size: 0.98rem !important;
+            }
+
+            body.sr-manual-fast .text-base {
+                font-size: 0.9rem !important;
+            }
+
+            body.sr-manual-fast .text-sm {
+                font-size: 0.8rem !important;
+            }
+
+            body.sr-manual-fast .text-xs {
+                font-size: 0.7rem !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 sr-manual-fast">
@@ -2751,6 +2788,44 @@
         </div>
     </div>
 
+    <!-- Modal: Agregar cliente rápido (Firebase manual_customers) -->
+    <div id="customer-add-modal" class="fixed inset-0 bg-black/60 z-[75] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
+            <div class="p-4 border-b flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="text-lg font-bold font-poppins truncate">Agregar cliente</div>
+                    <div class="text-xs text-gray-600 truncate">Se guardará en la lista de clientes rápidos</div>
+                </div>
+                <button id="customer-add-close" type="button" class="text-gray-500 hover:text-gray-900">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto modal-scrollbar">
+                <div>
+                    <label for="customer-add-name" class="block text-sm font-medium mb-1">Nombre completo *</label>
+                    <input id="customer-add-name" type="text" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-yellow-300 focus:border-yellow-400" placeholder="Nombre del cliente" />
+                    <div id="customer-add-name-error" class="mt-1 text-xs text-red-600 hidden"></div>
+                </div>
+                <div>
+                    <label for="customer-add-phone" class="block text-sm font-medium mb-1">Teléfono (opcional)</label>
+                    <input id="customer-add-phone" type="tel" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-yellow-300 focus:border-yellow-400" placeholder="922 123 4567" />
+                    <div id="customer-add-phone-error" class="mt-1 text-xs text-red-600 hidden"></div>
+                </div>
+                <div>
+                    <label for="customer-add-address" class="block text-sm font-medium mb-1">Dirección *</label>
+                    <textarea id="customer-add-address" rows="3" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-yellow-300 focus:border-yellow-400 resize-none" placeholder="Calle, número, colonia, referencias..."></textarea>
+                    <div id="customer-add-address-error" class="mt-1 text-xs text-red-600 hidden"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex flex-col gap-2">
+                <button id="customer-add-save" type="button" class="w-full bg-yellow-500 text-slate-900 font-extrabold py-3 rounded-xl hover:bg-yellow-400">
+                    <i class="fas fa-save mr-2"></i>Guardar cliente
+                </button>
+                <button id="customer-add-cancel" type="button" class="w-full text-center text-gray-600 text-sm hover:text-black">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="combo-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="combo-modal-card glass-effect rounded-2xl shadow-xl w-full max-w-lg mx-auto flex flex-col" style="max-height: 90vh;">
             <div class="p-4 border-b"><h3 id="combo-modal-title" class="text-2xl font-bold font-poppins text-center">Configura tu Combo</h3></div>
@@ -3078,7 +3153,7 @@
                     <div class="text-gray-700">Envío: <span id="checkout-sticky-delivery" class="font-semibold">—</span></div>
                     <div class="text-gray-800">Total: <span id="checkout-sticky-total" class="font-bold text-[#FFB300]">$0</span></div>
                 </div>
-                <button id="send-whatsapp-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg">
+                <button id="send-whatsapp-btn" class="hidden w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg">
                     <i class="fas fa-check-circle text-xl"></i><span>Confirmar Pedido</span>
                 </button>
             </div>
@@ -3259,14 +3334,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Botón flotante de WhatsApp optimizado para móvil -->
-    <a href="https://wa.me/5219221593688" target="_blank" class="wa-float fixed bottom-24 sm:bottom-40 right-4 sm:right-6 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-2xl w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-40 group">
-        <i class="fab fa-whatsapp text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300"></i>
-        <div class="absolute -left-20 sm:-left-24 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap hidden sm:block">
-            ¡Chatea con nosotros!
-        </div>
-    </a>
 
     <!-- Botón flotante de ayuda optimizado para móvil -->
     <button id="help-btn" class="fixed bottom-4 sm:bottom-20 right-4 sm:right-6 bg-gradient-to-br from-yellow-400 to-orange-500 text-white rounded-2xl w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-40 group">
@@ -3734,7 +3801,6 @@
                 } catch (_) {}
 
                 // Clientes (Firebase): selector para rellenar Nombre/Teléfono/Dirección
-                const customersPageUrl = 'clientes.html';
                 const openCustomersBtnCart = document.getElementById('open-customers-page-btn');
                 const openCustomersBtnCheckout = document.getElementById('open-customers-page-btn2');
                 const openPickerBtn = document.getElementById('open-customer-picker-btn');
@@ -3747,18 +3813,56 @@
                 const pickerList = document.getElementById('customer-picker-list');
                 const pickerEmpty = document.getElementById('customer-picker-empty');
 
+                const addCustomerModal = document.getElementById('customer-add-modal');
+                const addCustomerClose = document.getElementById('customer-add-close');
+                const addCustomerCancel = document.getElementById('customer-add-cancel');
+                const addCustomerSave = document.getElementById('customer-add-save');
+                const addCustomerName = document.getElementById('customer-add-name');
+                const addCustomerPhone = document.getElementById('customer-add-phone');
+                const addCustomerAddress = document.getElementById('customer-add-address');
+                const addCustomerNameError = document.getElementById('customer-add-name-error');
+                const addCustomerPhoneError = document.getElementById('customer-add-phone-error');
+                const addCustomerAddressError = document.getElementById('customer-add-address-error');
+
                 let pickerCustomers = [];
 
                 function normalizeDigits(v) {
                     return String(v || '').replace(/\D/g, '');
                 }
 
-                function openCustomersPage() {
-                    try { window.open(customersPageUrl, '_blank'); } catch (_) { window.location.href = customersPageUrl; }
+                function resetAddCustomerErrors() {
+                    if (addCustomerNameError) { addCustomerNameError.textContent = ''; addCustomerNameError.classList.add('hidden'); }
+                    if (addCustomerPhoneError) { addCustomerPhoneError.textContent = ''; addCustomerPhoneError.classList.add('hidden'); }
+                    if (addCustomerAddressError) { addCustomerAddressError.textContent = ''; addCustomerAddressError.classList.add('hidden'); }
                 }
 
-                if (openCustomersBtnCart) openCustomersBtnCart.addEventListener('click', openCustomersPage);
-                if (openCustomersBtnCheckout) openCustomersBtnCheckout.addEventListener('click', openCustomersPage);
+                function openAddCustomerModal() {
+                    if (!addCustomerModal) return;
+
+                    resetAddCustomerErrors();
+
+                    // Prefill con lo que ya esté escrito en el checkout
+                    const currentNameEl = document.getElementById('customer-name');
+                    const currentPhoneEl = document.getElementById('customer-phone');
+                    const currentAddrEl = document.getElementById('manual-address');
+
+                    if (addCustomerName) addCustomerName.value = currentNameEl ? currentNameEl.value : '';
+                    if (addCustomerPhone) addCustomerPhone.value = currentPhoneEl ? currentPhoneEl.value : '';
+                    if (addCustomerAddress) addCustomerAddress.value = currentAddrEl ? currentAddrEl.value : '';
+
+                    addCustomerModal.classList.remove('hidden');
+                    addCustomerModal.classList.add('flex');
+                    if (addCustomerName) addCustomerName.focus();
+                }
+
+                function hideAddCustomerModal() {
+                    if (!addCustomerModal) return;
+                    addCustomerModal.classList.add('hidden');
+                    addCustomerModal.classList.remove('flex');
+                }
+
+                if (openCustomersBtnCart) openCustomersBtnCart.addEventListener('click', openAddCustomerModal);
+                if (openCustomersBtnCheckout) openCustomersBtnCheckout.addEventListener('click', openAddCustomerModal);
 
                 function showPicker() {
                     if (!pickerModal) return;
@@ -3777,7 +3881,7 @@
                 if (pickerClose) pickerClose.addEventListener('click', hidePicker);
                 if (pickerAdd) pickerAdd.addEventListener('click', () => {
                     hidePicker();
-                    openCustomersPage();
+                    openAddCustomerModal();
                 });
                 if (pickerRefresh) pickerRefresh.addEventListener('click', () => loadPickerCustomers(true));
                 if (openPickerBtn) openPickerBtn.addEventListener('click', showPicker);
@@ -3788,6 +3892,12 @@
                     });
                 }
 
+                if (addCustomerModal) {
+                    addCustomerModal.addEventListener('click', (e) => {
+                        if (e.target === addCustomerModal) hideAddCustomerModal();
+                    });
+                }
+
                 async function waitForManualCustomerManager(timeoutMs = 6000) {
                     const started = Date.now();
                     while (Date.now() - started < timeoutMs) {
@@ -3795,6 +3905,65 @@
                         await new Promise(r => setTimeout(r, 50));
                     }
                     return null;
+                }
+
+                async function saveAddCustomerFromModal() {
+                    if (!addCustomerModal || !addCustomerSave) return;
+
+                    resetAddCustomerErrors();
+
+                    const name = addCustomerName ? String(addCustomerName.value || '').trim() : '';
+                    const phone = addCustomerPhone ? String(addCustomerPhone.value || '').trim() : '';
+                    const address = addCustomerAddress ? String(addCustomerAddress.value || '').trim() : '';
+
+                    let hasError = false;
+                    if (!name && addCustomerNameError) {
+                        addCustomerNameError.textContent = 'El nombre es obligatorio';
+                        addCustomerNameError.classList.remove('hidden');
+                        hasError = true;
+                    }
+                    if (!address && addCustomerAddressError) {
+                        addCustomerAddressError.textContent = 'La dirección es obligatoria';
+                        addCustomerAddressError.classList.remove('hidden');
+                        hasError = true;
+                    }
+
+                    if (hasError) return;
+
+                    const mgr = await waitForManualCustomerManager();
+                    if (!mgr) {
+                        alert('No se pudo conectar con Firebase para guardar el cliente. Intenta de nuevo.');
+                        return;
+                    }
+
+                    try {
+                        addCustomerSave.disabled = true;
+                        addCustomerSave.classList.add('opacity-60', 'cursor-wait');
+
+                        await mgr.upsertCustomer({ name, phone, address });
+
+                        // Rellenar automáticamente los campos del checkout con el nuevo cliente
+                        const checkoutName = document.getElementById('customer-name');
+                        const checkoutPhone = document.getElementById('customer-phone');
+                        const checkoutAddr = document.getElementById('manual-address');
+                        if (checkoutName) checkoutName.value = name;
+                        if (checkoutPhone) checkoutPhone.value = phone;
+                        if (checkoutAddr) checkoutAddr.value = address;
+
+                        // Recargar el listado del selector
+                        loadPickerCustomers(true);
+
+                        hideAddCustomerModal();
+                        try { console.log('✅ Cliente guardado correctamente en manual_customers'); } catch (_) {}
+                    } catch (e) {
+                        console.error('No se pudo guardar el cliente manual:', e);
+                        let msg = 'No se pudo guardar el cliente. Intenta de nuevo.';
+                        if (e && e.message) msg = e.message;
+                        alert(msg);
+                    } finally {
+                        addCustomerSave.disabled = false;
+                        addCustomerSave.classList.remove('opacity-60', 'cursor-wait');
+                    }
                 }
 
                 async function loadPickerCustomers(force = false) {
@@ -3877,6 +4046,10 @@
                 }
 
                 if (pickerSearch) pickerSearch.addEventListener('input', renderPicker);
+
+                if (addCustomerClose) addCustomerClose.addEventListener('click', hideAddCustomerModal);
+                if (addCustomerCancel) addCustomerCancel.addEventListener('click', hideAddCustomerModal);
+                if (addCustomerSave) addCustomerSave.addEventListener('click', () => { saveAddCustomerFromModal(); });
                 
                 const deliveryCostInput = document.getElementById('manual-delivery-cost');
                 
