@@ -2987,6 +2987,41 @@
                                     <span class="text-gray-600">Envío:</span>
                                     <span class="font-semibold text-orange-600">+$40.00</span>
                                 </div>
+
+                                <!-- Código de descuento -->
+                                <div class="mt-2">
+                                    <div id="checkout-discount-row" class="flex justify-between items-center hidden">
+                                        <span id="checkout-discount-label" class="text-green-700 font-medium">Descuento:</span>
+                                        <span id="checkout-discount-amount" class="font-semibold text-green-700">-$0.00</span>
+                                    </div>
+
+                                    <div class="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                                        <input
+                                            id="discount-code-input"
+                                            type="text"
+                                            placeholder="Código (ej. SR20)"
+                                            class="w-full p-2 border rounded-md text-sm focus:ring-1 focus:ring-green-300 focus:border-green-400"
+                                            autocomplete="off"
+                                            inputmode="text"
+                                        />
+                                        <button
+                                            id="apply-discount-code-btn"
+                                            type="button"
+                                            class="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm">
+                                            Aplicar
+                                        </button>
+                                    </div>
+
+                                    <div class="mt-1 flex items-center justify-between gap-2">
+                                        <div id="discount-code-msg" class="text-[11px] text-gray-600"></div>
+                                        <button
+                                            id="clear-discount-code-btn"
+                                            type="button"
+                                            class="hidden text-[11px] font-bold text-red-600 hover:text-red-700">
+                                            Quitar
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="border-t pt-1 mt-1">
                                     <div class="flex justify-between items-center">
                                         <span class="font-bold text-gray-800">Total:</span>

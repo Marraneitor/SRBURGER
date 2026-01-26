@@ -155,12 +155,42 @@ C<!DOCTYPE html>
         if (!n) return null;
         if (EXTRA_NAME_TO_ID[n] != null) return EXTRA_NAME_TO_ID[n];
 
-        const hasGrande = /\b(grande|grandes|xl)\b/i.test(String(name || ''));
-        if (n.includes('papas') && n.includes('frances')) return hasGrande ? 29 : 28;
-        if (n.includes('papas') && n.includes('gajo')) return hasGrande ? 16 : 8;
+        const raw = String(name || '');
+        const hasGrande = /\b(grande|grandes|xl)\b/i.test(raw);
+        const hasMediana = /\b(mediana|medianas)\b/i.test(raw);
+
+        // Si NO trae tamaño, lo tratamos como "complemento" (se costea aparte)
+        if (n.includes('papas') && n.includes('frances')) return (hasGrande || hasMediana) ? (hasGrande ? 29 : 28) : null;
+        if (n.includes('papas') && n.includes('gajo')) return (hasGrande || hasMediana) ? (hasGrande ? 16 : 8) : null;
         if (n.includes('salchipapas')) return hasGrande ? 18 : 17;
         if (n.includes('aros') && n.includes('cebolla')) return hasGrande ? 20 : 19;
         return null;
+      }
+
+      function resolveExtraUnitCostByName(name) {
+        const n = normText(name);
+        if (!n) return null;
+        const raw = String(name || '');
+        const hasGrande = /\b(grande|grandes|xl)\b/i.test(raw);
+        const hasMediana = /\b(mediana|medianas)\b/i.test(raw);
+
+        const isPapas = n.includes('papas');
+        const isComplemento = n.includes('complemento') || (isPapas && !hasGrande && !hasMediana);
+        if (!isComplemento) return null;
+
+        const isGajo = n.includes('gajo');
+        const isFrances = n.includes('frances');
+        if (!isPapas || (!isGajo && !isFrances)) return null;
+
+        const key = isGajo ? 'papasComplementoGajo' : 'papasComplementoFrancesas';
+        const direct = Number(productionCosts && (productionCosts[key] ?? productionCosts['papasComplemento']));
+        if (Number.isFinite(direct) && direct >= 0) return direct;
+
+        const medianaId = isGajo ? 8 : 28;
+        const medianaCost = Number(productionCosts && productionCosts[medianaId]);
+        if (Number.isFinite(medianaCost) && medianaCost > 0) return medianaCost / 2;
+
+        return 14;
       }
 
       function addCostByProductId(pid, qty) {
@@ -195,10 +225,18 @@ C<!DOCTYPE html>
                 const exQty = Number(ex.quantity || 1);
                 const exPid = Number(ex.id || ex.productId || ex.baseItemId || ex.itemId);
                 const resolvedPid = Number.isFinite(exPid) ? exPid : resolveExtraProductIdByName(ex.name);
-                if (!resolvedPid) return;
-                const c = addCostByProductId(resolvedPid, exQty * qty);
-                if (c > 0) {
-                  totalCost += c;
+                if (resolvedPid) {
+                  const c = addCostByProductId(resolvedPid, exQty * qty);
+                  if (c > 0) {
+                    totalCost += c;
+                    hasCost = true;
+                  }
+                  return;
+                }
+
+                const unit = resolveExtraUnitCostByName(ex.name);
+                if (Number.isFinite(unit) && unit > 0 && Number.isFinite(exQty) && exQty > 0) {
+                  totalCost += unit * exQty * qty;
                   hasCost = true;
                 }
               });
@@ -206,11 +244,20 @@ C<!DOCTYPE html>
 
             if (it.fries) {
               const fPidNum = Number(it.fries.id || it.fries.productId || it.fries.baseItemId || it.fries.itemId);
-              const fPid = Number.isFinite(fPidNum) ? fPidNum : resolveExtraProductIdByName(`Papas ${it.fries.type || ''}`);
+              const friesName = it.fries.size
+                ? `Papas ${it.fries.type || ''} ${it.fries.size}`
+                : `Papas ${it.fries.type || ''}`;
+              const fPid = Number.isFinite(fPidNum) ? fPidNum : resolveExtraProductIdByName(friesName);
               if (fPid) {
                 const c = addCostByProductId(fPid, 1 * qty);
                 if (c > 0) {
                   totalCost += c;
+                  hasCost = true;
+                }
+              } else {
+                const unit = resolveExtraUnitCostByName(friesName);
+                if (Number.isFinite(unit) && unit > 0) {
+                  totalCost += unit * 1 * qty;
                   hasCost = true;
                 }
               }
@@ -238,11 +285,18 @@ C<!DOCTYPE html>
 
                 partName = partName.replace(/^Papas\s*:\s*/i, 'Papas ');
                 const extraPid = resolveExtraProductIdByName(partName);
-                if (!extraPid) return;
+                if (extraPid) {
+                  const c = addCostByProductId(extraPid, partQty * qty);
+                  if (c > 0) {
+                    totalCost += c;
+                    hasCost = true;
+                  }
+                  return;
+                }
 
-                const c = addCostByProductId(extraPid, partQty * qty);
-                if (c > 0) {
-                  totalCost += c;
+                const unit = resolveExtraUnitCostByName(partName);
+                if (Number.isFinite(unit) && unit > 0 && Number.isFinite(partQty) && partQty > 0) {
+                  totalCost += unit * partQty * qty;
                   hasCost = true;
                 }
               });

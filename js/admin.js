@@ -54,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let adminSettings = {
         serviceActive: true,
         hiddenProducts: [],
+        // Secciones ocultas (por key normalizada)
+        hiddenCategories: [],
         priceOverrides: {},
         imageOverrides: {},
         customProducts: {},
@@ -86,7 +88,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return out;
     };
 
-    const getAllCategories = () => {
+    const categoryKey = (name) => String(name || '').trim().toLowerCase();
+
+    const escapeCss = (value) => {
+        try {
+            if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') return CSS.escape(String(value));
+        } catch (_) {}
+        return String(value).replace(/[^a-zA-Z0-9_-]/g, (m) => `\\${m}`);
+    };
+
+    let categoryTabsDragging = false;
+
+    const normalizeHiddenCategories = (list) => {
+        const arr = Array.isArray(list) ? list : [];
+        const seen = new Set();
+        const out = [];
+        for (const raw of arr) {
+            const k = categoryKey(raw);
+            if (!k) continue;
+            if (seen.has(k)) continue;
+            seen.add(k);
+            out.push(k);
+        }
+        return out;
+    };
+
+    const isCategoryHidden = (category) => {
+        const k = categoryKey(category);
+        return !!k && Array.isArray(adminSettings.hiddenCategories) && adminSettings.hiddenCategories.includes(k);
+    };
+
+    const getAllCategoriesIncludingHidden = () => {
         const fromSettings = normalizeCategories(adminSettings.categories);
         const out = fromSettings.length ? [...fromSettings] : [...DEFAULT_CATEGORIES];
 
@@ -99,6 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!out.some((c) => c.toLowerCase() === String(cat).toLowerCase())) out.push(cat);
         }
         return out;
+    };
+
+    const getAllCategories = () => {
+        const all = getAllCategoriesIncludingHidden();
+        const hidden = normalizeHiddenCategories(adminSettings.hiddenCategories);
+        if (!hidden.length) return all;
+        const visible = all.filter((c) => !hidden.includes(categoryKey(c)));
+        // Evitar pantalla vacía: si todas están ocultas, devolvemos al menos una.
+        return visible.length ? visible : all.slice(0, 1);
     };
 
     const getPersistedCategories = () => {
@@ -138,12 +179,94 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = document.createElement('button');
             const isActive = category === currentCategory;
             btn.className = isActive
-                ? 'category-tab active bg-white shadow-md text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all'
-                : 'category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all';
+                ? 'category-tab active bg-white shadow-md text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all cursor-grab active:cursor-grabbing'
+                : 'category-tab text-gray-600 hover:text-gray-800 px-6 py-3 rounded-lg font-semibold transition-all cursor-grab active:cursor-grabbing';
             btn.dataset.category = category;
+            btn.draggable = true;
+            btn.title = 'Arrastra para reordenar esta sección';
             const iconClass = iconByCategory[category] || 'fa-layer-group';
-            btn.innerHTML = `<i class="fas ${iconClass} mr-2"></i>${category}`;
+            btn.innerHTML = `<i class="fas fa-grip-vertical mr-2 opacity-60"></i><i class="fas ${iconClass} mr-2"></i>${category}`;
             tabsEl.appendChild(btn);
+        });
+    };
+
+    const setupCategoryTabsDragAndDrop = (tabsEl) => {
+        if (!tabsEl || tabsEl.__srDndSetup) return;
+        tabsEl.__srDndSetup = true;
+
+        tabsEl.addEventListener('dragstart', (e) => {
+            const tab = e.target.closest('.category-tab');
+            if (!tab) return;
+            categoryTabsDragging = true;
+            tab.classList.add('opacity-60');
+            try {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', tab.dataset.category || '');
+            } catch (_) {}
+        });
+
+        tabsEl.addEventListener('dragend', (e) => {
+            const tab = e.target.closest('.category-tab');
+            if (tab) tab.classList.remove('opacity-60');
+            // Evitar que el drop dispare un click inmediatamente
+            setTimeout(() => { categoryTabsDragging = false; }, 0);
+        });
+
+        tabsEl.addEventListener('dragover', (e) => {
+            const overTab = e.target.closest('.category-tab');
+            if (!overTab) return;
+            e.preventDefault();
+            try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+        });
+
+        tabsEl.addEventListener('drop', async (e) => {
+            const targetTab = e.target.closest('.category-tab');
+            if (!targetTab) return;
+            e.preventDefault();
+
+            let sourceCategory = '';
+            try { sourceCategory = e.dataTransfer.getData('text/plain') || ''; } catch (_) {}
+            sourceCategory = String(sourceCategory || '').trim();
+            const targetCategory = String(targetTab.dataset.category || '').trim();
+            if (!sourceCategory || !targetCategory || sourceCategory === targetCategory) return;
+
+            const sourceEl = tabsEl.querySelector(`.category-tab[data-category="${escapeCss(sourceCategory)}"]`);
+            if (!sourceEl) return;
+
+            const rect = targetTab.getBoundingClientRect();
+            const insertAfter = (e.clientX - rect.left) > rect.width / 2;
+            const refNode = insertAfter ? targetTab.nextSibling : targetTab;
+            tabsEl.insertBefore(sourceEl, refNode);
+
+            const newVisibleOrder = Array.from(tabsEl.querySelectorAll('.category-tab'))
+                .map((el) => String(el.dataset.category || '').trim())
+                .filter(Boolean);
+
+            const persisted = getPersistedCategories();
+            const newIndex = new Map(newVisibleOrder.map((c, i) => [categoryKey(c), i]));
+            const originalIndex = new Map(persisted.map((c, i) => [categoryKey(c), i]));
+
+            const nextAll = [...persisted].sort((a, b) => {
+                const ka = categoryKey(a);
+                const kb = categoryKey(b);
+                const ia = newIndex.has(ka) ? newIndex.get(ka) : Number.MAX_SAFE_INTEGER;
+                const ib = newIndex.has(kb) ? newIndex.get(kb) : Number.MAX_SAFE_INTEGER;
+                if (ia !== ib) return ia - ib;
+                return (originalIndex.get(ka) ?? 0) - (originalIndex.get(kb) ?? 0);
+            });
+
+            adminSettings.categories = normalizeCategories(nextAll);
+            ensureCurrentCategoryValid();
+            renderCategoryTabs();
+            populateCategorySelect();
+
+            try {
+                await saveSettingsToFirebase();
+                showToast('Orden de secciones actualizado', 'success');
+            } catch (err) {
+                console.error('No se pudo guardar el orden de secciones', err);
+                showToast('Error guardando orden de secciones', 'error');
+            }
         });
     };
 
@@ -161,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCategoryTabs();
         populateCategorySelect();
         renderProducts(currentCategory);
+        updateCategoryManagementUi();
     };
 
     // Helpers to keep IDs consistent and avoid type issues
@@ -281,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sanitizeProductOrderForAllCategories = (productOrder) => {
         const orderMap = mapProductOrder(productOrder);
         const out = {};
-        for (const category of getAllCategories()) {
+        for (const category of getAllCategoriesIncludingHidden()) {
             const products = [...(menuData[category] || []), ...(((adminSettings.customProducts || {})[category]) || [])];
             const ids = products.map(p => Number(p.id)).filter(n => !Number.isNaN(n));
             const idSet = new Set(ids);
@@ -380,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminSettings = {
                     serviceActive: settings.serviceActive !== undefined ? settings.serviceActive : true,
             hiddenProducts: normalizeHiddenProducts(settings.hiddenProducts),
+            hiddenCategories: normalizeHiddenCategories(settings.hiddenCategories),
             priceOverrides: mapPriceOverrides(settings.priceOverrides),
             imageOverrides: mapImageOverrides(settings.imageOverrides),
             customProducts: mapCustomProducts(settings.customProducts),
@@ -413,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedSpecificationsOverrides = localStorage.getItem('specificationsOverrides');
             const savedProductOrder = localStorage.getItem('productOrder');
             const savedCategories = localStorage.getItem('categories');
+            const savedHiddenCategories = localStorage.getItem('hiddenCategories');
             const savedProductionCosts = localStorage.getItem('productionCosts');
 
     adminSettings.serviceActive = serviceActive !== null ? serviceActive === 'true' : true;
@@ -421,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
     adminSettings.imageOverrides = mapImageOverrides(savedImageOverrides ? JSON.parse(savedImageOverrides) : {});
     adminSettings.customProducts = mapCustomProducts(savedCustomProducts ? JSON.parse(savedCustomProducts) : {});
     adminSettings.categories = normalizeCategories(savedCategories ? JSON.parse(savedCategories) : DEFAULT_CATEGORIES);
+    adminSettings.hiddenCategories = normalizeHiddenCategories(savedHiddenCategories ? JSON.parse(savedHiddenCategories) : []);
     adminSettings.productOrder = mapProductOrder(savedProductOrder ? JSON.parse(savedProductOrder) : {});
     adminSettings.productionCosts = savedProductionCosts ? JSON.parse(savedProductionCosts) : {};
     adminSettings.productInfoOverrides = mapProductInfoOverrides(savedProductInfoOverrides ? JSON.parse(savedProductInfoOverrides) : {});
@@ -466,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = sanitizeForFirestore({
                 serviceActive: adminSettings.serviceActive ?? true,
                 hiddenProducts: adminSettings.hiddenProducts || [],
+                hiddenCategories: normalizeHiddenCategories(adminSettings.hiddenCategories),
                 priceOverrides: adminSettings.priceOverrides || {},
                 imageOverrides: adminSettings.imageOverrides || {},
                 customProducts: adminSettings.customProducts || {},
@@ -488,6 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('imageOverrides', JSON.stringify(adminSettings.imageOverrides || {}));
             localStorage.setItem('customProducts', JSON.stringify(adminSettings.customProducts || {}));
             localStorage.setItem('categories', JSON.stringify(getPersistedCategories()));
+            localStorage.setItem('hiddenCategories', JSON.stringify(normalizeHiddenCategories(adminSettings.hiddenCategories)));
             localStorage.setItem('productOrder', JSON.stringify(adminSettings.productOrder || {}));
             localStorage.setItem('productInfoOverrides', JSON.stringify(adminSettings.productInfoOverrides || {}));
             localStorage.setItem('customizeButtonOverrides', JSON.stringify(adminSettings.customizeButtonOverrides || {}));
@@ -504,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('imageOverrides', JSON.stringify(adminSettings.imageOverrides || {}));
             localStorage.setItem('customProducts', JSON.stringify(adminSettings.customProducts || {}));
             localStorage.setItem('categories', JSON.stringify(getPersistedCategories()));
+            localStorage.setItem('hiddenCategories', JSON.stringify(normalizeHiddenCategories(adminSettings.hiddenCategories)));
             localStorage.setItem('productOrder', JSON.stringify(adminSettings.productOrder || {}));
             localStorage.setItem('productInfoOverrides', JSON.stringify(adminSettings.productInfoOverrides || {}));
             localStorage.setItem('customizeButtonOverrides', JSON.stringify(adminSettings.customizeButtonOverrides || {}));
@@ -522,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminSettings = {
                 serviceActive: newSettings.serviceActive !== undefined ? newSettings.serviceActive : true,
                 hiddenProducts: normalizeHiddenProducts(newSettings.hiddenProducts),
+                hiddenCategories: normalizeHiddenCategories(newSettings.hiddenCategories),
                 priceOverrides: mapPriceOverrides(newSettings.priceOverrides),
                 imageOverrides: mapImageOverrides(newSettings.imageOverrides),
                 customProducts: mapCustomProducts(newSettings.customProducts),
@@ -543,6 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderCategoryTabs();
                     populateCategorySelect();
                     renderProducts(currentCategory);
+                    updateCategoryManagementUi();
                     
                     // Show notification if service status changed from another device
                     if (oldServiceActive !== adminSettings.serviceActive) {
@@ -554,6 +686,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    }
+
+    function isBaseCategory(category) {
+        const k = categoryKey(category);
+        return DEFAULT_CATEGORIES.some((c) => categoryKey(c) === k);
+    }
+
+    function updateCategoryManagementUi() {
+        const toggleBtn = document.getElementById('toggle-category-visibility-btn');
+        const deleteBtn = document.getElementById('delete-category-btn');
+        const manageBtn = document.getElementById('manage-hidden-categories-btn');
+
+        if (manageBtn) {
+            const count = normalizeHiddenCategories(adminSettings.hiddenCategories).length;
+            manageBtn.innerHTML = `<i class="fas fa-eye mr-2"></i>Secciones ocultas${count ? ` (${count})` : ''}`;
+        }
+
+        if (toggleBtn) {
+            toggleBtn.innerHTML = isCategoryHidden(currentCategory)
+                ? '<i class="fas fa-eye mr-2"></i>Mostrar sección'
+                : '<i class="fas fa-eye-slash mr-2"></i>Ocultar sección';
+        }
+
+        if (deleteBtn) {
+            const disabled = isBaseCategory(currentCategory);
+            deleteBtn.disabled = disabled;
+            deleteBtn.className = disabled
+                ? 'bg-red-300 text-white font-semibold px-5 py-2 rounded-lg shadow-md cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md';
+            deleteBtn.title = disabled ? 'No se puede eliminar una sección base' : 'Eliminar sección';
+        }
+    }
+
+    function resolveCategoryNameByKey(key) {
+        const k = categoryKey(key);
+        const all = getAllCategoriesIncludingHidden();
+        const found = all.find((c) => categoryKey(c) === k);
+        return found || key;
+    }
+
+    function renderHiddenCategoriesList() {
+        const listEl = document.getElementById('hidden-categories-list');
+        if (!listEl) return;
+        const hidden = normalizeHiddenCategories(adminSettings.hiddenCategories);
+
+        if (!hidden.length) {
+            listEl.innerHTML = '<div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm">No hay secciones ocultas.</div>';
+            return;
+        }
+
+        listEl.innerHTML = hidden.map((k) => {
+            const name = resolveCategoryNameByKey(k);
+            const canDelete = !isBaseCategory(name);
+            return `
+                <div class="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200">
+                    <div class="min-w-0">
+                        <div class="font-semibold text-slate-800 truncate">${name}</div>
+                        <div class="text-xs text-slate-500">Oculta</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold" data-action="unhide" data-key="${k}">Mostrar</button>
+                        <button class="px-3 py-1.5 rounded-lg ${canDelete ? 'bg-red-600 hover:bg-red-700' : 'bg-red-300 cursor-not-allowed'} text-white text-sm font-semibold" ${canDelete ? '' : 'disabled'} data-action="delete" data-key="${k}">Eliminar</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     // Update service status display
@@ -899,6 +1097,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveAddCategory = document.getElementById('save-add-category');
         const newCategoryName = document.getElementById('new-category-name');
 
+        // Category management (hide/delete)
+        const toggleCategoryVisibilityBtn = document.getElementById('toggle-category-visibility-btn');
+        const deleteCategoryBtn = document.getElementById('delete-category-btn');
+        const manageHiddenCategoriesBtn = document.getElementById('manage-hidden-categories-btn');
+        const manageCategoriesModal = document.getElementById('manage-categories-modal');
+        const closeManageCategories = document.getElementById('close-manage-categories');
+        const closeManageCategories2 = document.getElementById('close-manage-categories-2');
+        const hiddenCategoriesList = document.getElementById('hidden-categories-list');
+
+        const openManageCategoriesModal = () => {
+            renderHiddenCategoriesList();
+            if (manageCategoriesModal) {
+                manageCategoriesModal.classList.remove('hidden');
+                manageCategoriesModal.classList.add('flex');
+            }
+        };
+        const closeManageCategoriesModal = () => {
+            if (manageCategoriesModal) {
+                manageCategoriesModal.classList.add('hidden');
+                manageCategoriesModal.classList.remove('flex');
+            }
+        };
+
         const openCategoryModal = () => {
             if (newCategoryName) newCategoryName.value = '';
             if (addCategoryModal) {
@@ -978,6 +1199,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return null;
         };
+
+        // Initialize category management UI
+        updateCategoryManagementUi();
 
         if (openBtn) openBtn.addEventListener('click', () => { setModalModeAdd(); openModal(); });
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
@@ -1146,12 +1370,164 @@ document.addEventListener('DOMContentLoaded', () => {
         // Category tabs (event delegation)
         const tabsEl = document.getElementById('category-tabs');
         if (tabsEl) {
+            setupCategoryTabsDragAndDrop(tabsEl);
             tabsEl.addEventListener('click', (e) => {
+                if (categoryTabsDragging) return;
                 const tab = e.target.closest('.category-tab');
                 if (!tab) return;
                 const category = tab.dataset.category;
                 if (!category) return;
                 setCurrentCategory(category);
+            });
+        }
+
+        // Manage hidden categories modal
+        if (manageHiddenCategoriesBtn) manageHiddenCategoriesBtn.addEventListener('click', openManageCategoriesModal);
+        if (closeManageCategories) closeManageCategories.addEventListener('click', closeManageCategoriesModal);
+        if (closeManageCategories2) closeManageCategories2.addEventListener('click', closeManageCategoriesModal);
+        if (manageCategoriesModal) {
+            manageCategoriesModal.addEventListener('click', (e) => {
+                if (e.target === manageCategoriesModal) closeManageCategoriesModal();
+            });
+        }
+        if (hiddenCategoriesList) {
+            hiddenCategoriesList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const action = btn.getAttribute('data-action');
+                const key = btn.getAttribute('data-key');
+                if (!key) return;
+
+                if (action === 'unhide') {
+                    adminSettings.hiddenCategories = normalizeHiddenCategories(adminSettings.hiddenCategories).filter((k) => k !== key);
+                    try {
+                        await saveSettingsToFirebase();
+                        ensureCurrentCategoryValid();
+                        renderCategoryTabs();
+                        populateCategorySelect();
+                        // Enfocar la categoría recién mostrada si existe
+                        const name = resolveCategoryNameByKey(key);
+                        if (getAllCategories().some((c) => categoryKey(c) === categoryKey(name))) {
+                            setCurrentCategory(name);
+                        } else {
+                            renderProducts(currentCategory);
+                            updateCategoryManagementUi();
+                        }
+                        closeManageCategoriesModal();
+                        showToast('Sección mostrada', 'success');
+                    } catch (err) {
+                        console.error('No se pudo mostrar la sección', err);
+                        showToast('Error mostrando sección', 'error');
+                    }
+                    return;
+                }
+
+                if (action === 'delete') {
+                    const name = resolveCategoryNameByKey(key);
+                    if (isBaseCategory(name)) {
+                        showToast('No se puede eliminar una sección base', 'warning');
+                        return;
+                    }
+                    const ok = confirm(`¿Eliminar la sección "${name}"?\n\nSe borrarán también sus productos personalizados.`);
+                    if (!ok) return;
+
+                    // Remove from categories list
+                    adminSettings.categories = normalizeCategories(adminSettings.categories).filter((c) => categoryKey(c) !== categoryKey(name));
+                    // Remove from hidden list
+                    adminSettings.hiddenCategories = normalizeHiddenCategories(adminSettings.hiddenCategories).filter((k) => k !== categoryKey(name));
+                    // Remove custom products + order map
+                    if (adminSettings.customProducts && Object.prototype.hasOwnProperty.call(adminSettings.customProducts, name)) {
+                        delete adminSettings.customProducts[name];
+                    }
+                    if (adminSettings.productOrder && Object.prototype.hasOwnProperty.call(adminSettings.productOrder, name)) {
+                        delete adminSettings.productOrder[name];
+                    }
+
+                    try {
+                        await saveSettingsToFirebase();
+                        ensureCurrentCategoryValid();
+                        renderCategoryTabs();
+                        populateCategorySelect();
+                        renderProducts(currentCategory);
+                        updateCategoryManagementUi();
+                        renderHiddenCategoriesList();
+                        showToast('Sección eliminada', 'success');
+                    } catch (err) {
+                        console.error('No se pudo eliminar la sección', err);
+                        showToast('Error eliminando sección', 'error');
+                    }
+                }
+            });
+        }
+
+        // Hide/show current section
+        if (toggleCategoryVisibilityBtn) {
+            toggleCategoryVisibilityBtn.addEventListener('click', async () => {
+                const visible = getAllCategories();
+                const curr = currentCategory;
+                if (!curr) return;
+
+                const hidden = normalizeHiddenCategories(adminSettings.hiddenCategories);
+                const currKey = categoryKey(curr);
+
+                if (!isCategoryHidden(curr)) {
+                    if (visible.length <= 1) {
+                        showToast('No puedes ocultar la última sección visible', 'warning');
+                        return;
+                    }
+                    adminSettings.hiddenCategories = normalizeHiddenCategories([...hidden, currKey]);
+                } else {
+                    adminSettings.hiddenCategories = hidden.filter((k) => k !== currKey);
+                }
+
+                try {
+                    await saveSettingsToFirebase();
+                    ensureCurrentCategoryValid();
+                    renderCategoryTabs();
+                    populateCategorySelect();
+                    renderProducts(currentCategory);
+                    updateCategoryManagementUi();
+                    showToast(isCategoryHidden(curr) ? 'Sección mostrada' : 'Sección ocultada', 'success');
+                } catch (err) {
+                    console.error('No se pudo actualizar visibilidad de sección', err);
+                    showToast('Error actualizando sección', 'error');
+                }
+            });
+        }
+
+        // Delete current section (custom only)
+        if (deleteCategoryBtn) {
+            deleteCategoryBtn.addEventListener('click', async () => {
+                const name = currentCategory;
+                if (!name) return;
+                if (isBaseCategory(name)) {
+                    showToast('No se puede eliminar una sección base', 'warning');
+                    return;
+                }
+                const ok = confirm(`¿Eliminar la sección "${name}"?\n\nSe borrarán también sus productos personalizados.`);
+                if (!ok) return;
+
+                adminSettings.categories = normalizeCategories(adminSettings.categories).filter((c) => categoryKey(c) !== categoryKey(name));
+                adminSettings.hiddenCategories = normalizeHiddenCategories(adminSettings.hiddenCategories).filter((k) => k !== categoryKey(name));
+                if (adminSettings.customProducts && Object.prototype.hasOwnProperty.call(adminSettings.customProducts, name)) {
+                    delete adminSettings.customProducts[name];
+                }
+                if (adminSettings.productOrder && Object.prototype.hasOwnProperty.call(adminSettings.productOrder, name)) {
+                    delete adminSettings.productOrder[name];
+                }
+
+                try {
+                    await saveSettingsToFirebase();
+                    ensureCurrentCategoryValid();
+                    renderCategoryTabs();
+                    populateCategorySelect();
+                    renderProducts(currentCategory);
+                    updateCategoryManagementUi();
+                    showToast('Sección eliminada', 'success');
+                } catch (err) {
+                    console.error('No se pudo eliminar la sección', err);
+                    showToast('Error eliminando sección', 'error');
+                }
             });
         }
 
@@ -1170,6 +1546,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const current = normalizeCategories(adminSettings.categories);
             adminSettings.categories = [...current, name];
+
+            // Si la sección estaba oculta, mostrarla al crearla
+            adminSettings.hiddenCategories = normalizeHiddenCategories(adminSettings.hiddenCategories).filter((k) => k !== categoryKey(name));
 
             try {
                 await saveSettingsToFirebase();

@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Global variable to store hidden products and admin overrides from Firebase
     let hiddenProductsFromFirebase = [];
+    let hiddenCategoriesFromFirebase = [];
     let priceOverridesFromFirebase = {};
     let imageOverridesFromFirebase = {};
     let customProductsFromFirebase = {};
@@ -188,12 +189,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return out;
     }
 
+    function categoryKey(name) {
+        return String(name || '').trim().toLowerCase();
+    }
+
+    function normalizeHiddenCategoriesList(list) {
+        const arr = Array.isArray(list) ? list : [];
+        const seen = new Set();
+        const out = [];
+        arr.forEach((raw) => {
+            const k = categoryKey(raw);
+            if (!k) return;
+            if (seen.has(k)) return;
+            seen.add(k);
+            out.push(k);
+        });
+        return out;
+    }
+
+    function getHiddenCategoryKeys() {
+        if (Array.isArray(hiddenCategoriesFromFirebase) && hiddenCategoriesFromFirebase.length > 0) {
+            return normalizeHiddenCategoriesList(hiddenCategoriesFromFirebase);
+        }
+        // Fallback: localStorage
+        try {
+            const raw = localStorage.getItem('hiddenCategories');
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return normalizeHiddenCategoriesList(parsed);
+        } catch (_) {
+            return [];
+        }
+    }
+
     function getMenuCategoriesInOrder() {
         const base = Object.keys(menuData);
         const fromFirebase = normalizeCategoriesList(categoriesFromFirebase);
 
-        // Orden fijo deseado para las categorías principales del menú
-        const DESIRED_CATEGORY_ORDER = [
+        // Orden por defecto (solo si aún no hay orden guardado en Firebase)
+        const DEFAULT_CATEGORY_ORDER = [
             'Hamburguesas',
             'Hot Dogs',
             'Boneles',
@@ -202,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Bebidas'
         ];
 
-        // Punto de partida: si hay configuración en Firebase, usarla; si no, usar las claves base
+        // Punto de partida: si hay configuración en Firebase, respetarla; si no, usar base
         const initial = fromFirebase.length ? fromFirebase : base;
 
         // Asegurar que las categorías base sigan visibles aunque no estén en settings
@@ -213,25 +247,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Aplicar el orden deseado, respetando solo las categorías realmente presentes
-        const lowerPresent = new Set(withBase.map((c) => String(c).toLowerCase()));
-        const ordered = [];
+        let ordered = [];
 
-        // 1) Agregar en el orden fijo deseado
-        DESIRED_CATEGORY_ORDER.forEach((cat) => {
-            const key = String(cat).toLowerCase();
-            if (lowerPresent.has(key)) {
-                const found = withBase.find((c) => String(c).toLowerCase() === key);
-                if (found && !ordered.includes(found)) {
-                    ordered.push(found);
+        // Si Firebase trae un orden, ese manda
+        if (fromFirebase.length) {
+            ordered = [...withBase];
+        } else {
+            // Si no hay orden guardado, aplicar el orden por defecto
+            const lowerPresent = new Set(withBase.map((c) => String(c).toLowerCase()));
+            DEFAULT_CATEGORY_ORDER.forEach((cat) => {
+                const key = String(cat).toLowerCase();
+                if (lowerPresent.has(key)) {
+                    const found = withBase.find((c) => String(c).toLowerCase() === key);
+                    if (found && !ordered.includes(found)) ordered.push(found);
                 }
-            }
-        });
+            });
+            withBase.forEach((c) => {
+                if (!ordered.includes(c)) ordered.push(c);
+            });
+        }
 
-        // 2) Agregar cualquier categoría adicional que no esté en el orden fijo
-        withBase.forEach((c) => {
-            if (!ordered.includes(c)) ordered.push(c);
-        });
+        // Ocultar categorías según configuración del admin
+        const hiddenKeys = getHiddenCategoryKeys();
+        if (hiddenKeys.length) {
+            const filtered = ordered.filter((c) => !hiddenKeys.includes(categoryKey(c)));
+            // Evitar menú vacío por accidente
+            return filtered.length ? filtered : ordered;
+        }
 
         return ordered;
     }
@@ -300,6 +342,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load hidden products from Firebase on page load
     async function loadHiddenProductsFromFirebase() {
         try {
+            // Preferimos leer settings una sola vez para extraer múltiples valores
+            if (window.firebaseManager && typeof window.firebaseManager.getSettings === 'function') {
+                const settings = await window.firebaseManager.getSettings();
+                hiddenProductsFromFirebase = Array.isArray(settings?.hiddenProducts) ? settings.hiddenProducts : [];
+                hiddenCategoriesFromFirebase = normalizeHiddenCategoriesList(settings?.hiddenCategories);
+                categoriesFromFirebase = Array.isArray(settings?.categories) ? settings.categories : null;
+                try { localStorage.setItem('hiddenCategories', JSON.stringify(hiddenCategoriesFromFirebase)); } catch (_) {}
+                console.log('Productos ocultos cargados desde Firebase:', hiddenProductsFromFirebase);
+                console.log('Categorías ocultas cargadas desde Firebase:', hiddenCategoriesFromFirebase);
+                return;
+            }
+
             hiddenProductsFromFirebase = await window.firebaseManager.getHiddenProducts();
             console.log('Productos ocultos cargados desde Firebase:', hiddenProductsFromFirebase);
         } catch (error) {
@@ -309,6 +363,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hiddenProducts) {
                 hiddenProductsFromFirebase = JSON.parse(hiddenProducts);
             }
+
+            try {
+                const rawCats = localStorage.getItem('hiddenCategories');
+                if (rawCats) hiddenCategoriesFromFirebase = normalizeHiddenCategoriesList(JSON.parse(rawCats));
+            } catch (_) {}
         }
     }
 
@@ -619,6 +678,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (oldCats !== newCats) {
                             categoriesFromFirebase = nextCats;
                             console.log('Categorías actualizadas, re-renderizando menú...');
+                            isUpdating = true;
+                            renderMenu();
+                            setTimeout(() => { isUpdating = false; }, 500);
+                        }
+                    }
+
+                    // Handle hidden categories changes
+                    if (newSettings.hiddenCategories !== undefined) {
+                        const oldHidden = JSON.stringify(normalizeHiddenCategoriesList(hiddenCategoriesFromFirebase || []));
+                        const nextHidden = normalizeHiddenCategoriesList(newSettings.hiddenCategories || []);
+                        const newHidden = JSON.stringify(nextHidden);
+                        if (oldHidden !== newHidden) {
+                            hiddenCategoriesFromFirebase = nextHidden;
+                            try { localStorage.setItem('hiddenCategories', JSON.stringify(hiddenCategoriesFromFirebase)); } catch (_) {}
+                            console.log('Categorías ocultas actualizadas, re-renderizando menú...');
                             isUpdating = true;
                             renderMenu();
                             setTimeout(() => { isUpdating = false; }, 500);
@@ -1171,6 +1245,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Recompensa activa (canjeada en Mi cuenta) para aplicar en la siguiente compra
     let activeReward = null;
 
+    // Código de descuento activo (cupón)
+    let activeDiscountCode = null;
+
     function setActiveRewardState(reward) {
         activeReward = (reward && typeof reward === 'object') ? reward : null;
         try {
@@ -1192,16 +1269,100 @@ document.addEventListener('DOMContentLoaded', () => {
         return activeReward;
     }
 
+    function normalizeDiscountCode(raw) {
+        const s = String(raw || '').trim().toUpperCase();
+        // Permitir letras, números, guion y guion bajo
+        return s.replace(/[^A-Z0-9_-]/g, '').slice(0, 32);
+    }
+
+    function setActiveDiscountCodeState(codeObj) {
+        const normalized = codeObj && typeof codeObj === 'object'
+            ? {
+                code: normalizeDiscountCode(codeObj.code),
+                amount: Number(codeObj.amount || 0),
+                verifiedAt: Number(codeObj.verifiedAt || Date.now())
+            }
+            : null;
+
+        if (!normalized || !normalized.code || !isFinite(normalized.amount) || normalized.amount <= 0) {
+            activeDiscountCode = null;
+            try { localStorage.removeItem('activeDiscountCode'); } catch (_) {}
+            return;
+        }
+
+        activeDiscountCode = normalized;
+        try { localStorage.setItem('activeDiscountCode', JSON.stringify(activeDiscountCode)); } catch (_) {}
+    }
+
+    function clearActiveDiscountCodeState() {
+        activeDiscountCode = null;
+        try { localStorage.removeItem('activeDiscountCode'); } catch (_) {}
+    }
+
+    function getActiveDiscountCodeState() {
+        if (activeDiscountCode && typeof activeDiscountCode === 'object') return activeDiscountCode;
+        try {
+            const raw = localStorage.getItem('activeDiscountCode');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    const code = normalizeDiscountCode(parsed.code);
+                    const amount = Number(parsed.amount || 0);
+                    if (code && isFinite(amount) && amount > 0) {
+                        activeDiscountCode = {
+                            code,
+                            amount,
+                            verifiedAt: Number(parsed.verifiedAt || 0) || 0
+                        };
+                        return activeDiscountCode;
+                    }
+                }
+            }
+        } catch (_) {}
+        activeDiscountCode = null;
+        return null;
+    }
+
+    async function fetchDiscountCodeInfo(codeUpper) {
+        const code = normalizeDiscountCode(codeUpper);
+        if (!code) return null;
+        if (!window.firebaseDb) throw new Error('Firebase no está listo');
+
+        const firestore = await import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js');
+        const ref = firestore.doc(window.firebaseDb, 'discount_codes', code);
+        const snap = await firestore.getDoc(ref);
+        if (!snap.exists()) return null;
+
+        const data = snap.data() || {};
+        const active = data.active !== false;
+        const amount = Number(data.amount || data.discountAmount || 0);
+        if (!active) throw new Error('Código desactivado');
+        if (!isFinite(amount) || amount <= 0) throw new Error('Código inválido');
+
+        return {
+            code,
+            amount: Number(amount.toFixed(2))
+        };
+    }
+
     function computeCheckoutPricing(deliveryTypeValue) {
         const subtotal = Number(getCartTotal() || 0);
         const reward = getActiveRewardState();
         const discountPercent = reward && isFinite(reward.discountPercent) ? Number(reward.discountPercent) : 0;
 
-        const discountAmount = (discountPercent > 0)
+        const rewardDiscountAmount = (discountPercent > 0)
             ? Number(((subtotal * discountPercent) / 100).toFixed(2))
             : 0;
 
-        const subtotalAfterDiscount = Math.max(0, Number((subtotal - discountAmount).toFixed(2)));
+        const discountCodeState = getActiveDiscountCodeState();
+        const discountCode = discountCodeState && discountCodeState.code ? String(discountCodeState.code) : '';
+        const rawCodeAmount = discountCodeState && isFinite(discountCodeState.amount) ? Number(discountCodeState.amount) : 0;
+
+        const subtotalAfterReward = Math.max(0, Number((subtotal - rewardDiscountAmount).toFixed(2)));
+        const discountCodeAmount = discountCode ? Math.min(Math.max(0, rawCodeAmount), subtotalAfterReward) : 0;
+
+        const discountAmount = Number((rewardDiscountAmount + discountCodeAmount).toFixed(2));
+        const subtotalAfterDiscount = Math.max(0, Number((subtotalAfterReward - discountCodeAmount).toFixed(2)));
 
         const isDelivery = deliveryTypeValue === 'delivery';
         
@@ -1232,15 +1393,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const rewardApplied = !!(
             reward && (
-                (discountPercent > 0 && discountAmount > 0) ||
+                (discountPercent > 0 && rewardDiscountAmount > 0) ||
                 (isDelivery && freeDelivery && baseDeliveryFee > 0)
             )
         );
+
+        const parts = [];
+        if (rewardApplied && reward && reward.label) parts.push(`Recompensa: ${reward.label}`);
+        if (discountCode) parts.push(`Código: ${discountCode}`);
+        const discountReason = parts.join(' + ');
 
         return {
             subtotal,
             discountPercent,
             discountAmount,
+            rewardDiscountAmount,
+            discountCode,
+            discountCodeAmount,
+            discountReason,
             subtotalAfterDiscount,
             baseDeliveryFee,
             deliveryFee,
@@ -2712,6 +2882,108 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupEventListeners() {
         console.log('⚙️ setupEventListeners() ejecutándose...');
 
+        // Cupón: aplicar / quitar
+        try {
+            const discountInput = document.getElementById('discount-code-input');
+            const applyBtn = document.getElementById('apply-discount-code-btn');
+            const clearBtn = document.getElementById('clear-discount-code-btn');
+            const msgEl = document.getElementById('discount-code-msg');
+
+            const setMsg = (text, tone) => {
+                if (!msgEl) return;
+                msgEl.textContent = String(text || '');
+                msgEl.classList.remove('text-gray-600', 'text-green-700', 'text-red-600', 'text-amber-600');
+                if (tone === 'ok') msgEl.classList.add('text-green-700');
+                else if (tone === 'err') msgEl.classList.add('text-red-600');
+                else if (tone === 'warn') msgEl.classList.add('text-amber-600');
+                else msgEl.classList.add('text-gray-600');
+            };
+
+            const syncUiFromState = () => {
+                const st = getActiveDiscountCodeState();
+                if (discountInput && st && st.code) discountInput.value = st.code;
+                if (clearBtn) clearBtn.classList.toggle('hidden', !(st && st.code));
+                if (st && st.code) {
+                    setMsg(`Código aplicado: ${st.code}`, 'ok');
+                } else {
+                    setMsg('', '');
+                }
+                try { updateCheckoutTotals(); } catch (_) {}
+                try { renderOrderSummary(); } catch (_) {}
+            };
+
+            const applyFromInput = async () => {
+                const raw = discountInput ? discountInput.value : '';
+                const code = normalizeDiscountCode(raw);
+                if (!code) {
+                    clearActiveDiscountCodeState();
+                    syncUiFromState();
+                    setMsg('Ingresa un código válido.', 'err');
+                    return;
+                }
+
+                if (applyBtn) applyBtn.disabled = true;
+                setMsg('Verificando código...', 'warn');
+                try {
+                    const info = await fetchDiscountCodeInfo(code);
+                    if (!info) {
+                        clearActiveDiscountCodeState();
+                        syncUiFromState();
+                        setMsg('Código no encontrado.', 'err');
+                        return;
+                    }
+
+                    setActiveDiscountCodeState({ code: info.code, amount: info.amount, verifiedAt: Date.now() });
+                    syncUiFromState();
+                    setMsg(`Código aplicado: ${info.code} (-$${Number(info.amount || 0).toFixed(0)})`, 'ok');
+                } catch (e) {
+                    console.warn('No se pudo verificar el código de descuento:', e);
+                    setMsg('No se pudo verificar el código. Intenta de nuevo.', 'err');
+                } finally {
+                    if (applyBtn) applyBtn.disabled = false;
+                }
+            };
+
+            const clearCoupon = () => {
+                clearActiveDiscountCodeState();
+                if (discountInput) discountInput.value = '';
+                syncUiFromState();
+                setMsg('Código removido.', '');
+            };
+
+            if (applyBtn) applyBtn.addEventListener('click', applyFromInput);
+            if (clearBtn) clearBtn.addEventListener('click', clearCoupon);
+            if (discountInput) {
+                discountInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyFromInput();
+                    }
+                });
+            }
+
+            // Cargar cupón guardado y revalidar en segundo plano
+            syncUiFromState();
+            const st = getActiveDiscountCodeState();
+            if (st && st.code) {
+                setTimeout(async () => {
+                    try {
+                        const info = await fetchDiscountCodeInfo(st.code);
+                        if (!info) {
+                            clearActiveDiscountCodeState();
+                            syncUiFromState();
+                            setMsg('El código guardado ya no está disponible.', 'warn');
+                            return;
+                        }
+                        setActiveDiscountCodeState({ code: info.code, amount: info.amount, verifiedAt: Date.now() });
+                        syncUiFromState();
+                    } catch (_) {
+                        // Si no hay conexión, dejamos el cupón como estaba.
+                    }
+                }, 800);
+            }
+        } catch (_) {}
+
         // Carrusel por categoría: flechas izq/der que hacen scroll horizontal suave
         if (!window.__carouselNavBound) {
             window.__carouselNavBound = true;
@@ -3716,6 +3988,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     notes += (notes ? ' | ' : '') + `Recompensa: ${pricing.reward.label}`;
                 }
 
+                if (pricing.discountCode) {
+                    notes += (notes ? ' | ' : '') + `Cupón: ${pricing.discountCode}`;
+                }
+
                 // Sesión requerida (excepto modo manual): asociar siempre el pedido al usuario autenticado
                 const clienteId = isManualMode ? (sessionUid || null) : sessionUid;
 
@@ -3734,7 +4010,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     changeAmount: changeAmount || undefined,
                     clienteId: clienteId || undefined,
                     reward: (pricing.rewardApplied && pricing.reward) ? pricing.reward : undefined,
-                    discountAmount: pricing.discountAmount || 0
+                    discountAmount: pricing.discountAmount || 0,
+                    discountReason: pricing.discountReason || undefined,
+                    discountCode: pricing.discountCode || undefined,
+                    discountCodeAmount: pricing.discountCodeAmount || 0,
+                    rewardDiscountAmount: pricing.rewardDiscountAmount || 0
                 };
 
                 // 1) Crear la orden y obtener el número (Firebase o respaldo local)
@@ -5031,7 +5311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totals.className = 'order-summary-totals mt-3 p-3 bg-gray-50 rounded-lg border';
         totals.innerHTML = `
             <div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Subtotal:</span><span>$${subtotal.toFixed(0)}</span></div>
-            ${pricing.discountAmount > 0 ? `<div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Descuento (${pricing.discountPercent}%):</span><span>-$${pricing.discountAmount.toFixed(0)}</span></div>` : ''}
+            ${pricing.discountAmount > 0 ? `<div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Descuento${pricing.discountReason ? ` (${pricing.discountReason})` : ''}:</span><span>-$${pricing.discountAmount.toFixed(0)}</span></div>` : ''}
             <div class=\"flex items-center justify-between text-sm text-gray-600\"><span>Envío:</span><span>${deliveryTypeValue === 'delivery' ? (deliveryCost > 0 ? `+$${deliveryCost.toFixed(0)}` : 'Pendiente de cotizar') : 'Gratis'}</span></div>
             <div class=\"flex items-center justify-between font-bold text-lg mt-2 pt-2 border-t\"><span>Total:</span><span class=\"text-[#FFB300]\">$${total.toFixed(0)}</span></div>
         `;
@@ -5198,6 +5478,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtotalElement = document.getElementById('checkout-subtotal');
         const deliveryFeeElement = document.getElementById('checkout-delivery-fee');
         const totalElement = document.getElementById('checkout-total');
+        const discountRowEl = document.getElementById('checkout-discount-row');
+        const discountLabelEl = document.getElementById('checkout-discount-label');
+        const discountAmountEl = document.getElementById('checkout-discount-amount');
         const deliveryOptionFeeEl = document.getElementById('delivery-option-fee');
         const deliveryLiveInfoEl = document.getElementById('delivery-live-info');
         
@@ -5236,6 +5519,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar elementos
         subtotalElement.textContent = `$${subtotal.toFixed(0)}`;
         totalElement.textContent = `$${total.toFixed(0)}`;
+
+        // Descuento (recompensa y/o cupón)
+        try {
+            if (discountRowEl && discountLabelEl && discountAmountEl) {
+                if (pricing.discountAmount > 0) {
+                    const label = pricing.discountReason
+                        ? `Descuento (${pricing.discountReason}):`
+                        : 'Descuento:';
+                    discountLabelEl.textContent = label;
+                    discountAmountEl.textContent = `-$${Number(pricing.discountAmount || 0).toFixed(0)}`;
+                    discountRowEl.classList.remove('hidden');
+                } else {
+                    discountRowEl.classList.add('hidden');
+                }
+            }
+        } catch (_) {}
 
         // Resumen fijo (footer): envío + total
         const stickyDeliveryEl = document.getElementById('checkout-sticky-delivery');
@@ -5295,14 +5594,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     : '';
 
                 const rewardLine = (pricing.rewardApplied && pricing.reward && pricing.reward.label)
-                    ? `<br><i class=\"fas fa-tag mr-1 text-green-600\"></i>Recompensa aplicada: <strong>${pricing.reward.label}</strong>${pricing.discountAmount > 0 ? ` • Descuento: <strong>-$${pricing.discountAmount.toFixed(0)}</strong>` : ''}`
+                    ? `<br><i class=\"fas fa-tag mr-1 text-green-600\"></i>Recompensa aplicada: <strong>${pricing.reward.label}</strong>${pricing.rewardDiscountAmount > 0 ? ` • Descuento: <strong>-$${pricing.rewardDiscountAmount.toFixed(0)}</strong>` : ''}`
                     : (pricing.reward && pricing.reward.label)
                         ? `<br><i class=\"fas fa-tag mr-1 text-green-600\"></i>Recompensa activa: <strong>${pricing.reward.label}</strong>${pricing.reward.freeDelivery ? ' (solo a domicilio)' : ''}`
                         : '';
+
+                const couponLine = (pricing.discountCode)
+                    ? `<br><i class=\"fas fa-tag mr-1 text-emerald-500\"></i>Código aplicado: <strong>${pricing.discountCode}</strong>${pricing.discountCodeAmount > 0 ? ` • Descuento: <strong>-$${pricing.discountCodeAmount.toFixed(0)}</strong>` : ''}`
+                    : '';
                 deliveryLiveInfoEl.innerHTML = `
                     <i class="fas fa-route mr-1 text-blue-600"></i>
                     Distancia: <strong>${km.toFixed(1)} km</strong>${modeText} • Envío: <strong>$${fee.toFixed(0)}</strong>${(pricing.reward && pricing.reward.freeDelivery && pricing.baseDeliveryFee > 0) ? ' (gratis con recompensa)' : ` (${kmToCharge} km x $${COSTO_POR_KM})`}${eta}
-                    ${rewardLine}
+                    ${rewardLine}${couponLine}
                 `;
                 deliveryLiveInfoEl.classList.remove('hidden');
             } else if (deliveryCalcPending > 0) {
@@ -5516,13 +5819,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pricing.reward && pricing.reward.label) {
             if (pricing.rewardApplied) {
                 message += `\n🏷️ *Recompensa aplicada:* ${pricing.reward.label}`;
-                if (pricing.discountAmount > 0) {
-                    message += ` (ahorro -$${pricing.discountAmount.toFixed(0)})`;
+                if (pricing.rewardDiscountAmount > 0) {
+                    message += ` (ahorro -$${pricing.rewardDiscountAmount.toFixed(0)})`;
                 }
                 message += `\n`;
             } else if (pricing.reward.freeDelivery && deliveryTypeValue !== 'delivery') {
                 message += `\n🏷️ *Recompensa activa:* ${pricing.reward.label} (se aplica solo a domicilio)\n`;
             }
+        }
+
+        if (pricing.discountCode) {
+            message += `\n🏷️ *Código aplicado:* ${pricing.discountCode}`;
+            if (pricing.discountCodeAmount > 0) {
+                message += ` (ahorro -$${pricing.discountCodeAmount.toFixed(0)})`;
+            }
+            message += `\n`;
         }
 
         if (pointsEarned > 0) {
@@ -5594,7 +5905,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Totales
         message += `\n*Subtotal:* $${subtotal.toFixed(0)}`;
         if (pricing.discountAmount > 0) {
-            message += `\n*Descuento (${pricing.discountPercent}%):* -$${pricing.discountAmount.toFixed(0)}`;
+            const label = pricing.discountReason ? `Descuento (${pricing.discountReason})` : 'Descuento';
+            message += `\n*${label}:* -$${pricing.discountAmount.toFixed(0)}`;
         }
         message += `\n*Envío:* ${deliveryTypeValue === 'delivery' ? (pricing.deliveryFee > 0 ? `$${pricing.deliveryFee.toFixed(0)}` : (pricing.reward && pricing.reward.freeDelivery && pricing.baseDeliveryFee > 0 ? 'Gratis (recompensa)' : 'Pendiente de cotizar')) : 'Gratis'}`;
         message += `\n*TOTAL:* $${total.toFixed(0)}`;
@@ -8337,9 +8649,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // Calcular totales
-            const subtotal = getCartTotal();
-            const deliveryCost = deliveryTypeValue === 'delivery' ? getCurrentDeliveryFee() : 0;
-            const total = subtotal + deliveryCost;
+            const pricing = computeCheckoutPricing(deliveryTypeValue);
+            const subtotal = Number(pricing.subtotal || 0);
+            const deliveryCost = Number(pricing.deliveryFee || 0);
+            const total = Number(pricing.total || 0);
             
             // Crear notas especiales
             let notes = '';
@@ -8349,6 +8662,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (paymentMethod !== 'Efectivo') {
                 notes += `Pago: ${paymentMethod}`;
+            }
+
+            if (pricing.rewardApplied && pricing.reward && pricing.reward.label) {
+                notes += (notes ? ' | ' : '') + `Recompensa: ${pricing.reward.label}`;
+            }
+
+            if (pricing.discountCode) {
+                notes += (notes ? ' | ' : '') + `Cupón: ${pricing.discountCode}`;
             }
 
             // Intentar asociar el pedido al usuario autenticado (para puntos)
@@ -8374,14 +8695,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 items: orderItems,
                 // Totales y desglose (flujo secundario sin recompensas)
                 subtotal: parseFloat(subtotal.toFixed(2)),
-                subtotalAfterDiscount: parseFloat(subtotal.toFixed(2)),
+                subtotalAfterDiscount: parseFloat(Number(pricing.subtotalAfterDiscount || subtotal).toFixed(2)),
                 deliveryFee: parseFloat(deliveryCost.toFixed(2)),
                 total: parseFloat(total.toFixed(2)),
                 notes: notes || '',
                 deliveryType: deliveryTypeValue,
                 paymentMethod: paymentMethod,
                 clienteId: clienteId || undefined,
-                discountAmount: 0
+                discountAmount: Number(pricing.discountAmount || 0),
+                discountReason: pricing.discountReason || undefined,
+                discountCode: pricing.discountCode || undefined,
+                discountCodeAmount: pricing.discountCodeAmount || 0,
+                rewardDiscountAmount: pricing.rewardDiscountAmount || 0,
+                reward: (pricing.rewardApplied && pricing.reward) ? pricing.reward : undefined
             };
             
             console.log('📝 Enviando pedido a Firebase...', orderData);

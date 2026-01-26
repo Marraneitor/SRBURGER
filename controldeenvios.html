@@ -17,6 +17,9 @@
     html { font-size: 16px; }
     html.kitchen-mode { font-size: 22px; } /* Mayor legibilidad por defecto */
 
+    /* Fallback for Tailwind's .hidden when offline/CDN fails */
+    .hidden { display: none !important; }
+
         :root {
             --primary-gold: #16A34A; /* remap UI accent to SR green */
             --primary-gold-dark: #15803D;
@@ -1680,6 +1683,7 @@
                                         discountAmount = Math.min(discountAmount, isFinite(subtotal) ? subtotal : discountAmount);
 
                                         const discountReason = String(order.discountReason || order.rewardLabel || '').trim();
+                                        const discountCode = String(order.discountCode || '').trim();
                                         const effectiveTotal = (isFinite(subtotal) && subtotal > 0)
                                             ? Number((subtotal - discountAmount + deliveryFee).toFixed(2))
                                             : (isFinite(storedTotal) ? storedTotal : 0);
@@ -1699,6 +1703,15 @@
                                                 <div class="flex justify-between items-center text-sm mb-1">
                                                     <span class="text-green-300">Descuento${discountReason ? ` (${escapeHtml(discountReason)})` : ''}:</span>
                                                     <span class="text-green-300 font-medium">-$${discountAmount.toFixed(2)}</span>
+                                                </div>
+                                            `;
+                                        }
+
+                                        if (discountCode) {
+                                            breakdown += `
+                                                <div class="flex justify-between items-center text-sm mb-1">
+                                                    <span class="text-cyan-200">Cupón:</span>
+                                                    <span class="text-cyan-200 font-medium">${escapeHtml(discountCode)}</span>
                                                 </div>
                                             `;
                                         }
@@ -1983,7 +1996,8 @@
             const customer = order.customer || order.cliente || {};
             const items = Array.isArray(order.items) ? order.items : [];
 
-            const PAPER_CHARS = 32; // ancho aprox. en monospace para 58mm (área imprimible ~48mm)
+            // Ticket más ligero: más caracteres por línea (font más pequeño) = menos saltos = menos spool
+            const PAPER_CHARS = 36; // ancho aprox. en monospace para 58mm
             const SEP = '-'.repeat(PAPER_CHARS);
             const padRight = (s, n) => {
                 const str = String(s ?? '');
@@ -2047,6 +2061,7 @@
                 : (isFinite(storedTotalNumber) ? storedTotalNumber : 0);
 
             const discountReason = String(order.discountReason || order.rewardLabel || '').trim();
+            const discountCode = String(order.discountCode || '').trim();
 
             // Determinar cómo interpretar precios en items (unitario vs total por línea)
             // para evitar duplicar multiplicaciones (casos legacy / datos mezclados).
@@ -2099,22 +2114,7 @@
                 return Math.floor(n / 10);
             })();
 
-            const baseHref = (() => {
-                try {
-                    return new URL('.', location.href).href;
-                } catch (_) {
-                    return '';
-                }
-            })();
-
-            const qrSrc = (() => {
-                if (qrOverrideSrc) return String(qrOverrideSrc);
-                try {
-                    return new URL('url_qrcodecreator.com_23_28_43.png', baseHref || location.href).href;
-                } catch (_) {
-                    return 'url_qrcodecreator.com_23_28_43.png';
-                }
-            })();
+            // Nota: se removió QR del ticket para aligerar el spool y evitar bloqueos en térmicas.
 
             const lines = [];
 
@@ -2313,10 +2313,7 @@
                         lines.push(lr(`${qty}x`, right));
                     }
 
-                    // Si hay varias unidades, mostrar el precio por pieza para evitar confusiones.
-                    if (qty > 1 && isFinite(unitPrice) && unitPrice > 0) {
-                        wrap(`Precio c/u: $${money(unitPrice)}`, PAPER_CHARS).forEach(l => lines.push(l));
-                    }
+                    // Ticket ligero: omitimos "Precio c/u" (reduce líneas en tickets largos)
 
                     const itemKey = normalizeTicketName(name);
                     const custom = String(item.customizations || '');
@@ -2369,6 +2366,9 @@
                 
                 if (discountAmount > 0) {
                     lines.push(lr('Descuento', '-$' + money(discountAmount)));
+                    if (discountCode) {
+                        lines.push(lr('Cupon', discountCode));
+                    }
                     if (discountReason) {
                         wrap('Motivo: ' + discountReason, PAPER_CHARS).forEach(x => lines.push(x));
                     }
@@ -2383,19 +2383,52 @@
                 lines.push(SEP);
             }
 
+            // Exponer las líneas para poder imprimir por partes si el driver se traba con tickets largos
+            // (algunas térmicas imprimen solo una parte del spool y se bloquean).
+            try {
+                order.__sr_ticketLines = Array.isArray(lines) ? lines.slice() : null;
+            } catch (_) {}
+
+            // Estimar altura para evitar paginación (la mayoría de térmicas fallan al intentar 2+ páginas)
+            const estimatedHeightMm = (() => {
+                try {
+                    const lineCount = Array.isArray(lines) ? lines.length : 0;
+                    // font más chico: menos mm por línea
+                    const mmPerLine = 3.55;
+                    const base = (mode === 'kitchen') ? 18 : 28; // padding + encabezado
+                    const raw = base + (lineCount * mmPerLine);
+                    const rounded = Math.ceil(raw / 10) * 10;
+                    // Rangos seguros: ni muy corto (paginación) ni enorme (algunos drivers se traban)
+                    return Math.max(220, Math.min(900, rounded));
+                } catch (_) {
+                    return 300;
+                }
+            })();
+
             const safe = lines.map(l => escapeHtml(l)).join('\n');
-            return `
+                        return buildPrintableTicketHtmlFromLines(lines, estimatedHeightMm, order, mode);
+                }
+
+                function buildPrintableTicketHtmlFromLines(lines, estimatedHeightMm, order, mode = 'customer') {
+                        const safe = (Array.isArray(lines) ? lines : []).map(l => escapeHtml(l)).join('\n');
+
+                    // Ticket ligero: sin <base>, sin fuentes externas, sin QR, sin sombras.
+
+                        const heightMm = (isFinite(Number(estimatedHeightMm)) && Number(estimatedHeightMm) > 0)
+                                ? Number(estimatedHeightMm)
+                                : 300;
+
+                        return `
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-        ${baseHref ? `<base href="${escapeHtml(baseHref)}">` : ''}
     <title>Ticket ${escapeHtml(String(order.id || ''))}</title>
     <style>
       /* Ticket 58mm (área útil ~48mm). Diseñado para no cortarse. */
             /* Algunos drivers (ej. XP-58) fallan con 'auto' en el alto */
-            @page { size: 58mm 200mm; margin: 0; }
+                                                @page { size: 58mm ${heightMm}mm; margin: 0; }
       html, body { background: #fff; color: #000; }
       body {
         margin: 0;
@@ -2405,54 +2438,25 @@
       .paper {
         width: 58mm;
         margin: 0 auto;
-        padding: 4mm 3.5mm;
+                padding: 3mm 3mm;
         box-sizing: border-box;
       }
-      .brand {
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-                font-weight: 700;
-                font-size: 18px;
-                letter-spacing: 0.15px;
-        text-align: center;
-        margin: 0 0 2mm 0;
-      }
-      .sub {
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        font-size: 11px;
-        text-align: center;
-        margin: 0;
-        line-height: 1.25;
-      }
       pre {
-        margin: 3mm 0 0 0;
-        font-size: 12.5px;
-        line-height: 1.22;
+                margin: 0;
+                font-size: 11.5px;
+                line-height: 1.12;
         white-space: pre-wrap;
         word-break: break-word;
       }
-            img.qr {
-                display: block;
-                margin: 2.5mm auto 0 auto;
-                width: 28mm;
-                height: 28mm;
-                background: #fff;
-                filter: contrast(200%);
-                image-rendering: crisp-edges;
-                image-rendering: pixelated;
-            }
-      @media screen {
-        body { padding: 10px; }
-        .paper { box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-      }
+                        @media print {
+                                /* Evitar que el navegador inserte cortes raros */
+                                pre { break-inside: avoid; page-break-inside: avoid; }
+                        }
     </style>
   </head>
   <body>
         <div class="paper">
-            ${mode === 'kitchen' ? '' : `<div class="brand">SR. &amp; SRA. BURGER</div>
-            <p class="sub">Minatitl\u00e1n, Veracruz</p>
-                        <p class="sub">Tel: 922-159-36-88</p>`}
                         <pre>${safe}</pre>
-                        ${mode === 'kitchen' ? '' : `<p class="sub" style="margin-top: 2mm; font-weight: 600;">Gracias por su compra</p>`}
         </div>
   </body>
 </html>`;
@@ -2474,59 +2478,13 @@
                     return;
                 }
 
-                const PRINT_DELAY_MS = 650; // ayuda a que el driver/spooler tenga tiempo de renderizar
+                const PRINT_DELAY_MS = 700; // ticket ligero: menor espera
+                const MAX_LINES_PER_JOB = 180; // imprimir en partes solo si es MUY largo
 
-                const getQrDataUrl = async () => {
-                    try {
-                        const qrUrl = new URL('url_qrcodecreator.com_23_28_43.png', location.href).href;
-                        const ac = new AbortController();
-                        const t = setTimeout(() => ac.abort(), 2000);
-                        const res = await fetch(qrUrl, { cache: 'no-store', signal: ac.signal });
-                        clearTimeout(t);
-                        if (!res.ok) return '';
-
-                        const blob = await res.blob();
-                        const objUrl = URL.createObjectURL(blob);
-                        const img = new Image();
-                        img.decoding = 'sync';
-                        const loaded = await new Promise((resolve) => {
-                            img.onload = () => resolve(true);
-                            img.onerror = () => resolve(false);
-                            img.src = objUrl;
-                        });
-                        if (!loaded) {
-                            try { URL.revokeObjectURL(objUrl); } catch (_) {}
-                            return '';
-                        }
-
-                        const target = 256; // 256x256 suficiente para lectura y liviano
-                        const canvas = document.createElement('canvas');
-                        canvas.width = target;
-                        canvas.height = target;
-                        const ctx = canvas.getContext('2d');
-                        if (!ctx) {
-                            try { URL.revokeObjectURL(objUrl); } catch (_) {}
-                            return '';
-                        }
-                        ctx.imageSmoothingEnabled = false;
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect(0, 0, target, target);
-                        ctx.drawImage(img, 0, 0, target, target);
-                        const dataUrl = canvas.toDataURL('image/png');
-                        try { URL.revokeObjectURL(objUrl); } catch (_) {}
-                        return String(dataUrl || '');
-                    } catch (_) {
-                        return '';
-                    }
-                };
-
-                const qrPromise = (async () => {
-                    try { return await getQrDataUrl(); } catch (_) { return ''; }
-                })();
+                // Ticket ligero: sin QR (reduce RAM/spool y evita cuelgues de impresora)
 
                 const openWindowAndPrint = async () => {
-                    const qrDataUrl = await qrPromise;
-                    const html = buildPrintableTicketHtml(order, qrDataUrl || undefined, mode);
+                    const html = buildPrintableTicketHtml(order, undefined, mode);
                     const w = window.open('about:blank', '_blank', 'width=420,height=700');
                     if (!w) return false;
                     w.document.open();
@@ -2542,26 +2500,46 @@
 
                     w.onload = () => {
                         try {
-                            const img = w.document.querySelector('img.qr');
-                            if (img) {
-                                if (img.complete) return doPrint();
-                                let done = false;
-                                const finish = () => { if (done) return; done = true; doPrint(); };
-                                img.onload = finish;
-                                img.onerror = finish;
-                                setTimeout(finish, 1600);
-                                return;
+                            if (w.document && w.document.fonts && w.document.fonts.ready) {
+                                // Esperar fuentes para evitar reflow durante impresión
+                                w.document.fonts.ready.then(() => {}).catch(() => {});
                             }
                         } catch (_) {}
                         doPrint();
                     };
 
+                    // Algunos navegadores imprimen mejor si no cierras de inmediato.
+                    try {
+                        w.onafterprint = () => {
+                            // Dejar un pequeño margen antes de cerrar
+                            setTimeout(() => { try { w.close(); } catch (_) {} }, 300);
+                        };
+                    } catch (_) {}
+
                     return true;
                 };
 
                 const openIframeAndPrint = async () => {
-                    const qrDataUrl = await qrPromise;
-                    const html = buildPrintableTicketHtml(order, qrDataUrl || undefined, mode);
+                    const html = buildPrintableTicketHtml(order, undefined, mode);
+
+                    // Si el ticket es largo, imprimirlo en partes (reduce el tamaño del spool y evita que “se trabe” a la mitad)
+                    const lines = order && Array.isArray(order.__sr_ticketLines) ? order.__sr_ticketLines : null;
+                    const needsChunking = !!(lines && lines.length > MAX_LINES_PER_JOB);
+                    const htmlParts = (() => {
+                        if (!needsChunking) return [html];
+                        const chunks = [];
+                        for (let i = 0; i < lines.length; i += MAX_LINES_PER_JOB) {
+                            chunks.push(lines.slice(i, i + MAX_LINES_PER_JOB));
+                        }
+                        return chunks.map((chunk) => {
+                            const mmPerLine = 3.55;
+                            const base = (mode === 'kitchen') ? 18 : 28;
+                            const raw = base + (chunk.length * mmPerLine);
+                            const rounded = Math.ceil(raw / 10) * 10;
+                            const heightMm = Math.max(220, Math.min(500, rounded));
+                            return buildPrintableTicketHtmlFromLines(chunk, heightMm, order, mode);
+                        });
+                    })();
 
                     const iframe = document.createElement('iframe');
                     iframe.style.position = 'fixed';
@@ -2572,35 +2550,50 @@
                     iframe.style.border = '0';
                     iframe.setAttribute('aria-hidden', 'true');
                     document.body.appendChild(iframe);
-                    const doc = iframe.contentWindow && iframe.contentWindow.document;
-                    if (!doc) {
+                    const cw = iframe.contentWindow;
+                    const doc = cw && cw.document;
+                    if (!doc || !cw) {
                         alert('No se pudo abrir impresión. Permite popups o usa otro navegador.');
                         return;
                     }
-                    doc.open();
-                    doc.write(html);
-                    doc.close();
 
-                    const doIframePrint = () => {
-                        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (_) {}
-                        setTimeout(() => { try { document.body.removeChild(iframe); } catch (_) {} }, 1400);
+                    const removeIframe = () => {
+                        try { document.body.removeChild(iframe); } catch (_) {}
                     };
 
-                    setTimeout(() => {
-                        try {
-                            const img = doc.querySelector('img.qr');
-                            if (img) {
-                                if (img.complete) return doIframePrint();
-                                let done = false;
-                                const finish = () => { if (done) return; done = true; doIframePrint(); };
-                                img.onload = finish;
-                                img.onerror = finish;
-                                setTimeout(finish, 1600);
-                                return;
-                            }
-                        } catch (_) {}
-                        doIframePrint();
-                    }, PRINT_DELAY_MS);
+                    const printPartsSequentially = async () => {
+                        let idx = 0;
+
+                        const printOne = () => {
+                            const part = htmlParts[idx];
+                            doc.open();
+                            doc.write(part);
+                            doc.close();
+
+                            let finished = false;
+                            const done = () => {
+                                if (finished) return;
+                                finished = true;
+                                idx += 1;
+                                if (idx >= htmlParts.length) {
+                                    setTimeout(removeIframe, 400);
+                                } else {
+                                    setTimeout(printOne, 500);
+                                }
+                            };
+
+                            try { cw.onafterprint = done; } catch (_) {}
+                            setTimeout(done, 9000); // fallback
+
+                            setTimeout(() => {
+                                try { cw.focus(); cw.print(); } catch (_) { done(); }
+                            }, PRINT_DELAY_MS);
+                        };
+
+                        printOne();
+                    };
+
+                    printPartsSequentially();
                 };
 
                 openWindowAndPrint().then((ok) => {

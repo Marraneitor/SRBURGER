@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Códigos - SR & SRA Burger</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles/sr-ui.css" />
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <script src="js/sr-shell.js"></script>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <header class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-extrabold">Códigos de descuento</h1>
+      <p class="text-slate-300 mt-1">Crea códigos con descuento fijo en MXN (ej. $20, $30, $50). Se aplican en el checkout.</p>
+    </header>
+
+    <section class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 md:p-5">
+      <h2 class="text-lg font-bold mb-3">Crear / actualizar</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-1" for="code">Código</label>
+          <input id="code" class="w-full rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2" placeholder="SR20" autocomplete="off" />
+          <div class="text-xs text-slate-400 mt-1">Se guarda en MAYÚSCULAS. Máx 32 chars. Permitido: A-Z 0-9 _ -</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-1" for="amount">Descuento (MXN)</label>
+          <input id="amount" type="number" min="1" step="1" class="w-full rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2" placeholder="20" />
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button data-quick="20" class="quick-amount px-3 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-bold">$20</button>
+            <button data-quick="30" class="quick-amount px-3 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-bold">$30</button>
+            <button data-quick="50" class="quick-amount px-3 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-bold">$50</button>
+            <button data-quick="100" class="quick-amount px-3 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-bold">$100</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-1" for="note">Nota (opcional)</label>
+          <input id="note" class="w-full rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2" placeholder="Ej: Solo esta semana" />
+
+          <label class="mt-3 flex items-center gap-2 text-sm font-semibold">
+            <input id="active" type="checkbox" class="accent-emerald-500" checked />
+            Activo
+          </label>
+
+          <div class="mt-4 flex gap-2">
+            <button id="save" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 font-extrabold">Guardar</button>
+            <button id="reset" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-extrabold">Limpiar</button>
+          </div>
+
+          <div id="msg" class="mt-2 text-sm text-slate-300"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-6 bg-slate-900/60 border border-slate-800 rounded-xl p-4 md:p-5">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h2 class="text-lg font-bold">Códigos guardados</h2>
+        <div class="text-sm text-slate-400" id="count"></div>
+      </div>
+
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="text-slate-300">
+            <tr class="border-b border-slate-800">
+              <th class="text-left py-2 pr-3">Código</th>
+              <th class="text-left py-2 pr-3">Descuento</th>
+              <th class="text-left py-2 pr-3">Activo</th>
+              <th class="text-left py-2 pr-3">Nota</th>
+              <th class="text-right py-2">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="rows" class="align-top"></tbody>
+        </table>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-3">Colección: <span class="font-mono">discount_codes</span> (docId = código en MAYÚSCULAS).</p>
+    </section>
+  </main>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import {
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      deleteDoc,
+      onSnapshot,
+      orderBy,
+      query,
+      serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js';
+
+    const $ = (id) => document.getElementById(id);
+
+    const codeEl = $('code');
+    const amountEl = $('amount');
+    const noteEl = $('note');
+    const activeEl = $('active');
+    const msgEl = $('msg');
+    const rowsEl = $('rows');
+    const countEl = $('count');
+
+    function normalizeCode(raw) {
+      const s = String(raw || '').trim().toUpperCase();
+      return s.replace(/[^A-Z0-9_-]/g, '').slice(0, 32);
+    }
+
+    function setMsg(text, tone = 'info') {
+      msgEl.textContent = String(text || '');
+      msgEl.className = 'mt-2 text-sm';
+      if (tone === 'ok') msgEl.classList.add('text-emerald-300');
+      else if (tone === 'err') msgEl.classList.add('text-rose-300');
+      else msgEl.classList.add('text-slate-300');
+    }
+
+    function resetForm() {
+      codeEl.value = '';
+      amountEl.value = '';
+      noteEl.value = '';
+      activeEl.checked = true;
+      setMsg('');
+      codeEl.focus();
+    }
+
+    document.querySelectorAll('.quick-amount').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        amountEl.value = String(btn.getAttribute('data-quick') || '');
+      });
+    });
+
+    $('reset').addEventListener('click', (e) => {
+      e.preventDefault();
+      resetForm();
+    });
+
+    $('save').addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const code = normalizeCode(codeEl.value);
+      const amount = Number(amountEl.value || 0);
+      const note = String(noteEl.value || '').trim();
+      const active = !!activeEl.checked;
+
+      if (!code) {
+        setMsg('Ingresa un código válido.', 'err');
+        return;
+      }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        setMsg('Ingresa un descuento válido (> 0).', 'err');
+        return;
+      }
+
+      setMsg('Guardando...', 'info');
+
+      const ref = doc(db, 'discount_codes', code);
+      const snap = await getDoc(ref);
+      const isNew = !snap.exists();
+
+      const payload = {
+        code,
+        amount: Number(amount.toFixed(2)),
+        active,
+        note,
+        updatedAt: serverTimestamp(),
+      };
+      if (isNew) payload.createdAt = serverTimestamp();
+
+      await setDoc(ref, payload, { merge: true });
+      setMsg(`Guardado: ${code} (-$${Math.round(amount)})`, 'ok');
+      codeEl.value = code;
+    });
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderRow(d) {
+      const code = String(d.code || '').trim();
+      const amount = Number(d.amount || 0);
+      const active = d.active !== false;
+      const note = String(d.note || '').trim();
+
+      const badge = active
+        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 text-xs font-bold">Activo</span>'
+        : '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-200 border border-rose-500/30 text-xs font-bold">Inactivo</span>';
+
+      return `
+        <tr class="border-b border-slate-800">
+          <td class="py-2 pr-3 font-extrabold">${escapeHtml(code)}</td>
+          <td class="py-2 pr-3">-$${Number(amount || 0).toFixed(0)}</td>
+          <td class="py-2 pr-3">${badge}</td>
+          <td class="py-2 pr-3 text-slate-300">${note ? escapeHtml(note) : '<span class="text-slate-500">—</span>'}</td>
+          <td class="py-2 text-right whitespace-nowrap">
+            <button data-action="toggle" data-code="${escapeHtml(code)}" data-active="${active ? '1' : '0'}" class="px-3 py-1 rounded-md bg-slate-800 hover:bg-slate-700 font-bold">${active ? 'Desactivar' : 'Activar'}</button>
+            <button data-action="delete" data-code="${escapeHtml(code)}" class="ml-2 px-3 py-1 rounded-md bg-rose-600/80 hover:bg-rose-600 font-bold">Borrar</button>
+          </td>
+        </tr>
+      `;
+    }
+
+    // Live list
+    const q = query(collection(db, 'discount_codes'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      const docs = [];
+      snap.forEach((s) => docs.push({ id: s.id, ...s.data() }));
+      rowsEl.innerHTML = docs.map(renderRow).join('');
+      countEl.textContent = `${docs.length} código(s)`;
+    });
+
+    rowsEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+
+      const action = btn.getAttribute('data-action');
+      const code = normalizeCode(btn.getAttribute('data-code'));
+      if (!code) return;
+
+      const ref = doc(db, 'discount_codes', code);
+
+      if (action === 'toggle') {
+        const currentActive = btn.getAttribute('data-active') === '1';
+        await updateDoc(ref, { active: !currentActive, updatedAt: serverTimestamp() });
+        setMsg(`Actualizado: ${code} → ${!currentActive ? 'Activo' : 'Inactivo'}`, 'ok');
+        return;
+      }
+
+      if (action === 'delete') {
+        if (!confirm(`¿Borrar el código ${code}?`)) return;
+        await deleteDoc(ref);
+        setMsg(`Borrado: ${code}`, 'ok');
+        return;
+      }
+    });
+
+    resetForm();
+  </script>
+</body>
+</html>

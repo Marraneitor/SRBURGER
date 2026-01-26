@@ -25,6 +25,7 @@
       { href: 'admin.html', label: 'Admin' },
       { href: 'paginaburger.html', label: 'Menú' },
       { href: 'controldeenvios.html', label: 'Envíos' },
+      { href: 'Codigos.html', label: 'Códigos' },
       { href: 'data.html', label: 'Data' },
       { href: 'insumosgastados.html', label: 'Insumos' },
       { href: 'itemsvendidos.html', label: 'Items' },
