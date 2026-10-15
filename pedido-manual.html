@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
+    <!-- Respaldo de imágenes rotas (Firebase Storage → /img/productos → placeholder) -->
+    <script src="/js/sr-image-fallback.js"></script>
     <title>SR & SRA BURGER - ¡Hechas con Pasión!</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍔</text></svg>">
     <script>
@@ -3852,7 +3854,7 @@
             window.__MANUAL_MODE = true;
             window.__MANUAL_FAST_MODE = true;
         </script>
-        <script src="js/script.js.backup?v=2026-02-27a"></script>
+        <script src="js/script.js.backup?v=2026-10-15a"></script>
 
         <!-- Script personalizado para entrada manual -->
         <script>
@@ -5708,6 +5710,498 @@
                 window._srOpenCustomizationModal(id);
             }
         };
+        </script>
+
+        <!-- ═══════════════════ Chat WhatsApp tipo WA Web ═══════════════════ -->
+        <button id="wa-chat-fab" type="button"
+            class="fixed bottom-5 right-5 z-[60] w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-2xl text-white flex items-center justify-center transition-transform hover:scale-105"
+            title="Chat WhatsApp">
+          <i class="fa-brands fa-whatsapp text-2xl"></i>
+          <span id="wa-chat-fab-badge" class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-red-500 text-[11px] font-bold flex items-center justify-center px-1">0</span>
+        </button>
+
+        <div id="wa-chat-panel"
+            class="hidden fixed bottom-5 right-5 z-[61] w-[min(95vw,920px)] h-[min(85vh,640px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col"
+            style="font-family: 'Inter', sans-serif;">
+
+          <!-- Header -->
+          <div class="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white">
+            <i class="fa-brands fa-whatsapp text-xl"></i>
+            <div class="flex-1">
+              <div class="text-sm font-bold leading-tight">Chat WhatsApp</div>
+              <div id="wa-chat-status" class="text-[11px] opacity-90 leading-tight">Verificando…</div>
+            </div>
+            <button id="wa-chat-menu-btn" type="button" class="px-2 py-1 rounded hover:bg-emerald-700 text-xs" title="Imágenes del menú">
+              <i class="fa-solid fa-images"></i>
+            </button>
+            <button id="wa-chat-close" type="button" class="px-2 py-1 rounded hover:bg-emerald-700">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div class="flex-1 flex min-h-0">
+            <!-- Lista de chats -->
+            <aside class="w-[36%] min-w-[180px] max-w-[280px] border-r border-slate-200 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-950/40">
+              <div class="p-2 border-b border-slate-200 dark:border-slate-700">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                  <input id="wa-chat-search" type="text" placeholder="Buscar"
+                    class="w-full pl-7 pr-2 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                </div>
+              </div>
+              <div id="wa-chat-list" class="flex-1 overflow-y-auto"></div>
+            </aside>
+
+            <!-- Conversación -->
+            <section class="flex-1 flex flex-col min-w-0 bg-[#efeae2] dark:bg-slate-800/40">
+              <div id="wa-chat-empty" class="flex-1 flex items-center justify-center text-center p-6 text-slate-500 dark:text-slate-400 text-sm">
+                Selecciona una conversación
+              </div>
+
+              <div id="wa-chat-active" class="hidden flex-1 flex flex-col min-h-0">
+                <!-- Encabezado del chat activo -->
+                <div class="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                  <div class="w-9 h-9 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm" id="wa-chat-active-avatar">?</div>
+                  <div class="flex-1 min-w-0">
+                    <div id="wa-chat-active-name" class="text-sm font-bold truncate text-slate-900 dark:text-slate-100">—</div>
+                    <div id="wa-chat-active-phone" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">—</div>
+                  </div>
+                  <label class="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input id="wa-chat-bot-toggle" type="checkbox" class="rounded">
+                    <span>Bot</span>
+                  </label>
+                </div>
+
+                <!-- Mensajes -->
+                <div id="wa-chat-messages" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+
+                <!-- Composer -->
+                <div class="p-2 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
+                  <div class="flex items-end gap-1.5">
+                    <button id="wa-chat-attach" type="button" class="px-2 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800" title="Enviar imagen">
+                      <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <input id="wa-chat-image-input" type="file" accept="image/*" class="hidden" />
+                    <textarea id="wa-chat-input" rows="1" placeholder="Escribe un mensaje…"
+                      class="flex-1 resize-none px-3 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 max-h-32"></textarea>
+                    <button id="wa-chat-send" type="button" class="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center disabled:opacity-50">
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                  </div>
+                  <div id="wa-chat-image-preview" class="hidden mt-2 flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <img id="wa-chat-image-thumb" class="w-12 h-12 object-cover rounded" />
+                    <input id="wa-chat-image-caption" type="text" placeholder="Descripción (opcional)"
+                      class="flex-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                    <button id="wa-chat-image-cancel" type="button" class="text-slate-500 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Modal: imágenes del menú -->
+          <div id="wa-menu-modal" class="hidden absolute inset-0 z-10 bg-black/50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+              <div class="flex items-center gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+                <i class="fa-solid fa-images text-emerald-500"></i>
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 flex-1">Imágenes del menú (auto-respuesta del bot)</h3>
+                <button id="wa-menu-close" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="p-3 flex flex-wrap gap-2 items-center border-b border-slate-200 dark:border-slate-700">
+                <input id="wa-menu-upload" type="file" accept="image/*" multiple class="hidden" />
+                <button id="wa-menu-upload-btn" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs flex items-center gap-1">
+                  <i class="fa-solid fa-upload"></i> Subir imágenes
+                </button>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">Estas imágenes se enviarán automáticamente cuando un cliente escriba "menú".</span>
+              </div>
+              <div id="wa-menu-grid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        (function () {
+          'use strict';
+          const $ = (id) => document.getElementById(id);
+          const fab = $('wa-chat-fab');
+          const panel = $('wa-chat-panel');
+          const closeBtn = $('wa-chat-close');
+          const listEl = $('wa-chat-list');
+          const searchEl = $('wa-chat-search');
+          const emptyEl = $('wa-chat-empty');
+          const activeEl = $('wa-chat-active');
+          const msgsEl = $('wa-chat-messages');
+          const inputEl = $('wa-chat-input');
+          const sendBtn = $('wa-chat-send');
+          const attachBtn = $('wa-chat-attach');
+          const imgInput = $('wa-chat-image-input');
+          const imgPreview = $('wa-chat-image-preview');
+          const imgThumb = $('wa-chat-image-thumb');
+          const imgCaption = $('wa-chat-image-caption');
+          const imgCancel = $('wa-chat-image-cancel');
+          const botToggle = $('wa-chat-bot-toggle');
+          const statusEl = $('wa-chat-status');
+          const fabBadge = $('wa-chat-fab-badge');
+          const menuBtn = $('wa-chat-menu-btn');
+          const menuModal = $('wa-menu-modal');
+          const menuClose = $('wa-menu-close');
+          const menuUpload = $('wa-menu-upload');
+          const menuUploadBtn = $('wa-menu-upload-btn');
+          const menuGrid = $('wa-menu-grid');
+
+          let currentChats = [];
+          let activeJid = null;
+          let pendingImageDataUrl = null;
+          let sse = null;
+          let pollTimer = null;
+
+          function getAdminKey() {
+            let k = '';
+            try { k = sessionStorage.getItem('sr_admin_key') || ''; } catch (_) {}
+            if (!k) {
+              k = window.prompt('ADMIN_KEY del servidor:');
+              if (k) { try { sessionStorage.setItem('sr_admin_key', k.trim()); } catch (_) {} return k.trim(); }
+              return '';
+            }
+            return k;
+          }
+
+          function authHeaders(extra) {
+            return Object.assign({ 'x-admin-key': getAdminKey() }, extra || {});
+          }
+
+          function fmtTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            const now = new Date();
+            const sameDay = d.toDateString() === now.toDateString();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            if (sameDay) return `${hh}:${mm}`;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            return `${dd}/${mo} ${hh}:${mm}`;
+          }
+
+          function escapeHtml(s) {
+            return String(s == null ? '' : s)
+              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+          }
+
+          function avatarLetter(name, phone) {
+            const s = String(name || phone || '?').trim();
+            return (s[0] || '?').toUpperCase();
+          }
+
+          function renderChatList() {
+            const term = (searchEl.value || '').toLowerCase().trim();
+            const filtered = !term ? currentChats : currentChats.filter(c =>
+              (c.name || '').toLowerCase().includes(term) || (c.phone || '').includes(term));
+
+            if (!filtered.length) {
+              listEl.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">Sin conversaciones</div>';
+              return;
+            }
+            listEl.innerHTML = filtered.map(c => `
+              <button data-jid="${escapeHtml(c.jid)}"
+                class="wa-chat-row w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-200/60 dark:hover:bg-slate-800 text-left border-b border-slate-200/70 dark:border-slate-800 ${c.jid === activeJid ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}">
+                <div class="w-9 h-9 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0">${escapeHtml(avatarLetter(c.name, c.phone))}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1">
+                    <div class="text-sm font-semibold truncate text-slate-800 dark:text-slate-100">${escapeHtml(c.name || c.phone)}</div>
+                    <div class="ml-auto text-[10px] text-slate-400">${fmtTime(c.lastTs)}</div>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${c.lastFromMe ? '<span class="text-emerald-500">✓ </span>' : ''}${escapeHtml(c.preview || '')}</div>
+                    ${c.unread ? `<span class="ml-auto bg-emerald-500 text-white text-[10px] font-bold rounded-full px-1.5 min-w-[18px] text-center">${c.unread}</span>` : ''}
+                  </div>
+                </div>
+              </button>
+            `).join('');
+
+            listEl.querySelectorAll('.wa-chat-row').forEach(btn => {
+              btn.addEventListener('click', () => openChat(btn.dataset.jid));
+            });
+          }
+
+          async function loadChatList() {
+            try {
+              const r = await fetch('/api/whatsapp/chat/list', { headers: authHeaders() });
+              const d = await r.json();
+              if (!d.ok) return;
+              currentChats = d.chats || [];
+              const totalUnread = currentChats.reduce((acc, c) => acc + (c.unread || 0), 0);
+              if (totalUnread > 0) {
+                fabBadge.textContent = String(totalUnread);
+                fabBadge.classList.remove('hidden');
+              } else {
+                fabBadge.classList.add('hidden');
+              }
+              renderChatList();
+            } catch (e) { console.warn('loadChatList', e); }
+          }
+
+          function renderMessage(m) {
+            const mine = !!m.fromMe;
+            const wrap = document.createElement('div');
+            wrap.className = `flex ${mine ? 'justify-end' : 'justify-start'}`;
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[78%] rounded-lg px-3 py-1.5 text-sm shadow-sm ${
+              mine
+                ? (m.bot ? 'bg-blue-100 text-blue-900 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-100 dark:border-blue-700/50'
+                         : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100')
+                : 'bg-white text-slate-900 dark:bg-slate-700 dark:text-slate-100'
+            }`;
+            let inner = '';
+            if (m.bot) inner += '<div class="text-[10px] uppercase opacity-70 mb-0.5"><i class="fa-solid fa-robot"></i> Bot</div>';
+            if (m.type === 'image' && m.imageUrl) {
+              inner += `<img src="${escapeHtml(m.imageUrl)}" class="rounded-lg max-w-full max-h-60 mb-1 object-contain bg-black/5" />`;
+            }
+            if (m.text) {
+              const safe = escapeHtml(m.text).replace(/\n/g, '<br>').replace(/\*([^*\n]+)\*/g, '<b>$1</b>');
+              inner += `<div class="whitespace-pre-wrap break-words">${safe}</div>`;
+            }
+            inner += `<div class="text-[10px] text-right opacity-60 mt-0.5">${fmtTime(m.ts)}</div>`;
+            bubble.innerHTML = inner;
+            wrap.appendChild(bubble);
+            return wrap;
+          }
+
+          async function openChat(jid) {
+            activeJid = jid;
+            renderChatList();
+            try {
+              const r = await fetch(`/api/whatsapp/chat/${encodeURIComponent(jid)}/messages`, { headers: authHeaders() });
+              const d = await r.json();
+              if (!d.ok) return;
+              emptyEl.classList.add('hidden');
+              activeEl.classList.remove('hidden');
+              activeEl.classList.add('flex');
+              $('wa-chat-active-avatar').textContent = avatarLetter(d.name, d.phone);
+              $('wa-chat-active-name').textContent = d.name || d.phone;
+              $('wa-chat-active-phone').textContent = '+' + (d.phone || '');
+              botToggle.checked = !d.botPaused;
+              msgsEl.innerHTML = '';
+              (d.messages || []).forEach(m => msgsEl.appendChild(renderMessage(m)));
+              msgsEl.scrollTop = msgsEl.scrollHeight;
+              loadChatList(); // refrescar contadores tras marcar como leído
+            } catch (e) { console.warn('openChat', e); }
+          }
+
+          async function refreshActive() {
+            if (!activeJid) return;
+            try {
+              const r = await fetch(`/api/whatsapp/chat/${encodeURIComponent(activeJid)}/messages`, { headers: authHeaders() });
+              const d = await r.json();
+              if (!d.ok) return;
+              const wasNearBottom = (msgsEl.scrollTop + msgsEl.clientHeight) > (msgsEl.scrollHeight - 40);
+              msgsEl.innerHTML = '';
+              (d.messages || []).forEach(m => msgsEl.appendChild(renderMessage(m)));
+              if (wasNearBottom) msgsEl.scrollTop = msgsEl.scrollHeight;
+            } catch (_) {}
+          }
+
+          async function sendText() {
+            const text = inputEl.value.trim();
+            if (!activeJid) return;
+            if (pendingImageDataUrl) { return sendImage(); }
+            if (!text) return;
+            sendBtn.disabled = true;
+            try {
+              const r = await fetch(`/api/whatsapp/chat/${encodeURIComponent(activeJid)}/send`, {
+                method: 'POST',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ text }),
+              });
+              const d = await r.json();
+              if (!d.ok) { alert('Error: ' + (d.error || 'desconocido')); return; }
+              inputEl.value = '';
+              await refreshActive();
+              loadChatList();
+            } finally { sendBtn.disabled = false; }
+          }
+
+          function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+              const r = new FileReader();
+              r.onload = () => resolve(r.result);
+              r.onerror = reject;
+              r.readAsDataURL(file);
+            });
+          }
+
+          async function sendImage() {
+            if (!activeJid || !pendingImageDataUrl) return;
+            const caption = imgCaption.value.trim();
+            sendBtn.disabled = true;
+            try {
+              const r = await fetch(`/api/whatsapp/chat/${encodeURIComponent(activeJid)}/send-image`, {
+                method: 'POST',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ image: pendingImageDataUrl, caption }),
+              });
+              const d = await r.json();
+              if (!d.ok) { alert('Error: ' + (d.error || 'desconocido')); return; }
+              clearPendingImage();
+              await refreshActive();
+              loadChatList();
+            } finally { sendBtn.disabled = false; }
+          }
+
+          function clearPendingImage() {
+            pendingImageDataUrl = null;
+            imgCaption.value = '';
+            imgPreview.classList.add('hidden');
+            imgInput.value = '';
+          }
+
+          imgInput.addEventListener('change', async () => {
+            const f = imgInput.files && imgInput.files[0];
+            if (!f) return;
+            try {
+              const dataUrl = await readFileAsDataUrl(f);
+              pendingImageDataUrl = dataUrl;
+              imgThumb.src = dataUrl;
+              imgPreview.classList.remove('hidden');
+              imgPreview.classList.add('flex');
+            } catch (e) { alert('No se pudo leer la imagen'); }
+          });
+          imgCancel.addEventListener('click', clearPendingImage);
+          attachBtn.addEventListener('click', () => imgInput.click());
+
+          sendBtn.addEventListener('click', () => pendingImageDataUrl ? sendImage() : sendText());
+          inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              pendingImageDataUrl ? sendImage() : sendText();
+            }
+          });
+
+          botToggle.addEventListener('change', async () => {
+            if (!activeJid) return;
+            const paused = !botToggle.checked;
+            await fetch(`/api/whatsapp/chat/${encodeURIComponent(activeJid)}/bot`, {
+              method: 'POST',
+              headers: authHeaders({ 'Content-Type': 'application/json' }),
+              body: JSON.stringify({ paused }),
+            });
+          });
+
+          searchEl.addEventListener('input', renderChatList);
+
+          // Estado WhatsApp
+          async function checkWaStatus() {
+            try {
+              const r = await fetch('/api/whatsapp/config');
+              const d = await r.json();
+              if (d && d.connected) {
+                statusEl.textContent = `Conectado · +${d.phoneNumber || ''}`;
+              } else {
+                statusEl.textContent = 'Desconectado (abre notifi.html y escanea QR)';
+              }
+            } catch (_) { statusEl.textContent = 'Sin conexión al servidor'; }
+          }
+
+          // SSE para nuevos mensajes
+          function startSSE() {
+            try {
+              if (sse) { sse.close(); sse = null; }
+              const k = getAdminKey();
+              if (!k) return;
+              // EventSource no soporta headers — usamos polling cuando el panel está abierto
+              if (pollTimer) clearInterval(pollTimer);
+              pollTimer = setInterval(() => {
+                loadChatList();
+                if (activeJid && panel.classList.contains('hidden') === false) refreshActive();
+              }, 3500);
+            } catch (_) {}
+          }
+
+          // Polling ligero del badge SIEMPRE (aunque el panel esté cerrado),
+          // para que veas mensajes nuevos que llegaron mientras no estabas mirando.
+          let badgeTimer = null;
+          function startBadgePolling() {
+            if (badgeTimer) return;
+            // primer chequeo inmediato
+            loadChatList();
+            badgeTimer = setInterval(() => {
+              // si el panel está abierto, ya hay otro polling más frecuente
+              if (panel.classList.contains('hidden')) loadChatList();
+            }, 10000);
+          }
+
+          fab.addEventListener('click', () => {
+            panel.classList.remove('hidden');
+            fab.classList.add('hidden');
+            checkWaStatus();
+            loadChatList();
+            startSSE();
+            startBadgePolling();
+          });
+          closeBtn.addEventListener('click', () => {
+            panel.classList.add('hidden');
+            fab.classList.remove('hidden');
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            // mantenemos badgeTimer activo para seguir avisando de mensajes nuevos
+          });
+
+          // Arrancar polling del badge en cuanto carga la página (si hay admin key)
+          try {
+            const hasKey = !!(sessionStorage.getItem('sr_admin_key') || '').trim();
+            if (hasKey) startBadgePolling();
+          } catch (_) {}
+
+          // ─── Modal de imágenes del menú ───
+          async function loadMenuImages() {
+            try {
+              const r = await fetch('/api/whatsapp/menu-images', { headers: authHeaders() });
+              const d = await r.json();
+              if (!d.ok) return;
+              if (!d.images.length) {
+                menuGrid.innerHTML = '<div class="col-span-full text-center text-sm text-slate-400 py-6">Sin imágenes. Sube una para que el bot las envíe automáticamente.</div>';
+                return;
+              }
+              menuGrid.innerHTML = d.images.map(img => `
+                <div class="relative group rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <img src="/api/whatsapp/menu-images/${encodeURIComponent(img.filename)}" class="w-full h-28 object-cover" />
+                  <button data-fn="${escapeHtml(img.filename)}" class="wa-menu-del absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition" title="Eliminar">
+                    <i class="fa-solid fa-trash text-[10px]"></i>
+                  </button>
+                  ${img.caption ? `<div class="px-2 py-1 text-[10px] text-slate-600 dark:text-slate-300 truncate">${escapeHtml(img.caption)}</div>` : ''}
+                </div>
+              `).join('');
+              menuGrid.querySelectorAll('.wa-menu-del').forEach(b => {
+                b.addEventListener('click', async () => {
+                  if (!confirm('¿Eliminar imagen?')) return;
+                  await fetch(`/api/whatsapp/menu-images/${encodeURIComponent(b.dataset.fn)}`, {
+                    method: 'DELETE', headers: authHeaders(),
+                  });
+                  loadMenuImages();
+                });
+              });
+            } catch (_) {}
+          }
+
+          menuBtn.addEventListener('click', () => { menuModal.classList.remove('hidden'); loadMenuImages(); });
+          menuClose.addEventListener('click', () => menuModal.classList.add('hidden'));
+          menuUploadBtn.addEventListener('click', () => menuUpload.click());
+          menuUpload.addEventListener('change', async () => {
+            const files = Array.from(menuUpload.files || []);
+            for (const f of files) {
+              try {
+                const dataUrl = await readFileAsDataUrl(f);
+                await fetch('/api/whatsapp/menu-images', {
+                  method: 'POST',
+                  headers: authHeaders({ 'Content-Type': 'application/json' }),
+                  body: JSON.stringify({ image: dataUrl, filename: f.name }),
+                });
+              } catch (e) { console.warn('upload menu img', e); }
+            }
+            menuUpload.value = '';
+            loadMenuImages();
+          });
+        })();
         </script>
 
 </body>

@@ -491,7 +491,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const override = overrides[item.id];
                 if (!override || !override.image) return item;
                 const newItem = { ...item };
-                newItem.image = override.image;
+                // Preferir la copia local en /img/productos (Firebase Storage antiguo devuelve 402)
+                const localImage = typeof window.srResolveLocalImage === 'function'
+                    ? window.srResolveLocalImage(override.image)
+                    : null;
+                newItem.image = localImage || override.image;
                 return newItem;
             });
         }
@@ -1907,6 +1911,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = String(cat || '').toLowerCase().trim();
         return c.includes('boneles') && c !== 'boneles';
     }
+
+    // Detecta si un item específico es la "Boneles Burger" / "BonelesBurger"
+    // (independiente de la categoría — vive en "Hamburguesas")
+    function isBonelesBurgerItem(item) {
+        const n = String(item && item.name || '').toLowerCase();
+        return /boneles\s*burger|bonelesburger|boneless\s*burger/i.test(n);
+    }
+    // Salsas disponibles para hamburguesa con boneles (mismas que Boneles piezas)
+    const BURGER_BONELES_SAUCES = ['NATURAL', 'BBQ DULCE', 'BBQ PICANTE', 'PARMESANO RANCH'];
 
     // Modal de salsa para hamburguesas de boneles NO customizables
     function openBurgerBonelesSauceModal(itemId, buttonEl) {
@@ -3770,6 +3783,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     summaryEl.textContent = summaryText.length > 0 ? summaryText.join(', ') : 'Sin personalización.';
                 } else {
+                    // Si la hamburguesa elegida es BonelesBurger, inyectar la salsa seleccionada
+                    try {
+                        const _comboBurger = tempComboConfig.choices[choiceIndex] && tempComboConfig.choices[choiceIndex].burger;
+                        if (isBonelesBurgerItem(_comboBurger)) {
+                            // Quitar cualquier 'Salsa: X' previa para no duplicar
+                            for (let i = customizations.length - 1; i >= 0; i--) {
+                                if (/^salsa\s*:/i.test(String(customizations[i] && customizations[i].name || ''))) customizations.splice(i, 1);
+                            }
+                            const sauce = document.querySelector('input[name="burger-boneles-sauce"]:checked')?.value || 'NATURAL';
+                            customizations.push({ name: `Salsa: ${sauce}`, price: 0 });
+                        }
+                    } catch (_) {}
                     // Actualizar configuración de la hamburguesa en el combo
                     tempComboConfig.choices[choiceIndex].customizations = customizations;
                     tempComboConfig.choices[choiceIndex].fries = fries;
@@ -3817,7 +3842,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = applyDailyPromotion(originalItem, category);
 
                 // Salsa para hamburguesas de boneles (inyectada al final de customizations)
-                if (isBurgerBonelesCategory(category)) {
+                if (isBurgerBonelesCategory(category) || isBonelesBurgerItem(item)) {
+                    // Quitar cualquier 'Salsa: X' previa para no duplicar
+                    for (let i = customizations.length - 1; i >= 0; i--) {
+                        if (/^salsa\s*:/i.test(String(customizations[i] && customizations[i].name || ''))) customizations.splice(i, 1);
+                    }
                     const sauce = document.querySelector('input[name="burger-boneles-sauce"]:checked')?.value || 'NATURAL';
                     customizations.push({ name: `Salsa: ${sauce}`, price: 0 });
                 }
@@ -3928,6 +3957,17 @@ document.addEventListener('DOMContentLoaded', () => {
             validateCheckoutForm();
         });
 
+        // Re-validar el checkout cuando cambia el estado de sesión
+        // (login / registro / verificación / logout).
+        window.addEventListener('sr-auth-changed', () => {
+            try { validateCheckoutForm(); } catch (_) {}
+        });
+        // También sincronizar entre pestañas (storage event nativo)
+        window.addEventListener('storage', (e) => {
+            if (!e || e.key !== 'sr_verified_customer_session') return;
+            try { validateCheckoutForm(); } catch (_) {}
+        });
+
         // Cerrar modal de checkout
         closeModalBtn.addEventListener('click', () => {
             checkoutModal.classList.add('hidden');
@@ -4001,18 +4041,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (_) {}
 
-            // Sesión verificada por código de WhatsApp (local)
+            // Sesión local (registro/login con correo+contraseña o por código WhatsApp)
             try {
                 const raw = localStorage.getItem('sr_verified_customer_session');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (parsed && parsed.uid && parsed.telefono) {
+                    if (parsed && parsed.uid) {
                         return String(parsed.uid);
                     }
                 }
             } catch (_) {}
             return null;
         }
+        // Exponer al scope global para que validateCheckoutForm (definida fuera
+        // de este DOMContentLoaded) pueda usarla sin ReferenceError.
+        try { window.getLoggedInClientUid = getLoggedInClientUid; } catch (_) {}
 
         function redirectToLoginForCheckout() {
             try {
@@ -4838,8 +4881,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const _existBBSauce = document.getElementById('burger-boneles-sauce-section');
         if (_existBBSauce) _existBBSauce.remove();
         const _bbCat = isCombo ? '' : getCategoryForItemId(context.itemId);
-        if (!isCombo && isBurgerBonelesCategory(_bbCat)) {
-            const BURGER_BONELES_SAUCES = ['NATURAL', 'BBQ DULCE', 'BBQ PICANTE', 'PARMESANO RANCH'];
+        // Activar para: (a) item en categoría boneles (no piezas), o
+        // (b) cuando el item específico es BonelesBurger (regular o dentro de combo)
+        const _isBonelesBurger = isBonelesBurgerItem(item);
+        if ((!isCombo && isBurgerBonelesCategory(_bbCat)) || _isBonelesBurger) {
+            // Recordar la salsa previamente elegida (si existe en customizations)
+            const _prevSauceMatch = (currentCustomizations || []).find(c => /^salsa\s*:/i.test(String(c && c.name || '')));
+            const _prevSauce = _prevSauceMatch ? String(_prevSauceMatch.name).replace(/^salsa\s*:\s*/i, '').trim().toUpperCase() : '';
             const _sauceSection = document.createElement('div');
             _sauceSection.id = 'burger-boneles-sauce-section';
             _sauceSection.className = 'mt-4 pt-4 border-t border-gray-200 dark:border-white/10';
@@ -4848,12 +4896,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas fa-pepper-hot text-red-500"></i>Tipo de salsa
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    ${BURGER_BONELES_SAUCES.map((s, idx) => `
+                    ${BURGER_BONELES_SAUCES.map((s, idx) => {
+                        const _checked = _prevSauce ? (s === _prevSauce) : (idx === 0);
+                        return `
                         <label class="flex items-center gap-2 border border-gray-200 dark:border-white/20 rounded-xl p-3 cursor-pointer hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors">
-                            <input type="radio" name="burger-boneles-sauce" value="${s}" class="form-radio text-yellow-500" ${idx === 0 ? 'checked' : ''}>
+                            <input type="radio" name="burger-boneles-sauce" value="${s}" class="form-radio text-yellow-500" ${_checked ? 'checked' : ''}>
                             <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">${s}</span>
-                        </label>
-                    `).join('')}
+                        </label>`;
+                    }).join('')}
                 </div>
             `;
             const _modalBody = document.getElementById('custom-modal-body');
@@ -5040,7 +5090,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tempComboConfig.choices[i] = {
                 burger: defaultBurger,
-                customizations: [],
+                customizations: isBonelesBurgerItem(defaultBurger) ? [{ name: 'Salsa: NATURAL', price: 0 }] : [],
                 fries: null
             };
             
@@ -5291,14 +5341,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!newBurger) return;
         
         tempComboConfig.choices[choiceIndex].burger = newBurger;
-        tempComboConfig.choices[choiceIndex].customizations = [];
+        tempComboConfig.choices[choiceIndex].customizations = isBonelesBurgerItem(newBurger) ? [{ name: 'Salsa: NATURAL', price: 0 }] : [];
         tempComboConfig.choices[choiceIndex].fries = null;
         tempComboConfig.choices[choiceIndex].onionRings = null;
         
         updateBurgerDisplay(choiceIndex, newBurger);
         
         const summaryEl = document.querySelector(`[data-choice-index="${choiceIndex}"] .customizations-summary`);
-        summaryEl.textContent = 'Sin personalización.';
+        summaryEl.textContent = isBonelesBurgerItem(newBurger) ? 'Salsa: NATURAL' : 'Sin personalización.';
         
         updateComboModalTotal();
     }
@@ -5731,7 +5781,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Sesión requerida para finalizar
         const isManualMode = (typeof window.__MANUAL_MODE !== 'undefined' && window.__MANUAL_MODE === true);
-        let isLoggedIn = !!getLoggedInClientUid();
+        const _getUid = (typeof getLoggedInClientUid === 'function') ? getLoggedInClientUid
+                       : (typeof window !== 'undefined' && typeof window.getLoggedInClientUid === 'function' ? window.getLoggedInClientUid
+                       : function () { return null; });
+        let isLoggedIn = !!_getUid();
         if (isManualMode) isLoggedIn = true;
         
         if (!deliveryTypeElement || !paymentMethodElement) {
@@ -6204,7 +6257,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointsEarned = Math.max(0, Math.floor(Number(total || 0) / 10)); // 1 punto por cada $10 MXN
 
         // Detectar si hay sesión para acreditar puntos
-        let isLoggedIn = !!getLoggedInClientUid();
+        let isLoggedIn = !!((typeof getLoggedInClientUid === 'function')
+            ? getLoggedInClientUid()
+            : (typeof window !== 'undefined' && typeof window.getLoggedInClientUid === 'function' ? window.getLoggedInClientUid() : null));
 
         const deliveryLabel = deliveryTypeValue === 'delivery' ? '🚚 A domicilio' : '🏪 Recoger en local';
         const paymentLabel = paymentMethod === 'Efectivo' ? '💵 Efectivo' : `💳 ${paymentMethod}`;
@@ -6393,6 +6448,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedPhone && customerPhoneInput && !customerPhoneInput.dataset.userEdited && !customerPhoneInput.value) {
             customerPhoneInput.value = savedPhone;
         }
+
+        // 3) Fallback: nombre/teléfono desde sesión local (sr_verified_customer_session)
+        //    o desde 'customerName' (localStorage), por si la sesión Firebase aún no respondió.
+        try {
+            const savedName = localStorage.getItem('customerName');
+            if (savedName && customerNameInput && !customerNameInput.dataset.userEdited && !customerNameInput.value) {
+                customerNameInput.value = savedName;
+            }
+            const rawSess = localStorage.getItem('sr_verified_customer_session');
+            if (rawSess) {
+                const sess = JSON.parse(rawSess);
+                if (sess) {
+                    if (customerNameInput && !customerNameInput.dataset.userEdited && !customerNameInput.value && sess.nombre) {
+                        customerNameInput.value = sess.nombre;
+                    }
+                    if (customerPhoneInput && !customerPhoneInput.dataset.userEdited && !customerPhoneInput.value && sess.telefono) {
+                        customerPhoneInput.value = sess.telefono;
+                    }
+                }
+            }
+        } catch (_) {}
+
+        // 4) Forzar validación tras prellenar (habilita el botón si los datos quedan completos)
+        try { validateCheckoutForm(); } catch (_) {}
     }
 
     // Modal CTA de registro: solo para usuarios SIN sesión iniciada
@@ -9122,7 +9201,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Intentar asociar el pedido al usuario autenticado (para puntos)
-            const clienteId = getLoggedInClientUid();
+            const clienteId = (typeof getLoggedInClientUid === 'function')
+                ? getLoggedInClientUid()
+                : (typeof window !== 'undefined' && typeof window.getLoggedInClientUid === 'function' ? window.getLoggedInClientUid() : null);
             
             // Crear objeto de datos del pedido
             const orderData = {

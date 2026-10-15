@@ -142,6 +142,16 @@
       }
     }
 
+    // Notificar al resto de la página que el estado de sesión cambió
+    // (login, registro, verificación de código, logout).
+    function emitAuthChanged(reason) {
+      try {
+        window.dispatchEvent(new CustomEvent('sr-auth-changed', {
+          detail: { reason: reason || 'change', loggedIn: !!getLocalSession() }
+        }));
+      } catch (_) {}
+    }
+
     function setTab(tab) {
       const t = tab === 'register' ? 'register' : 'login';
       if (tabLoginBtn) {
@@ -379,6 +389,7 @@
               localStorage.setItem('customerName', session.nombre || '');
               localStorage.setItem('customerPhone', session.telefono || telefono || '');
             } catch (_) {}
+            emitAuthChanged('login');
 
             currentUser = {
               uid: session.uid,
@@ -484,6 +495,7 @@
               localStorage.setItem('customerName', nombre);
               localStorage.setItem('customerPhone', phoneDigits);
             } catch (_) {}
+            emitAuthChanged('register');
             currentUser = { uid, displayName: nombre, phoneNumber: phoneDigits, email: correo };
             if (viewLoggedIn) {
               hide(viewLogin);
@@ -541,6 +553,7 @@
             localStorage.setItem('sr_verified_customer_session', JSON.stringify(data.session));
             localStorage.setItem('customerName', data.session.nombre || pendingRegister.nombre);
             localStorage.setItem('customerPhone', data.session.telefono || pendingRegister.telefono);
+            emitAuthChanged('verify');
             currentUser = {
               uid: data.session.uid,
               displayName: data.session.nombre || pendingRegister.nombre,
@@ -614,6 +627,7 @@
           try {
             logoutBtn.disabled = true;
             try { localStorage.removeItem('sr_verified_customer_session'); } catch (_) {}
+            emitAuthChanged('logout');
             currentUser = null;
             if (manager && typeof manager.logout === 'function') {
               await manager.logout();

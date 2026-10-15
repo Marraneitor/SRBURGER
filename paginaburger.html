@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no">
+    <!-- Respaldo de imágenes rotas (Firebase Storage → /img/productos → placeholder) -->
+    <script src="/js/sr-image-fallback.js"></script>
     <title>SR & SRA BURGER - ¡Hechas con Pasión!</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍔</text></svg>">
 
@@ -3666,7 +3668,7 @@
                         <span id="checkout-sticky-total" class="font-black text-xl text-green-600 dark:text-green-400 font-poppins" style="letter-spacing:-0.03em">$0</span>
                     </div>
                 </div>
-                <a id="checkout-auth-cta" href="cliente.html" data-sr-auth-open="1" class="w-full mb-2 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-extrabold shadow-lg shadow-orange-500/30 hover:from-yellow-600 hover:to-orange-600 active:scale-[0.99] transition-all duration-200" aria-label="Crear cuenta o iniciar sesión">
+                <a id="checkout-auth-cta" href="cliente.html" data-sr-auth-open="1" class="hidden w-full mb-2 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-extrabold shadow-lg shadow-orange-500/30 hover:from-yellow-600 hover:to-orange-600 active:scale-[0.99] transition-all duration-200" aria-label="Crear cuenta o iniciar sesión">
                     <i class="fas fa-user-plus"></i>
                     <span>Crear cuenta o iniciar sesión (10% OFF)</span>
                 </a>
@@ -4444,7 +4446,7 @@
             })();
         </script>
         <!-- SKILL-01: defer — no bloquea el parser HTML; el script corre tras DOMContentLoaded -->
-        <script src="js/script.js.backup?v=2026-04-21f" defer></script>
+        <script src="js/script.js.backup?v=2026-10-15a" defer></script>
 
         <!-- UX enhancements: sticky category nav, cart badge pop, checkout prefill -->
         <script>

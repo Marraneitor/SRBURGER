@@ -6,7 +6,7 @@
  * Versiona el cache incrementando CACHE_VERSION al desplegar cambios.
  */
 
-const CACHE_VERSION = 'sr-v6';
+const CACHE_VERSION = 'sr-v9';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`;
 
@@ -15,10 +15,13 @@ const PRECACHE_URLS = [
   '/paginaburger.html',
   '/codigosacc.html',
   '/codigoacc.html',
+  '/Publicidad.html',
   '/js/script.js.backup',
   '/js/firebase-config.js',
   '/js/spa-router.js',
   '/js/sr-auth-modal.js',
+  '/js/sr-shell.js',
+  '/js/sr-image-fallback.js',
   '/styles/sr-ui.css',
   '/styles/variables.css',
 ];
@@ -62,7 +65,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Imágenes de Imgur → Cache-First con deduplicated IMAGE_CACHE
-  if (url.hostname === 'i.imgur.com') {
+  // Fotos locales de productos (/img/...) → mismo cache de imágenes
+  if (url.hostname === 'i.imgur.com' || (url.origin === self.location.origin && url.pathname.startsWith('/img/'))) {
     event.respondWith(_cacheFirst(request, IMAGE_CACHE));
     return;
   }

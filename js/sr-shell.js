@@ -37,6 +37,7 @@
       { href: 'ingredientes.html', label: 'Ingredientes' },
       { href: 'inventario.html', label: 'Inventario' },
       { href: 'clientes-admin.html', label: 'Clientes' },
+      { href: 'Publicidad.html', label: 'Publicidad' },
       { href: 'notifi.html', label: 'Notifi' }
     ];
 

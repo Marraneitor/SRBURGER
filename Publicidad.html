@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es" class="sr-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Publicidad · SR &amp; SRA BURGER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/sr-ui.css">
+  <script src="js/sr-shell.js" defer></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, .title-font { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-bullhorn text-slate-900"></i>
+        </div>
+        <div>
+          <div class="font-bold text-lg title-font">Publicidad · Promociones</div>
+          <div class="text-xs text-slate-400">Envía promociones masivas por WhatsApp</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-xs">
+        <a href="clientes-admin.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+          <i class="fas fa-users"></i><span>Clientes</span>
+        </a>
+        <a href="paginaburger.html" class="px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 flex items-center gap-1">
+          <i class="fas fa-store"></i><span>Ver web</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Guard ADMIN -->
+    <section id="admin-guard" class="bg-red-950/40 border border-red-800 text-red-100 rounded-2xl p-4">
+      <div class="flex items-start gap-3">
+        <i class="fas fa-lock text-xl mt-0.5"></i>
+        <div class="flex-1 space-y-2">
+          <p class="font-semibold mb-1">Acceso solo para administrador</p>
+          <p class="text-xs">Ingresa la contraseña de administrador para acceder a Publicidad.</p>
+          <form id="admin-login-form" class="flex flex-col sm:flex-row gap-2 text-xs">
+            <input id="admin-password" type="password" autocomplete="off" placeholder="Contraseña de administrador"
+              class="flex-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-red-400/60 text-red-50 placeholder:text-red-200/60 focus:outline-none focus:ring-1 focus:ring-red-400" />
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-xs font-semibold flex items-center gap-1">
+              <i class="fas fa-unlock"></i><span>Entrar</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Estado WhatsApp -->
+    <section id="wa-status-card" class="hidden bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div id="wa-dot" class="w-3 h-3 rounded-full bg-slate-500"></div>
+        <div>
+          <p class="text-sm font-bold">WhatsApp</p>
+          <p id="wa-status-text" class="text-xs text-slate-400">Verificando conexión…</p>
+        </div>
+      </div>
+      <a href="notifi.html" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+        <i class="fab fa-whatsapp"></i> Panel WhatsApp
+      </a>
+    </section>
+
+    <!-- Contenido principal -->
+    <div id="admin-content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Columna izquierda: Crear Promoción -->
+      <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-300">
+            <i class="fas fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold title-font">Crear promoción</h2>
+            <p class="text-xs text-slate-400">Personaliza el mensaje que se enviará a tus clientes.</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de promoción</label>
+          <input id="promo-tipo" type="text" placeholder="Ej. PROMOCIÓN DOBLE BURGER"
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Texto / descripción</label>
+          <textarea id="promo-texto" rows="6" placeholder="Ej. 2 HAMBURGUESAS SENCILLAS + PAPAS MEDIANAS POR SOLO $200. Solo hoy."
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 resize-y"></textarea>
+        </div>
+
+        <!-- Generar con IA -->
+        <div class="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-fuchsia-900/10 p-3 space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-purple-400/15 flex items-center justify-center text-purple-300">
+              <i class="fas fa-wand-magic-sparkles text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <div class="text-sm font-bold title-font text-purple-100">Generar con IA</div>
+              <div class="text-[11px] text-slate-400">Da una idea y la IA redactará la promoción.</div>
+            </div>
+          </div>
+          <input id="promo-ai-idea" type="text" maxlength="240"
+            placeholder="Ej. Promo del martes para mover combos familiares con descuento"
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400" />
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="promo-ai-generate" type="button"
+              class="px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-wand-magic-sparkles"></i>
+              <span id="promo-ai-generate-label">Generar</span>
+            </button>
+            <button id="promo-ai-improve" type="button"
+              class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-arrows-rotate"></i> Mejorar texto actual
+            </button>
+            <span id="promo-ai-status" class="text-[11px] text-slate-400"></span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-xs flex-wrap">
+          <label class="flex items-center gap-2">
+            <input id="promo-incluir-saludo" type="checkbox" checked class="rounded">
+            <span>Incluir saludo personalizado (Hola {nombre})</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input id="promo-incluir-firma" type="checkbox" checked class="rounded">
+            <span>Incluir firma (🍔 SR &amp; SRA BURGER)</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Vista previa del mensaje</label>
+          <pre id="promo-preview" class="whitespace-pre-wrap break-words text-xs p-3 rounded-lg bg-slate-950 border border-slate-700 text-emerald-100 min-h-[120px]"></pre>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>Caracteres: <span id="promo-char-count">0</span> / 4000</span>
+          <button id="promo-clear" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+            <i class="fas fa-eraser"></i> Limpiar
+          </button>
+        </div>
+      </section>
+
+      <!-- Columna derecha: Destinatarios -->
+      <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2 justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-400/10 flex items-center justify-center text-emerald-300">
+              <i class="fas fa-address-book"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold title-font">Destinatarios</h2>
+              <p class="text-xs text-slate-400">Clientes registrados (Firestore + cuentas locales).</p>
+            </div>
+          </div>
+          <button id="reload-contacts" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs flex items-center gap-1">
+            <i class="fas fa-rotate"></i> Recargar
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <div class="relative flex-1 min-w-[180px]">
+            <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input id="contacts-search" type="text" placeholder="Buscar por nombre o teléfono..."
+              class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-yellow-400" />
+          </div>
+          <button id="select-all-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+            <i class="fas fa-check-double"></i> Todos
+          </button>
+          <button id="select-none-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center gap-1">
+            <i class="fas fa-square"></i> Ninguno
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700">
+            <span id="contacts-total">0</span> totales
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-200 border border-emerald-700">
+            <span id="contacts-selected">0</span> seleccionados
+          </span>
+          <span id="contacts-status" class="text-slate-500"></span>
+        </div>
+
+        <div id="contacts-list" class="max-h-[420px] overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 divide-y divide-slate-800">
+          <div class="p-4 text-xs text-slate-400 text-center">Cargando contactos…</div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+          <button id="send-broadcast" class="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-extrabold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fab fa-whatsapp text-lg"></i>
+            <span>Enviar promoción a seleccionados</span>
+          </button>
+        </div>
+
+        <div id="send-progress" class="hidden text-xs text-slate-300 space-y-1 p-3 rounded-lg bg-slate-950 border border-slate-800"></div>
+        <div id="send-error" class="hidden text-xs text-red-300 p-3 rounded-lg bg-red-950/40 border border-red-800"></div>
+        <div id="send-success" class="hidden text-xs text-emerald-300 p-3 rounded-lg bg-emerald-950/40 border border-emerald-800"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="js/firebase-config.js?v=2026-04-26-publicidad"></script>
+  <script>
+    (function () {
+      'use strict';
+      const ADMIN_PASS = '3141592';
+      const byId = (id) => document.getElementById(id);
+      const show = (el) => el && el.classList.remove('hidden');
+      const hide = (el) => el && el.classList.add('hidden');
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+      }
+
+      function normalizePhone10(raw) {
+        const d = String(raw || '').replace(/\D/g, '');
+        if (!d) return '';
+        return d.slice(-10);
+      }
+
+      function getOrPromptAdminKey() {
+        let key = '';
+        try { key = sessionStorage.getItem('sr_admin_key') || ''; } catch (_) {}
+        if (!key) {
+          key = window.prompt('Para enviar promociones: ingresa la ADMIN_KEY del servidor.');
+          if (!key) return null;
+          try { sessionStorage.setItem('sr_admin_key', key); } catch (_) {}
+        }
+        return key;
+      }
+
+      function waitForClientManager(cb) {
+        let tries = 0;
+        const max = 60;
+        (function check() {
+          if (window.firebaseClientManager) return cb(window.firebaseClientManager);
+          if (tries++ < max) return setTimeout(check, 100);
+          cb(null);
+        })();
+      }
+
+      // ── Estado WhatsApp ─────────────────────────────────────────
+      async function refreshWaStatus() {
+        const dot = byId('wa-dot');
+        const txt = byId('wa-status-text');
+        try {
+          const r = await fetch('/api/whatsapp/config');
+          const d = await r.json().catch(() => ({}));
+          if (d && d.connected) {
+            dot.className = 'w-3 h-3 rounded-full bg-emerald-500 animate-pulse';
+            txt.textContent = 'Conectado y listo para enviar.';
+          } else {
+            dot.className = 'w-3 h-3 rounded-full bg-red-500';
+            txt.textContent = 'Desconectado. Abre notifi.html y escanea el QR.';
+          }
+        } catch (_) {
+          dot.className = 'w-3 h-3 rounded-full bg-slate-500';
+          txt.textContent = 'No se pudo verificar (asegúrate de tener el servidor corriendo).';
+        }
+      }
+
+      // ── Promoción / vista previa ────────────────────────────────
+      const tipoEl = byId('promo-tipo');
+      const textoEl = byId('promo-texto');
+      const previewEl = byId('promo-preview');
+      const charCountEl = byId('promo-char-count');
+      const incluirSaludo = byId('promo-incluir-saludo');
+      const incluirFirma = byId('promo-incluir-firma');
+
+      function buildMessage(nombreCliente) {
+        const tipo = String(tipoEl.value || '').trim();
+        const texto = String(textoEl.value || '').trim();
+        const partes = [];
+        if (incluirSaludo.checked) {
+          const n = (nombreCliente && String(nombreCliente).trim()) || 'amigo';
+          partes.push(`Hola ${n} 👋`);
+          partes.push('');
+        }
+        if (tipo) {
+          partes.push(`*${tipo}*`);
+          partes.push('');
+        }
+        if (texto) {
+          partes.push(texto);
+        }
+        if (incluirFirma.checked) {
+          partes.push('');
+          partes.push('🍔 SR & SRA BURGER');
+        }
+        return partes.join('\n');
+      }
+
+      function refreshPreview() {
+        const sample = buildMessage('{nombre}');
+        previewEl.textContent = sample;
+        charCountEl.textContent = String(sample.length);
+      }
+
+      [tipoEl, textoEl].forEach(el => el.addEventListener('input', refreshPreview));
+      [incluirSaludo, incluirFirma].forEach(el => el.addEventListener('change', refreshPreview));
+      byId('promo-clear').addEventListener('click', () => {
+        tipoEl.value = '';
+        textoEl.value = '';
+        refreshPreview();
+      });
+
+      // ── Generador IA ────────────────────────────────────────────
+      const aiIdeaEl = byId('promo-ai-idea');
+      const aiGenBtn = byId('promo-ai-generate');
+      const aiImproveBtn = byId('promo-ai-improve');
+      const aiStatus = byId('promo-ai-status');
+      const aiGenLabel = byId('promo-ai-generate-label');
+
+      function setAiBusy(busy, msg) {
+        aiGenBtn.disabled = busy;
+        aiImproveBtn.disabled = busy;
+        if (busy) {
+          aiGenLabel.textContent = 'Generando…';
+          aiStatus.textContent = msg || 'Pensando…';
+          aiStatus.className = 'text-[11px] text-purple-300';
+        } else {
+          aiGenLabel.textContent = 'Generar';
+          if (msg) {
+            aiStatus.textContent = msg;
+          }
+        }
+      }
+
+      async function callGeneratePromo({ improve }) {
+        const key = getOrPromptAdminKey();
+        if (!key) return;
+        const idea = String(aiIdeaEl.value || '').trim();
+        const tipoActual = String(tipoEl.value || '').trim();
+        const textoActual = String(textoEl.value || '').trim();
+
+        if (!improve && !idea) {
+          aiStatus.textContent = 'Escribe una idea o pulsa "Mejorar texto actual".';
+          aiStatus.className = 'text-[11px] text-amber-300';
+          aiIdeaEl.focus();
+          return;
+        }
+        if (improve && !textoActual && !tipoActual) {
+          aiStatus.textContent = 'No hay texto actual para mejorar.';
+          aiStatus.className = 'text-[11px] text-amber-300';
+          return;
+        }
+
+        setAiBusy(true);
+        try {
+          const r = await fetch('/api/generate-promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+            body: JSON.stringify({
+              idea,
+              tipo: improve ? tipoActual : '',
+              texto: improve ? textoActual : '',
+            }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.status === 401) {
+            try { sessionStorage.removeItem('sr_admin_key'); } catch (_) {}
+            setAiBusy(false, '');
+            aiStatus.textContent = 'ADMIN_KEY incorrecta. Vuelve a intentarlo.';
+            aiStatus.className = 'text-[11px] text-red-300';
+            return;
+          }
+          if (!r.ok || !d.ok) {
+            setAiBusy(false, '');
+            aiStatus.textContent = d.error || 'No se pudo generar.';
+            aiStatus.className = 'text-[11px] text-red-300';
+            return;
+          }
+          if (d.tipo) tipoEl.value = d.tipo;
+          if (d.texto) textoEl.value = d.texto;
+          refreshPreview();
+          setAiBusy(false, '');
+          aiStatus.textContent = '✨ Generado. Revisa y ajusta antes de enviar.';
+          aiStatus.className = 'text-[11px] text-emerald-300';
+        } catch (e) {
+          setAiBusy(false, '');
+          aiStatus.textContent = 'Error de red al contactar la IA.';
+          aiStatus.className = 'text-[11px] text-red-300';
+        }
+      }
+
+      aiGenBtn.addEventListener('click', () => callGeneratePromo({ improve: false }));
+      aiImproveBtn.addEventListener('click', () => callGeneratePromo({ improve: true }));
+      aiIdeaEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          callGeneratePromo({ improve: false });
+        }
+      });
+
+      // ── Contactos ───────────────────────────────────────────────
+      let allContacts = []; // [{nombre, telefono, telefonoDigits, source}]
+      const selected = new Set(); // teléfonos (10 dig)
+
+      function mergeContacts(firestoreList, phoneAuthList) {
+        const map = new Map();
+        const addOne = (nombre, telefono, source) => {
+          const tel10 = normalizePhone10(telefono);
+          if (!tel10 || tel10.length < 10) return;
+          if (!map.has(tel10)) {
+            map.set(tel10, {
+              nombre: String(nombre || '').trim() || '(sin nombre)',
+              telefono: String(telefono || '').trim(),
+              telefonoDigits: tel10,
+              sources: new Set([source])
+            });
+          } else {
+            const cur = map.get(tel10);
+            cur.sources.add(source);
+            if (!cur.nombre || cur.nombre === '(sin nombre)') {
+              cur.nombre = String(nombre || '').trim() || cur.nombre;
+            }
+          }
+        };
+
+        (firestoreList || []).forEach(c => {
+          const tel = c.telefonoDigits || c.telefono || '';
+          addOne(c.nombre || c.name || c.correo || '', tel, 'clientes');
+        });
+        (phoneAuthList || []).forEach(u => {
+          addOne(u.nombre || u.name || '', u.telefono || '', 'admin');
+        });
+
+        const arr = Array.from(map.values()).map(c => ({
+          ...c,
+          sources: Array.from(c.sources)
+        }));
+        arr.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        return arr;
+      }
+
+      async function loadFirestoreClients(manager) {
+        if (!manager || typeof manager.getAllClients !== 'function') return [];
+        try { return await manager.getAllClients(); } catch (e) {
+          console.warn('[publicidad] error firestore:', e); return [];
+        }
+      }
+
+      async function loadPhoneAuthUsers() {
+        const key = getOrPromptAdminKey();
+        if (!key) return [];
+        try {
+          const r = await fetch('/api/admin/phone-users', { headers: { 'x-admin-key': key } });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok || !d.ok) {
+            if (r.status === 401 || r.status === 503) {
+              try { sessionStorage.removeItem('sr_admin_key'); } catch (_) {}
+            }
+            return [];
+          }
+          return Array.isArray(d.users) ? d.users : [];
+        } catch (e) { console.warn('[publicidad] phone-users:', e); return []; }
+      }
+
+      function renderContacts() {
+        const container = byId('contacts-list');
+        const term = String(byId('contacts-search').value || '').toLowerCase().trim();
+        const filtered = !term ? allContacts : allContacts.filter(c =>
+          c.nombre.toLowerCase().includes(term) || c.telefonoDigits.includes(term)
+        );
+        byId('contacts-total').textContent = String(allContacts.length);
+        byId('contacts-selected').textContent = String(selected.size);
+
+        if (!filtered.length) {
+          container.innerHTML = '<div class="p-4 text-xs text-slate-400 text-center">No hay contactos que coincidan.</div>';
+          return;
+        }
+
+        container.innerHTML = filtered.map(c => {
+          const checked = selected.has(c.telefonoDigits) ? 'checked' : '';
+          const sourceBadges = c.sources.map(s => {
+            const cls = s === 'clientes' ? 'bg-emerald-900/40 text-emerald-200 border-emerald-700' : 'bg-yellow-900/40 text-yellow-200 border-yellow-700';
+            const lbl = s === 'clientes' ? 'Firestore' : 'Local';
+            return `<span class="text-[10px] px-1.5 py-0.5 rounded border ${cls}">${lbl}</span>`;
+          }).join(' ');
+          return `
+            <label class="flex items-center gap-3 px-3 py-2 hover:bg-slate-900 cursor-pointer">
+              <input type="checkbox" data-tel="${escapeHtml(c.telefonoDigits)}" ${checked} class="contact-cb rounded">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate">${escapeHtml(c.nombre)}</div>
+                <div class="text-xs text-slate-400">${escapeHtml(c.telefono || c.telefonoDigits)}</div>
+              </div>
+              <div class="flex flex-col gap-1 items-end">${sourceBadges}</div>
+            </label>
+          `;
+        }).join('');
+      }
+
+      function bindContactsEvents() {
+        byId('contacts-list').addEventListener('change', (e) => {
+          const cb = e.target.closest('.contact-cb');
+          if (!cb) return;
+          const tel = cb.getAttribute('data-tel');
+          if (cb.checked) selected.add(tel); else selected.delete(tel);
+          byId('contacts-selected').textContent = String(selected.size);
+        });
+        byId('contacts-search').addEventListener('input', renderContacts);
+        byId('select-all-btn').addEventListener('click', () => {
+          // Selecciona los actualmente filtrados
+          const term = String(byId('contacts-search').value || '').toLowerCase().trim();
+          const list = !term ? allContacts : allContacts.filter(c =>
+            c.nombre.toLowerCase().includes(term) || c.telefonoDigits.includes(term)
+          );
+          list.forEach(c => selected.add(c.telefonoDigits));
+          renderContacts();
+        });
+        byId('select-none-btn').addEventListener('click', () => {
+          selected.clear();
+          renderContacts();
+        });
+        byId('reload-contacts').addEventListener('click', () => {
+          loadAllContacts();
+        });
+      }
+
+      async function loadAllContacts() {
+        const status = byId('contacts-status');
+        status.textContent = 'Cargando…';
+        const manager = window.firebaseClientManager || null;
+        const [fsList, paList] = await Promise.all([
+          loadFirestoreClients(manager),
+          loadPhoneAuthUsers()
+        ]);
+        allContacts = mergeContacts(fsList, paList);
+        // No deseleccionar automáticamente: mantener selección si los teléfonos siguen presentes
+        const validSet = new Set(allContacts.map(c => c.telefonoDigits));
+        Array.from(selected).forEach(tel => { if (!validSet.has(tel)) selected.delete(tel); });
+        status.textContent = `Firestore: ${fsList.length} · Local: ${paList.length}`;
+        renderContacts();
+      }
+
+      // ── Envío masivo ────────────────────────────────────────────
+      async function sendBroadcast() {
+        const sendBtn = byId('send-broadcast');
+        const progressEl = byId('send-progress');
+        const errEl = byId('send-error');
+        const okEl = byId('send-success');
+        hide(progressEl); hide(errEl); hide(okEl);
+
+        const baseMessage = buildMessage('{nombre}').trim();
+        if (!baseMessage) {
+          errEl.textContent = 'Escribe el tipo y/o el texto de la promoción.';
+          show(errEl);
+          return;
+        }
+        if (selected.size === 0) {
+          errEl.textContent = 'Selecciona al menos un destinatario.';
+          show(errEl);
+          return;
+        }
+
+        const tels = Array.from(selected);
+        const confirmMsg = `¿Enviar la promoción a ${tels.length} contacto(s) por WhatsApp?\n\nEsta acción no se puede deshacer y puede tardar unos minutos.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        const key = getOrPromptAdminKey();
+        if (!key) return;
+
+        sendBtn.disabled = true;
+        progressEl.textContent = `Enviando a ${tels.length} contacto(s)… (esto puede tardar)`;
+        show(progressEl);
+
+        // Personalización: enviamos un solo lote por nombre para evitar muchas llamadas.
+        // El servidor hace la espera entre cada envío. Para personalizar por nombre,
+        // hacemos pequeños lotes agrupados por nombre.
+        const groupsByName = new Map();
+        for (const tel of tels) {
+          const c = allContacts.find(x => x.telefonoDigits === tel);
+          const nombre = (c && c.nombre && c.nombre !== '(sin nombre)') ? c.nombre.split(' ')[0] : 'amigo';
+          if (!groupsByName.has(nombre)) groupsByName.set(nombre, []);
+          groupsByName.get(nombre).push(tel);
+        }
+
+        let totalSent = 0, totalFailed = 0;
+        const allResults = [];
+        try {
+          let i = 0;
+          for (const [nombre, lista] of groupsByName) {
+            i++;
+            const msg = buildMessage(nombre);
+            progressEl.textContent = `Lote ${i}/${groupsByName.size} · destinatarios "${nombre}": ${lista.length}`;
+            const resp = await fetch('/api/admin/broadcast', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+              body: JSON.stringify({ message: msg, telefonos: lista, delayMs: 900 })
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok || !data.ok) {
+              throw new Error(data && data.error ? data.error : `Error ${resp.status}`);
+            }
+            totalSent += Number(data.sent || 0);
+            totalFailed += Number(data.failed || 0);
+            (data.results || []).forEach(r => allResults.push(r));
+          }
+
+          hide(progressEl);
+          const failedList = allResults.filter(r => !r.ok);
+          let html = `<i class="fas fa-circle-check"></i> Enviados: <b>${totalSent}</b> · Fallidos: <b>${totalFailed}</b>`;
+          if (failedList.length) {
+            html += '<details class="mt-2"><summary class="cursor-pointer">Ver fallidos (' + failedList.length + ')</summary>';
+            html += '<ul class="mt-2 space-y-0.5 list-disc list-inside text-red-300">';
+            failedList.slice(0, 30).forEach(f => {
+              html += `<li>${escapeHtml(f.telefono)} — ${escapeHtml(f.error || 'error')}</li>`;
+            });
+            html += '</ul></details>';
+          }
+          okEl.innerHTML = html;
+          show(okEl);
+        } catch (e) {
+          hide(progressEl);
+          errEl.textContent = (e && e.message) ? e.message : 'No se pudo completar el envío.';
+          show(errEl);
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
+
+      // ── Init ────────────────────────────────────────────────────
+      function unlockAdmin() {
+        hide(byId('admin-guard'));
+        show(byId('admin-content'));
+        show(byId('wa-status-card'));
+        refreshPreview();
+        bindContactsEvents();
+        byId('send-broadcast').addEventListener('click', sendBroadcast);
+        refreshWaStatus();
+        setInterval(refreshWaStatus, 20000);
+        waitForClientManager(() => loadAllContacts());
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = byId('admin-login-form');
+        const passInput = byId('admin-password');
+        form.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const v = (passInput.value || '').trim();
+          if (v === ADMIN_PASS) {
+            unlockAdmin();
+          } else {
+            alert('Contraseña de administrador incorrecta.');
+            passInput.focus(); passInput.select();
+          }
+        });
+        passInput.focus();
+      });
+    })();
+  </script>
+</body>
+</html>

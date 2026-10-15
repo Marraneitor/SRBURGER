@@ -54,7 +54,7 @@ function getFirebaseAdminApp() {
   return _firebaseAdminApp;
 }
 
-function requireAdminKey(req, res) {
+function requireAdminKey(req, res, next) {
   const expected = (process.env.ADMIN_KEY || '').trim();
   if (!expected) {
     // Fail-closed: si ADMIN_KEY no está configurada, negar acceso
@@ -62,7 +62,10 @@ function requireAdminKey(req, res) {
     return false;
   }
   const provided = String(req.get('x-admin-key') || '').trim();
-  if (provided && provided === expected) return true;
+  if (provided && provided === expected) {
+    if (typeof next === 'function') next();
+    return true;
+  }
   res.status(401).json({ ok: false, error: 'No autorizado.' });
   return false;
 }
@@ -1009,6 +1012,95 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ── API: generar texto de promoción con IA ──────────────────────────────────
+// Protegido por ADMIN_KEY. Usa Gemini para devolver { tipo, texto } JSON.
+app.post('/api/generate-promo', async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
+
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+  if (!apiKey) {
+    return res.status(503).json({ ok: false, error: 'GEMINI_API_KEY no configurada.' });
+  }
+
+  const idea = String(req.body?.idea || '').replace(/<[^>]*>/g, '').trim().slice(0, 500);
+  const tipoActual = String(req.body?.tipo || '').replace(/<[^>]*>/g, '').trim().slice(0, 120);
+  const textoActual = String(req.body?.texto || '').replace(/<[^>]*>/g, '').trim().slice(0, 800);
+
+  const SYS = `Eres un copywriter experto de **Sr. y Sra. Burger**, dark kitchen de hamburguesas artesanales en Minatitlán, Veracruz.
+Tu tarea: redactar mensajes BREVES de promoción para enviar por WhatsApp a clientes registrados.
+
+REGLAS ESTRICTAS:
+- Responde SIEMPRE en JSON válido con esta forma exacta:
+  {"tipo":"TÍTULO CORTO EN MAYÚSCULAS","texto":"Cuerpo del mensaje"}
+- "tipo": 3 a 6 palabras, mayúsculas, atractivo (ej. "PROMO DOBLE BURGER HOY", "MARTES DE LOCURA").
+- "texto": 2 a 4 líneas. Tono cercano, mexicano, energético. Puedes usar 1-3 emojis (🍔🔥🎉🥤🍟). Incluye un llamado a la acción claro.
+- NO incluyas saludo (Hola...) ni firma (SR & SRA BURGER) — eso lo agrega el sistema.
+- NO inventes precios ni productos si no se proporcionan en el "Brief". Si no hay precios, escribe sin números específicos.
+- NO uses markdown, ni \`\`\`json, solo el objeto JSON puro.
+
+CATÁLOGO DE REFERENCIA:
+🍔 Sencilla $90 · Premium $105 · BBQ Beacon $115 · Alohawai $120 · Chistorraburger $125 · Salchiburger $125 · Choriargentina $125 · Guacamole $140 · Boneless Burger $150
+🌭 Hot Dog Jumbo $65
+🎁 Combo Duo $190 · Triple Dog $215 · Combo Boneless $215 · Combo Amigos $380 · Combo Familiar $680
+🍟 Papas M $65/XL $130 · Salchipapas Parmesanas M $90/XL $140 · Aros M $50/XL $95
+📍 Coahuila #36, Col. Emiliano Zapata, Minatitlán · Envío $8/km`;
+
+  const briefParts = [];
+  if (idea) briefParts.push(`Idea / objetivo: ${idea}`);
+  if (tipoActual) briefParts.push(`Título actual (mejóralo si conviene): ${tipoActual}`);
+  if (textoActual) briefParts.push(`Texto actual (úsalo como base, hazlo más persuasivo): ${textoActual}`);
+  if (!briefParts.length) briefParts.push('Genera una promoción atractiva del día para llenar el local. Elige libremente entre el catálogo.');
+  const userMessage = `Brief:\n${briefParts.join('\n')}\n\nResponde solo con el JSON solicitado.`;
+
+  try {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const geminiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYS }] },
+        contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+        generationConfig: {
+          temperature: 0.95,
+          maxOutputTokens: 512,
+          topP: 0.95,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+
+    if (!geminiRes.ok) {
+      const errBody = await geminiRes.json().catch(() => ({}));
+      console.error('[generate-promo] Gemini error', geminiRes.status, JSON.stringify(errBody).slice(0, 200));
+      return res.status(502).json({ ok: false, error: 'Error al conectar con la IA.' });
+    }
+
+    const data = await geminiRes.json();
+    let raw = String(data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    raw = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+
+    let parsed = null;
+    try { parsed = JSON.parse(raw); }
+    catch (_) {
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch (_) {} }
+    }
+    if (!parsed) {
+      console.error('[generate-promo] Respuesta no parseable:', raw.slice(0, 300));
+      return res.status(502).json({ ok: false, error: 'La IA no devolvió un JSON válido.' });
+    }
+
+    return res.json({
+      ok: true,
+      tipo: String(parsed.tipo || '').trim().slice(0, 120),
+      texto: String(parsed.texto || '').trim().slice(0, 1500),
+    });
+  } catch (e) {
+    console.error('[generate-promo] Error interno:', e.message);
+    return res.status(500).json({ ok: false, error: 'Error interno del generador.' });
+  }
+});
+
 // ── API de configuración del chatbot ────────────────────────────────────────
 
 // GET — devuelve el prompt actual (custom de Firestore o el default hardcodeado)
@@ -1446,6 +1538,66 @@ app.delete('/api/admin/phone-users', (req, res) => {
   }
 });
 
+// POST /api/admin/broadcast — envía un mensaje promocional por WhatsApp a una
+// lista de teléfonos. Protegido por ADMIN_KEY. Espera entre envíos para evitar
+// que WhatsApp marque la cuenta como spam.
+app.post('/api/admin/broadcast', async (req, res) => {
+  if (!requireAdminKey(req, res)) return;
+  try {
+    const message = String((req.body && req.body.message) || '').trim();
+    const telsRaw = (req.body && Array.isArray(req.body.telefonos)) ? req.body.telefonos : [];
+
+    if (!message) return res.status(400).json({ ok: false, error: 'El mensaje está vacío.' });
+    if (message.length > 4000) return res.status(400).json({ ok: false, error: 'El mensaje es demasiado largo (máx. 4000 caracteres).' });
+
+    // Normalizar y deduplicar teléfonos (mínimo 10 dígitos)
+    const seen = new Set();
+    const telefonos = [];
+    for (const t of telsRaw) {
+      const d = String(t || '').replace(/\D/g, '');
+      if (d.length < 10) continue;
+      // Tomar últimos 10 para dedupe (por si llegan con/ sin lada)
+      const key = d.slice(-10);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      telefonos.push(d);
+    }
+
+    if (!telefonos.length) return res.status(400).json({ ok: false, error: 'No hay teléfonos válidos en la lista.' });
+    if (telefonos.length > 500) return res.status(400).json({ ok: false, error: 'Demasiados destinatarios (máx. 500 por envío).' });
+
+    const wa = getWAService();
+    if (!wa.connected) {
+      return res.status(503).json({ ok: false, error: 'WhatsApp no está conectado. Abre notifi.html y escanea el QR.' });
+    }
+
+    const results = [];
+    let sent = 0;
+    let failed = 0;
+    const delayMs = Math.max(400, Math.min(5000, Number(req.body && req.body.delayMs) || 900));
+
+    for (let i = 0; i < telefonos.length; i++) {
+      const tel = telefonos[i];
+      try {
+        await wa.sendToPhone(tel, message);
+        sent++;
+        results.push({ telefono: tel, ok: true });
+      } catch (err) {
+        failed++;
+        results.push({ telefono: tel, ok: false, error: (err && err.message) || 'Error al enviar' });
+      }
+      if (i < telefonos.length - 1) {
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+
+    return res.json({ ok: true, total: telefonos.length, sent, failed, results });
+  } catch (e) {
+    console.error('[broadcast] error:', e && e.message);
+    return res.status(500).json({ ok: false, error: e.message || 'No se pudo enviar el broadcast.' });
+  }
+});
+
 /**
  * Extrae datos comunes del objeto order de Firestore.
  * Soporta los distintos nombres de campo que usa el frontend.
@@ -1653,6 +1805,148 @@ app.get('/api/whatsapp/events', (req, res) => {
     send('disconnected', { error: e.message });
     res.end();
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ─── Chat WhatsApp tipo WhatsApp Web (panel del operador) ─────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+const _waChatJsonParser = express.json({ limit: '8mb' });
+const _waChatSSEClients = new Set();
+
+function _broadcastChatUpdate(payload) {
+  for (const res of _waChatSSEClients) {
+    try { res.write(`event: chat-update\ndata: ${JSON.stringify(payload)}\n\n`); } catch (_) {}
+  }
+}
+try {
+  const wa0 = getWAService();
+  wa0.on('chat-update', (p) => _broadcastChatUpdate(p));
+} catch (_) {}
+
+// SSE: notificación de nuevos mensajes
+app.get('/api/whatsapp/chat/events', requireAdminKey, (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  res.write(`event: hello\ndata: {}\n\n`);
+  _waChatSSEClients.add(res);
+  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch(_){} }, 25000);
+  req.on('close', () => { clearInterval(ping); _waChatSSEClients.delete(res); });
+});
+
+// Lista de chats (resumen)
+app.get('/api/whatsapp/chat/list', requireAdminKey, (_req, res) => {
+  try {
+    const wa = getWAService();
+    res.json({ ok: true, chats: wa.listChats() });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Mensajes de un chat
+app.get('/api/whatsapp/chat/:jid/messages', requireAdminKey, (req, res) => {
+  try {
+    const jid = decodeURIComponent(req.params.jid);
+    const wa = getWAService();
+    const data = wa.getChatMessages(jid);
+    if (!data) return res.status(404).json({ ok: false, error: 'Chat no encontrado.' });
+    wa.markChatRead(jid);
+    res.json({ ok: true, ...data });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Marcar como leído
+app.post('/api/whatsapp/chat/:jid/read', requireAdminKey, (req, res) => {
+  try {
+    const jid = decodeURIComponent(req.params.jid);
+    const wa = getWAService();
+    wa.markChatRead(jid);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Pausar / reanudar bot por chat
+app.post('/api/whatsapp/chat/:jid/bot', requireAdminKey, _waChatJsonParser, (req, res) => {
+  try {
+    const jid = decodeURIComponent(req.params.jid);
+    const paused = !!req.body?.paused;
+    const wa = getWAService();
+    wa.setBotPaused(jid, paused);
+    res.json({ ok: true, paused });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Enviar texto
+app.post('/api/whatsapp/chat/:jid/send', requireAdminKey, _waChatJsonParser, async (req, res) => {
+  try {
+    const jid = decodeURIComponent(req.params.jid);
+    const text = String(req.body?.text || '').slice(0, 4000);
+    const wa = getWAService();
+    await wa.sendChatText(jid, text);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Enviar imagen (base64 dataURL en body.image)
+app.post('/api/whatsapp/chat/:jid/send-image', requireAdminKey, _waChatJsonParser, async (req, res) => {
+  try {
+    const jid = decodeURIComponent(req.params.jid);
+    const dataUrl = String(req.body?.image || '');
+    const caption = String(req.body?.caption || '').slice(0, 1000);
+    const m = dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/);
+    if (!m) return res.status(400).json({ ok: false, error: 'image debe ser dataURL base64.' });
+    const mime = m[1] || 'image/jpeg';
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length) return res.status(400).json({ ok: false, error: 'Imagen vacía.' });
+    if (buf.length > 6 * 1024 * 1024) return res.status(413).json({ ok: false, error: 'Imagen demasiado grande (máx 6MB).' });
+    const wa = getWAService();
+    await wa.sendChatImage(jid, buf, mime, caption);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ── Imágenes del menú (banco para el bot) ──────────────────────────────────
+app.get('/api/whatsapp/menu-images', requireAdminKey, (_req, res) => {
+  try {
+    const wa = getWAService();
+    const list = wa.listMenuImages().map(i => ({ filename: i.filename, caption: i.caption, mimetype: i.mimetype }));
+    res.json({ ok: true, images: list });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.get('/api/whatsapp/menu-images/:filename', (req, res) => {
+  try {
+    const wa = getWAService();
+    const p = wa.getMenuImagePath(req.params.filename);
+    if (!p) return res.status(404).end();
+    res.sendFile(p);
+  } catch (e) { res.status(500).end(); }
+});
+
+app.post('/api/whatsapp/menu-images', requireAdminKey, _waChatJsonParser, (req, res) => {
+  try {
+    const dataUrl = String(req.body?.image || '');
+    const filename = String(req.body?.filename || '').trim();
+    const caption  = String(req.body?.caption || '').slice(0, 500);
+    const m = dataUrl.match(/^data:([\w/+.-]+);base64,(.+)$/);
+    if (!m) return res.status(400).json({ ok: false, error: 'image debe ser dataURL base64.' });
+    const ext = m[1].includes('png') ? '.png' : m[1].includes('webp') ? '.webp' : '.jpg';
+    const safeName = (filename || `menu_${Date.now()}${ext}`).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length) return res.status(400).json({ ok: false, error: 'Imagen vacía.' });
+    if (buf.length > 6 * 1024 * 1024) return res.status(413).json({ ok: false, error: 'Imagen demasiado grande (máx 6MB).' });
+    const wa = getWAService();
+    const saved = wa.saveMenuImage(safeName, buf, caption);
+    res.json({ ok: true, filename: saved });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+app.delete('/api/whatsapp/menu-images/:filename', requireAdminKey, (req, res) => {
+  try {
+    const wa = getWAService();
+    wa.deleteMenuImage(req.params.filename);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 // GET /api/whatsapp/groups — lista de grupos (solo si está conectado)

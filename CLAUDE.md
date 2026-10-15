@@ -37,7 +37,18 @@ js/firebase-config.js    — Inicialización Firebase + todas las funciones Fire
 js/script.js             — Lógica del frontend (carrito, pedidos, UI)
 styles/sr-ui.css         — Componentes UI reutilizables
 styles/variables.css     — Variables CSS globales
+js/sr-image-fallback.js  — Respaldo global de <img> rotas (Storage → /img/productos → placeholder)
+img/productos/           — Fotos de productos servidas por Vercel (preferir sobre hotlinks)
+docs/ARQUITECTURA.md     — Análisis de funcionamiento, flujos y deuda técnica
+.claude/skills/          — Skills del proyecto (imágenes, deploy, menú, nueva página)
 ```
+
+### 2.1 Puntos críticos (leer antes de editar)
+
+- **El script de producción es `js/script.js.backup`** (cargado con `?v=...` en `paginaburger.html` y `pedido-manual.html`). `js/script.js` no lo carga ninguna página. Al editarlo, subir el `?v=`.
+- **`server.js` no corre en Vercel**: en producción solo existen las funciones de `api/`.
+- **Fotos**: el bucket de Storage `manager-d860c` responde 402 (facturación cerrada). Nuevas fotos van en `img/productos/`.
+- El menú base está hardcodeado (`menuData`) y se modifica con overrides de Firestore desde `admin.html`.
 
 ---
 

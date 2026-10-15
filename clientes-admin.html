@@ -278,7 +278,7 @@
         waitForClientManager(function(manager, auth) {
           currentManager = manager;
           if (status) {
-            status.textContent = 'Ingresa la contraseña SEÑORBURGERADMIN para acceder al panel ADMIN.';
+            status.textContent = 'Ingresa la contraseña de administrador para acceder al panel ADMIN.';
           }
 
           function handleAdminLogin(event) {
@@ -286,7 +286,7 @@
               event.preventDefault();
             }
             const password = (adminPasswordInput && adminPasswordInput.value ? adminPasswordInput.value : '').trim();
-            if (password === 'SEÑORBURGERADMIN') {
+            if (password === '3141592') {
               if (status) status.textContent = 'Panel ADMIN desbloqueado.';
               hide(guard);
               show(content);

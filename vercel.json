@@ -5,5 +5,13 @@
     { "source": "/", "destination": "/paginaburger.html" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/pedidos", "destination": "/controldeenvios.html" }
+  ],
+  "headers": [
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+      ]
+    }
   ]
 }
