@@ -46,6 +46,7 @@ docs/ARQUITECTURA.md     — Análisis de funcionamiento, flujos y deuda técnic
 ### 2.1 Puntos críticos (leer antes de editar)
 
 - **El script de producción es `js/script.js.backup`** (cargado con `?v=...` en `paginaburger.html` y `pedido-manual.html`). `js/script.js` no lo carga ninguna página. Al editarlo, subir el `?v=`.
+- **Service Worker activo** (cache-first para scripts): al desplegar, subir `CACHE_VERSION` en `sw.js`.
 - **`server.js` no corre en Vercel**: en producción solo existen las funciones de `api/`.
 - **Fotos**: el bucket de Storage `manager-d860c` responde 402 (facturación cerrada). Nuevas fotos van en `img/productos/`.
 - El menú base está hardcodeado (`menuData`) y se modifica con overrides de Firestore desde `admin.html`.

@@ -66,7 +66,7 @@ Storage → `/img/productos/<mismo nombre>` → placeholder de marca.
 1. **Fotos**: las 22 fotos migradas a `img/productos/` (oct 2026). Pendiente: desplegar y, opcionalmente, actualizar `imageOverrides` en el admin a URLs `/img/productos/...`.
 2. `js/script.js` (330 KB) y `js/script.js.backup` (476 KB) divergieron; solo el `.backup` se usa.
    Editar siempre el `.backup` o unificar en una tarea dedicada.
-3. El Service Worker (`sw.js`) solo se registra desde `js/script.js`, que no se carga → **SW inactivo en producción**.
+3. El Service Worker (`sw.js`) **sí está activo** para visitantes recurrentes (registrado por versiones anteriores) y usa cache-first para scripts: todo script sin `?v=` queda viejo hasta subir `CACHE_VERSION`.
 4. La API key de Gemini y otros secretos deben vivir solo en env vars de Vercel (ver `SECURITY.md`).
 5. Archivos de respaldo en la raíz (`*-backup*.html`, `ideas-backup-old.html`) se publican en Vercel; conviene moverlos o excluirlos.
 6. Hotlinks a sitios de terceros (imgur, alimentosglaciar) son frágiles.

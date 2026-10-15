@@ -7,7 +7,7 @@ description: Checklist para publicar cambios del frontend o de api/*.js en Verce
 
 1. **Script de producción**: el menú carga `js/script.js.backup?v=...`, no `js/script.js`.
    Si se editó, subir el sufijo `?v=AAAA-MM-DDx` en `paginaburger.html` y `pedido-manual.html`.
-2. **Assets nuevos**: añadirlos a `PRECACHE_URLS` en `sw.js` y subir `CACHE_VERSION`.
+2. **Service Worker activo (cache-first para JS/CSS)**: todo script sin `?v=` queda viejo en clientes recurrentes. Siempre subir `CACHE_VERSION` en `sw.js` al desplegar y añadir assets nuevos a `PRECACHE_URLS`.
 3. **CSS**: si se agregaron clases Tailwind nuevas, correr `npm run build:css` (genera `styles/tailwind.min.css`).
 4. **API**: toda función en `api/` usa `api/_security.js` (`applyCors`, `checkRateLimit`, `requireAdminKey`).
    Recordar que `server.js` NO corre en Vercel; endpoints solo-locales no existen en producción.
