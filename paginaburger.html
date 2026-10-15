@@ -2692,6 +2692,31 @@
             #spa-overlay { display: none !important; }
             .spa-img-reveal { animation: none !important; }
         }
+
+        /* ===== Fotos de producto recortadas (img/productos): encuadre completo ===== */
+        /* Son PNG/WebP sin fondo en lienzo cuadrado: se muestran enteras (contain)
+           sobre un fondo tipo estudio, sin recortar botellas ni combos. */
+        img[src*="/img/productos/"] {
+            object-fit: contain !important;
+        }
+        .menu-card img[data-sr-img][src*="/img/productos/"] {
+            padding: 0.5rem;
+            filter: drop-shadow(0 12px 16px rgba(15, 23, 42, 0.22));
+        }
+        .menu-card div:has(> img[data-sr-img][src*="/img/productos/"]) {
+            background: radial-gradient(circle at 50% 42%, #ffffff 0%, #f1f5f9 62%, #e2e8f0 100%) !important;
+        }
+        html.dark .menu-card div:has(> img[data-sr-img][src*="/img/productos/"]) {
+            background: radial-gradient(circle at 50% 42%, #273449 0%, #172033 60%, #0f172a 100%) !important;
+        }
+        html.dark .menu-card img[data-sr-img][src*="/img/productos/"] {
+            filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .menu-card:hover img[data-sr-img][src*="/img/productos/"] {
+                transform: scale(1.06) !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100">
